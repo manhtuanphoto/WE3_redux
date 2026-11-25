@@ -1,0 +1,788 @@
+{
+  "teams": [
+    {
+      "team_id": 0,
+      "team_name": "Germany",
+      "formation_id": 1,
+      "sweeper_line": 2,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 1,
+      "team_name": "Spain",
+      "formation_id": 1,
+      "sweeper_line": 2,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 2,
+      "team_name": "Romania",
+      "formation_id": 1,
+      "sweeper_line": 2,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 3,
+      "team_name": "England",
+      "formation_id": 1,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 4,
+      "team_name": "France",
+      "formation_id": 1,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 5,
+      "team_name": "Denmark",
+      "formation_id": 1,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 6,
+      "team_name": "Italy",
+      "formation_id": 0,
+      "sweeper_line": 3,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 7,
+      "team_name": "Netherlands",
+      "formation_id": 0,
+      "sweeper_line": 2,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 8,
+      "team_name": "Norway",
+      "formation_id": 63,
+      "sweeper_line": 3,
+      "tactic_a": 15,
+      "tactic_b": 15
+    },
+    {
+      "team_id": 9,
+      "team_name": "Sweden",
+      "formation_id": 63,
+      "sweeper_line": 2,
+      "tactic_a": 15,
+      "tactic_b": 15
+    },
+    {
+      "team_id": 10,
+      "team_name": "Croatia",
+      "formation_id": 45,
+      "sweeper_line": 0,
+      "tactic_a": 11,
+      "tactic_b": 8
+    },
+    {
+      "team_id": 11,
+      "team_name": "Yugoslavia",
+      "formation_id": 46,
+      "sweeper_line": 0,
+      "tactic_a": 11,
+      "tactic_b": 12
+    },
+    {
+      "team_id": 12,
+      "team_name": "Bulgaria",
+      "formation_id": 48,
+      "sweeper_line": 0,
+      "tactic_a": 12,
+      "tactic_b": 8
+    },
+    {
+      "team_id": 13,
+      "team_name": "Austria",
+      "formation_id": 50,
+      "sweeper_line": 0,
+      "tactic_a": 13,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 14,
+      "team_name": "Portugal",
+      "formation_id": 54,
+      "sweeper_line": 0,
+      "tactic_a": 14,
+      "tactic_b": 8
+    },
+    {
+      "team_id": 15,
+      "team_name": "Scotland",
+      "formation_id": 0,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 16,
+      "team_name": "Greece",
+      "formation_id": 63,
+      "sweeper_line": 3,
+      "tactic_a": 4,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 17,
+      "team_name": "Belgium",
+      "formation_id": 0,
+      "sweeper_line": 0,
+      "tactic_a": 2,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 18,
+      "team_name": "Turkey",
+      "formation_id": 48,
+      "sweeper_line": 0,
+      "tactic_a": 15,
+      "tactic_b": 15
+    },
+    {
+      "team_id": 19,
+      "team_name": "Ireland",
+      "formation_id": 56,
+      "sweeper_line": 0,
+      "tactic_a": 15,
+      "tactic_b": 15
+    },
+    {
+      "team_id": 20,
+      "team_name": "Northern Ireland",
+      "formation_id": 32,
+      "sweeper_line": 0,
+      "tactic_a": 6,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 21,
+      "team_name": "Wales",
+      "formation_id": 63,
+      "sweeper_line": 3,
+      "tactic_a": 15,
+      "tactic_b": 15
+    },
+    {
+      "team_id": 22,
+      "team_name": "Morocco",
+      "formation_id": 40,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 23,
+      "team_name": "Tunisia",
+      "formation_id": 0,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 24,
+      "team_name": "South Africa",
+      "formation_id": 0,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 1
+    },
+    {
+      "team_id": 25,
+      "team_name": "Cameroon",
+      "formation_id": 0,
+      "sweeper_line": 2,
+      "tactic_a": 0,
+      "tactic_b": 3
+    },
+    {
+      "team_id": 26,
+      "team_name": "Nigeria",
+      "formation_id": 0,
+      "sweeper_line": 3,
+      "tactic_a": 0,
+      "tactic_b": 4
+    },
+    {
+      "team_id": 27,
+      "team_name": "Mexico",
+      "formation_id": 1,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 6
+    },
+    {
+      "team_id": 28,
+      "team_name": "United States",
+      "formation_id": 1,
+      "sweeper_line": 3,
+      "tactic_a": 0,
+      "tactic_b": 8
+    },
+    {
+      "team_id": 29,
+      "team_name": "Jamaica",
+      "formation_id": 2,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 10
+    },
+    {
+      "team_id": 30,
+      "team_name": "Brazil",
+      "formation_id": 2,
+      "sweeper_line": 3,
+      "tactic_a": 0,
+      "tactic_b": 11
+    },
+    {
+      "team_id": 31,
+      "team_name": "Colombia",
+      "formation_id": 3,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 12
+    },
+    {
+      "team_id": 32,
+      "team_name": "Chile",
+      "formation_id": 3,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 13
+    },
+    {
+      "team_id": 33,
+      "team_name": "Argentina",
+      "formation_id": 0,
+      "sweeper_line": 0,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 34,
+      "team_name": "Paraguay",
+      "formation_id": 3,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 0
+    },
+    {
+      "team_id": 35,
+      "team_name": "Japan",
+      "formation_id": 0,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 2
+    },
+    {
+      "team_id": 36,
+      "team_name": "Korea",
+      "formation_id": 0,
+      "sweeper_line": 3,
+      "tactic_a": 0,
+      "tactic_b": 4
+    },
+    {
+      "team_id": 37,
+      "team_name": "Saudi Arabia",
+      "formation_id": 1,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 5
+    },
+    {
+      "team_id": 38,
+      "team_name": "Iran",
+      "formation_id": 1,
+      "sweeper_line": 2,
+      "tactic_a": 0,
+      "tactic_b": 7
+    },
+    {
+      "team_id": 39,
+      "team_name": "Australia",
+      "formation_id": 1,
+      "sweeper_line": 3,
+      "tactic_a": 0,
+      "tactic_b": 8
+    },
+    {
+      "team_id": 40,
+      "team_name": "World All Stars",
+      "formation_id": 2,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 10
+    },
+    {
+      "team_id": 41,
+      "team_name": "European All Stars",
+      "formation_id": 2,
+      "sweeper_line": 3,
+      "tactic_a": 0,
+      "tactic_b": 12
+    },
+    {
+      "team_id": 42,
+      "team_name": "All Stars / Secret (Team 42)",
+      "formation_id": 0,
+      "sweeper_line": 1,
+      "tactic_a": 0,
+      "tactic_b": 3
+    }
+  ],
+  "formations": [
+    {
+      "formation_id": 0,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 1,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 2,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 3,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 4,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 5,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 6,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 7,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 8,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 9,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "formation_id": 10,
+      "slot_roles": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        3,
+        3,
+        1
+      ]
+    },
+    {
+      "formation_id": 11,
+      "slot_roles": [
+        0,
+        2,
+        0,
+        3,
+        0,
+        4,
+        0,
+        6,
+        0,
+        5,
+        0
+      ]
+    },
+    {
+      "formation_id": 12,
+      "slot_roles": [
+        7,
+        0,
+        1,
+        0,
+        1,
+        0,
+        2,
+        0,
+        3,
+        0,
+        6
+      ]
+    },
+    {
+      "formation_id": 13,
+      "slot_roles": [
+        0,
+        5,
+        0,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ]
+    },
+    {
+      "formation_id": 14,
+      "slot_roles": [
+        5,
+        0,
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "formation_id": 15,
+      "slot_roles": [
+        0,
+        2,
+        0,
+        5,
+        0,
+        7,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "formation_id": 16,
+      "slot_roles": [
+        7,
+        0,
+        3,
+        0,
+        1,
+        0,
+        2,
+        0,
+        8,
+        0,
+        4
+      ]
+    },
+    {
+      "formation_id": 17,
+      "slot_roles": [
+        0,
+        5,
+        0,
+        7,
+        0,
+        6,
+        0,
+        3,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "formation_id": 18,
+      "slot_roles": [
+        8,
+        0,
+        4,
+        0,
+        5,
+        0,
+        7,
+        0,
+        4,
+        0,
+        5
+      ]
+    },
+    {
+      "formation_id": 19,
+      "slot_roles": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        7,
+        0
+      ]
+    },
+    {
+      "formation_id": 20,
+      "slot_roles": [
+        3,
+        0,
+        4,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "formation_id": 21,
+      "slot_roles": [
+        0,
+        21,
+        20,
+        19,
+        18,
+        17,
+        16,
+        15,
+        14,
+        13,
+        12
+      ]
+    },
+    {
+      "formation_id": 22,
+      "slot_roles": [
+        11,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    },
+    {
+      "formation_id": 23,
+      "slot_roles": [
+        21,
+        16,
+        15,
+        17,
+        14,
+        18,
+        19,
+        13,
+        12,
+        11,
+        20
+      ]
+    }
+  ],
+  "red_card_replacement_priority": {
+    "GK": [
+      0,
+      0,
+      0,
+      0,
+      5,
+      5,
+      5,
+      5,
+      0,
+      5,
+      5
+    ],
+    "DF": [
+      0,
+      8,
+      8,
+      6,
+      7,
+      6,
+      7,
+      0,
+      0,
+      0,
+      0
+    ],
+    "MF": [
+      5,
+      5,
+      7,
+      6,
+      7,
+      6,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "FW": [
+      0,
+      5,
+      5,
+      5,
+      5,
+      0,
+      5,
+      5,
+      0,
+      8,
+      8
+    ]
+  }
+}

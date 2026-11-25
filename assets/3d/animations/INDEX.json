@@ -1,0 +1,554 @@
+{
+  "animations": [
+    {
+      "anim_id": 0,
+      "frames": 1,
+      "file": "anim_000_1f.gltf"
+    },
+    {
+      "anim_id": 1,
+      "frames": 21,
+      "file": "anim_001_21f.gltf"
+    },
+    {
+      "anim_id": 2,
+      "frames": 18,
+      "file": "anim_002_18f.gltf"
+    },
+    {
+      "anim_id": 3,
+      "frames": 18,
+      "file": "anim_003_18f.gltf"
+    },
+    {
+      "anim_id": 4,
+      "frames": 14,
+      "file": "anim_004_14f.gltf"
+    },
+    {
+      "anim_id": 5,
+      "frames": 36,
+      "file": "anim_005_36f.gltf"
+    },
+    {
+      "anim_id": 6,
+      "frames": 10,
+      "file": "anim_006_10f.gltf"
+    },
+    {
+      "anim_id": 7,
+      "frames": 10,
+      "file": "anim_007_10f.gltf"
+    },
+    {
+      "anim_id": 8,
+      "frames": 10,
+      "file": "anim_008_10f.gltf"
+    },
+    {
+      "anim_id": 9,
+      "frames": 16,
+      "file": "anim_009_16f.gltf"
+    },
+    {
+      "anim_id": 10,
+      "frames": 13,
+      "file": "anim_010_13f.gltf"
+    },
+    {
+      "anim_id": 11,
+      "frames": 14,
+      "file": "anim_011_14f.gltf"
+    },
+    {
+      "anim_id": 12,
+      "frames": 14,
+      "file": "anim_012_14f.gltf"
+    },
+    {
+      "anim_id": 13,
+      "frames": 17,
+      "file": "anim_013_17f.gltf"
+    },
+    {
+      "anim_id": 14,
+      "frames": 16,
+      "file": "anim_014_16f.gltf"
+    },
+    {
+      "anim_id": 15,
+      "frames": 44,
+      "file": "anim_015_44f.gltf"
+    },
+    {
+      "anim_id": 16,
+      "frames": 23,
+      "file": "anim_016_23f.gltf"
+    },
+    {
+      "anim_id": 17,
+      "frames": 23,
+      "file": "anim_017_23f.gltf"
+    },
+    {
+      "anim_id": 18,
+      "frames": 17,
+      "file": "anim_018_17f.gltf"
+    },
+    {
+      "anim_id": 19,
+      "frames": 12,
+      "file": "anim_019_12f.gltf"
+    },
+    {
+      "anim_id": 20,
+      "frames": 29,
+      "file": "anim_020_29f.gltf"
+    },
+    {
+      "anim_id": 21,
+      "frames": 12,
+      "file": "anim_021_12f.gltf"
+    },
+    {
+      "anim_id": 22,
+      "frames": 9,
+      "file": "anim_022_9f.gltf"
+    },
+    {
+      "anim_id": 23,
+      "frames": 9,
+      "file": "anim_023_9f.gltf"
+    },
+    {
+      "anim_id": 24,
+      "frames": 16,
+      "file": "anim_024_16f.gltf"
+    },
+    {
+      "anim_id": 25,
+      "frames": 18,
+      "file": "anim_025_18f.gltf"
+    },
+    {
+      "anim_id": 26,
+      "frames": 18,
+      "file": "anim_026_18f.gltf"
+    },
+    {
+      "anim_id": 27,
+      "frames": 16,
+      "file": "anim_027_16f.gltf"
+    },
+    {
+      "anim_id": 28,
+      "frames": 12,
+      "file": "anim_028_12f.gltf"
+    },
+    {
+      "anim_id": 29,
+      "frames": 28,
+      "file": "anim_029_28f.gltf"
+    },
+    {
+      "anim_id": 30,
+      "frames": 26,
+      "file": "anim_030_26f.gltf"
+    },
+    {
+      "anim_id": 31,
+      "frames": 27,
+      "file": "anim_031_27f.gltf"
+    },
+    {
+      "anim_id": 32,
+      "frames": 28,
+      "file": "anim_032_28f.gltf"
+    },
+    {
+      "anim_id": 33,
+      "frames": 20,
+      "file": "anim_033_20f.gltf"
+    },
+    {
+      "anim_id": 34,
+      "frames": 14,
+      "file": "anim_034_14f.gltf"
+    },
+    {
+      "anim_id": 35,
+      "frames": 15,
+      "file": "anim_035_15f.gltf"
+    },
+    {
+      "anim_id": 36,
+      "frames": 25,
+      "file": "anim_036_25f.gltf"
+    },
+    {
+      "anim_id": 38,
+      "frames": 16,
+      "file": "anim_038_16f.gltf"
+    },
+    {
+      "anim_id": 39,
+      "frames": 54,
+      "file": "anim_039_54f.gltf"
+    },
+    {
+      "anim_id": 40,
+      "frames": 17,
+      "file": "anim_040_17f.gltf"
+    },
+    {
+      "anim_id": 41,
+      "frames": 29,
+      "file": "anim_041_29f.gltf"
+    },
+    {
+      "anim_id": 42,
+      "frames": 20,
+      "file": "anim_042_20f.gltf"
+    },
+    {
+      "anim_id": 43,
+      "frames": 17,
+      "file": "anim_043_17f.gltf"
+    },
+    {
+      "anim_id": 44,
+      "frames": 47,
+      "file": "anim_044_47f.gltf"
+    },
+    {
+      "anim_id": 45,
+      "frames": 29,
+      "file": "anim_045_29f.gltf"
+    },
+    {
+      "anim_id": 46,
+      "frames": 26,
+      "file": "anim_046_26f.gltf"
+    },
+    {
+      "anim_id": 47,
+      "frames": 4,
+      "file": "anim_047_4f.gltf"
+    },
+    {
+      "anim_id": 48,
+      "frames": 13,
+      "file": "anim_048_13f.gltf"
+    },
+    {
+      "anim_id": 49,
+      "frames": 26,
+      "file": "anim_049_26f.gltf"
+    },
+    {
+      "anim_id": 50,
+      "frames": 24,
+      "file": "anim_050_24f.gltf"
+    },
+    {
+      "anim_id": 52,
+      "frames": 16,
+      "file": "anim_052_16f.gltf"
+    },
+    {
+      "anim_id": 53,
+      "frames": 35,
+      "file": "anim_053_35f.gltf"
+    },
+    {
+      "anim_id": 54,
+      "frames": 35,
+      "file": "anim_054_35f.gltf"
+    },
+    {
+      "anim_id": 73,
+      "frames": 20,
+      "file": "anim_073_20f.gltf"
+    },
+    {
+      "anim_id": 74,
+      "frames": 31,
+      "file": "anim_074_31f.gltf"
+    },
+    {
+      "anim_id": 76,
+      "frames": 26,
+      "file": "anim_076_26f.gltf"
+    },
+    {
+      "anim_id": 77,
+      "frames": 21,
+      "file": "anim_077_21f.gltf"
+    },
+    {
+      "anim_id": 79,
+      "frames": 1,
+      "file": "anim_079_1f.gltf"
+    },
+    {
+      "anim_id": 80,
+      "frames": 1,
+      "file": "anim_080_1f.gltf"
+    },
+    {
+      "anim_id": 83,
+      "frames": 17,
+      "file": "anim_083_17f.gltf"
+    },
+    {
+      "anim_id": 84,
+      "frames": 27,
+      "file": "anim_084_27f.gltf"
+    },
+    {
+      "anim_id": 85,
+      "frames": 15,
+      "file": "anim_085_15f.gltf"
+    },
+    {
+      "anim_id": 86,
+      "frames": 4,
+      "file": "anim_086_4f.gltf"
+    },
+    {
+      "anim_id": 87,
+      "frames": 13,
+      "file": "anim_087_13f.gltf"
+    },
+    {
+      "anim_id": 88,
+      "frames": 6,
+      "file": "anim_088_6f.gltf"
+    },
+    {
+      "anim_id": 89,
+      "frames": 14,
+      "file": "anim_089_14f.gltf"
+    },
+    {
+      "anim_id": 90,
+      "frames": 28,
+      "file": "anim_090_28f.gltf"
+    },
+    {
+      "anim_id": 91,
+      "frames": 2,
+      "file": "anim_091_2f.gltf"
+    },
+    {
+      "anim_id": 92,
+      "frames": 7,
+      "file": "anim_092_7f.gltf"
+    },
+    {
+      "anim_id": 93,
+      "frames": 17,
+      "file": "anim_093_17f.gltf"
+    },
+    {
+      "anim_id": 94,
+      "frames": 7,
+      "file": "anim_094_7f.gltf"
+    },
+    {
+      "anim_id": 95,
+      "frames": 20,
+      "file": "anim_095_20f.gltf"
+    },
+    {
+      "anim_id": 96,
+      "frames": 36,
+      "file": "anim_096_36f.gltf"
+    },
+    {
+      "anim_id": 97,
+      "frames": 24,
+      "file": "anim_097_24f.gltf"
+    },
+    {
+      "anim_id": 98,
+      "frames": 28,
+      "file": "anim_098_28f.gltf"
+    },
+    {
+      "anim_id": 99,
+      "frames": 24,
+      "file": "anim_099_24f.gltf"
+    },
+    {
+      "anim_id": 100,
+      "frames": 28,
+      "file": "anim_100_28f.gltf"
+    },
+    {
+      "anim_id": 101,
+      "frames": 17,
+      "file": "anim_101_17f.gltf"
+    },
+    {
+      "anim_id": 102,
+      "frames": 36,
+      "file": "anim_102_36f.gltf"
+    },
+    {
+      "anim_id": 103,
+      "frames": 36,
+      "file": "anim_103_36f.gltf"
+    },
+    {
+      "anim_id": 106,
+      "frames": 24,
+      "file": "anim_106_24f.gltf"
+    },
+    {
+      "anim_id": 107,
+      "frames": 28,
+      "file": "anim_107_28f.gltf"
+    },
+    {
+      "anim_id": 108,
+      "frames": 26,
+      "file": "anim_108_26f.gltf"
+    },
+    {
+      "anim_id": 109,
+      "frames": 19,
+      "file": "anim_109_19f.gltf"
+    },
+    {
+      "anim_id": 110,
+      "frames": 24,
+      "file": "anim_110_24f.gltf"
+    },
+    {
+      "anim_id": 112,
+      "frames": 43,
+      "file": "anim_112_43f.gltf"
+    },
+    {
+      "anim_id": 113,
+      "frames": 20,
+      "file": "anim_113_20f.gltf"
+    },
+    {
+      "anim_id": 114,
+      "frames": 23,
+      "file": "anim_114_23f.gltf"
+    },
+    {
+      "anim_id": 115,
+      "frames": 18,
+      "file": "anim_115_18f.gltf"
+    },
+    {
+      "anim_id": 116,
+      "frames": 36,
+      "file": "anim_116_36f.gltf"
+    },
+    {
+      "anim_id": 118,
+      "frames": 23,
+      "file": "anim_118_23f.gltf"
+    },
+    {
+      "anim_id": 119,
+      "frames": 23,
+      "file": "anim_119_23f.gltf"
+    }
+  ],
+  "player_records": [
+    {
+      "record": 0,
+      "file": "record_00.gltf"
+    },
+    {
+      "record": 1,
+      "file": "record_01.gltf"
+    },
+    {
+      "record": 2,
+      "file": "record_02.gltf"
+    },
+    {
+      "record": 3,
+      "file": "record_03.gltf"
+    },
+    {
+      "record": 4,
+      "file": "record_04.gltf"
+    },
+    {
+      "record": 5,
+      "file": "record_05.gltf"
+    },
+    {
+      "record": 6,
+      "file": "record_06.gltf"
+    },
+    {
+      "record": 7,
+      "file": "record_07.gltf"
+    },
+    {
+      "record": 8,
+      "file": "record_08.gltf"
+    },
+    {
+      "record": 9,
+      "file": "record_09.gltf"
+    },
+    {
+      "record": 10,
+      "file": "record_10.gltf"
+    },
+    {
+      "record": 11,
+      "file": "record_11.gltf"
+    },
+    {
+      "record": 12,
+      "file": "record_12.gltf"
+    },
+    {
+      "record": 13,
+      "file": "record_13.gltf"
+    },
+    {
+      "record": 14,
+      "file": "record_14.gltf"
+    },
+    {
+      "record": 15,
+      "file": "record_15.gltf"
+    },
+    {
+      "record": 16,
+      "file": "record_16.gltf"
+    },
+    {
+      "record": 17,
+      "file": "record_17.gltf"
+    },
+    {
+      "record": 18,
+      "file": "record_18.gltf"
+    },
+    {
+      "record": 19,
+      "file": "record_19.gltf"
+    },
+    {
+      "record": 20,
+      "file": "record_20.gltf"
+    },
+    {
+      "record": 21,
+      "file": "record_21.gltf"
+    }
+  ]
+}

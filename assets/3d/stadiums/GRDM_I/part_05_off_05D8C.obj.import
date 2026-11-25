@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dd30i6u5w1l5"
+path="res://.godot/imported/part_05_off_05D8C.obj-498059d151c49d2a263e9d51bb5cfbdc.mesh"
+
+[deps]
+
+files=["res://.godot/imported/part_05_off_05D8C.obj-498059d151c49d2a263e9d51bb5cfbdc.mesh"]
+
+source_file="res://assets/3d/stadiums/GRDM_I/part_05_off_05D8C.obj"
+dest_files=["res://.godot/imported/part_05_off_05D8C.obj-498059d151c49d2a263e9d51bb5cfbdc.mesh", "res://.godot/imported/part_05_off_05D8C.obj-498059d151c49d2a263e9d51bb5cfbdc.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

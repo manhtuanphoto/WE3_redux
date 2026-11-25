@@ -1,0 +1,293 @@
+class_name Ball
+extends Node3D
+## Arcade-simulation soccer ball with gravity, bounce, spin, goalpost collision, and dribble lock.
+
+signal goal_detected(scoring_team: int)
+signal out_of_bounds_detected(event_type: String, restart_pos: Vector3, restart_team: int)
+
+enum BallState { STOPPED, AIRBORNE, ROLLING, ATTACHED }
+
+const BALL_RADIUS := 0.16
+const GRAVITY := 24.0
+const GROUND_FRICTION := 1.65
+const AIR_DRAG := 0.28
+
+var state: BallState = BallState.STOPPED
+var vel: Vector3 = Vector3.ZERO
+var angular_spin_y: float = 0.0
+var owner_player: Node3D = null
+var last_touch_player: Node3D = null
+var last_touch_team: int = 0
+var pickup_cooldown: float = 0.0
+var is_active_play: bool = true
+var offside_target: Node3D = null
+var offside_defending_team: int = 0
+
+var _mesh_node: MeshInstance3D
+var _shadow_node: MeshInstance3D
+
+func _ready() -> void:
+	_build_visuals()
+	reset_to_center()
+
+func _build_visuals() -> void:
+	_mesh_node = MeshInstance3D.new()
+	_mesh_node.name = "BallMesh"
+	var obj_res: Variant = load("res://assets/3d/ball.obj")
+	if obj_res is Mesh:
+		_mesh_node.mesh = obj_res
+	else:
+		var sphere := SphereMesh.new()
+		sphere.radius = BALL_RADIUS
+		sphere.height = BALL_RADIUS * 2.0
+		_mesh_node.mesh = sphere
+
+	var mat := StandardMaterial3D.new()
+	if ResourceLoader.exists("res://assets/3d/ball_tex.png"):
+		mat.albedo_texture = load("res://assets/3d/ball_tex.png") as Texture2D
+		mat.albedo_color = Color.WHITE
+		mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	else:
+		mat.albedo_color = Color(0.95, 0.95, 0.93)
+	mat.roughness = 0.45
+	_mesh_node.material_override = mat
+	add_child(_mesh_node)
+
+	# Ground shadow disc so ball height is always readable
+	_shadow_node = MeshInstance3D.new()
+	_shadow_node.name = "BallShadow"
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = BALL_RADIUS * 1.15
+	cyl.bottom_radius = BALL_RADIUS * 1.15
+	cyl.height = 0.01
+	_shadow_node.mesh = cyl
+	var sh_mat := StandardMaterial3D.new()
+	sh_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.42)
+	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_shadow_node.material_override = sh_mat
+	add_child(_shadow_node)
+
+func reset_to_center() -> void:
+	global_position = Vector3(0.0, BALL_RADIUS, 0.0)
+	vel = Vector3.ZERO
+	angular_spin_y = 0.0
+	owner_player = null
+	state = BallState.STOPPED
+	pickup_cooldown = 0.0
+	is_active_play = true
+	_update_shadow()
+
+func place_at(pos: Vector3) -> void:
+	global_position = Vector3(pos.x, BALL_RADIUS, pos.z)
+	vel = Vector3.ZERO
+	angular_spin_y = 0.0
+	owner_player = null
+	state = BallState.STOPPED
+	pickup_cooldown = 0.0
+	_update_shadow()
+
+func set_owner_player(p: Node3D, team_idx: int) -> void:
+	owner_player = p
+	last_touch_player = p
+	last_touch_team = team_idx
+	vel = Vector3.ZERO
+	state = BallState.ATTACHED
+	offside_target = null
+
+func kick(kick_vel: Vector3, kicker: Node3D, team_idx: int, spin_y: float = 0.0) -> void:
+	owner_player = null
+	last_touch_player = kicker
+	last_touch_team = team_idx
+	vel = kick_vel
+	angular_spin_y = spin_y
+	state = BallState.AIRBORNE if kick_vel.y > 0.2 else BallState.ROLLING
+	pickup_cooldown = 0.16
+	offside_target = null
+	SoundFX.play_sfx("kick")
+
+func predict_landing_point(max_steps: int = 45) -> Vector3:
+	# Mirrors WE3 func_8004B2E0: simulate forward to find ball intercept/landing point
+	if owner_player != null or state == BallState.STOPPED:
+		return global_position
+	var sim_pos := global_position
+	var sim_vel := vel
+	var dt := 1.0 / 30.0
+	for _i in range(max_steps):
+		if sim_pos.y > BALL_RADIUS + 0.02 or sim_vel.y > 0.0:
+			sim_vel.y -= GRAVITY * dt
+		sim_pos += sim_vel * dt
+		if sim_pos.y <= BALL_RADIUS:
+			sim_pos.y = BALL_RADIUS
+			if absf(sim_vel.y) < 1.5:
+				return sim_pos
+			sim_vel.y = -sim_vel.y * 0.65
+			sim_vel.x *= 0.8
+			sim_vel.z *= 0.8
+	return sim_pos
+
+func _physics_process(delta: float) -> void:
+	if pickup_cooldown > 0.0:
+		pickup_cooldown = maxf(0.0, pickup_cooldown - delta)
+
+	if owner_player != null and is_instance_valid(owner_player):
+		# Follow ahead of the dribbling player's feet (further ahead when sprinting, like WE3)
+		var fwd := -owner_player.global_transform.basis.z
+		fwd.y = 0.0
+		if fwd.length_squared() < 0.001:
+			fwd = Vector3.FORWARD
+		fwd = fwd.normalized()
+		var p_speed := Vector2(owner_player.vel.x, owner_player.vel.z).length() if "vel" in owner_player else 0.0
+		var lead_dist := lerpf(0.52, 0.76, clampf(p_speed / 7.8, 0.0, 1.0))
+		var target_pos := owner_player.global_position + fwd * lead_dist
+		target_pos.y = BALL_RADIUS
+		var step := target_pos - global_position
+		global_position = global_position.lerp(target_pos, clampf(delta * 22.0, 0.0, 1.0))
+		vel = step / maxf(delta, 0.001)
+		_roll_visual(vel, delta)
+		_update_shadow()
+		return
+
+	# Free-flight / rolling physics synced 1:1 with we3_native_engine/src/we3_physics.c
+	var pos := global_position
+	var dt60 := delta * 60.0
+	if pos.y > BALL_RADIUS + 0.005 or vel.y > 0.0:
+		state = BallState.AIRBORNE
+		vel.y -= GRAVITY * delta
+		# Magnus / curve effect (we3_physics.c: 0.18 perp to XZ vel)
+		var speed_xz := Vector2(vel.x, vel.z).length()
+		if speed_xz > 0.1 and absf(angular_spin_y) > 0.01:
+			var nx := -vel.z / speed_xz
+			var nz := vel.x / speed_xz
+			vel.x += nx * angular_spin_y * 0.18 * delta * 10.0
+			vel.z += nz * angular_spin_y * 0.18 * delta * 10.0
+		var air_d := pow(0.992, dt60)
+		vel.x *= air_d
+		vel.z *= air_d
+	else:
+		pos.y = BALL_RADIUS
+		vel.y = 0.0
+		angular_spin_y *= pow(0.94, dt60)
+		var ground_d := pow(0.968, dt60)
+		vel.x *= ground_d
+		vel.z *= ground_d
+		if Vector2(vel.x, vel.z).length() < 0.12:
+			vel.x = 0.0
+			vel.z = 0.0
+			state = BallState.STOPPED
+		else:
+			state = BallState.ROLLING
+
+	pos += vel * delta
+
+	# WE3 angle-dependent bounce restitution (func_8004BAA4.s)
+	if pos.y < BALL_RADIUS:
+		pos.y = BALL_RADIUS
+		if vel.y < -1.4:
+			var h_spd := Vector2(vel.x, vel.z).length()
+			var k := minf(8.0, h_spd / (absf(vel.y) + 1.0))
+			var h_keep := 1.0 - (64.0 - 4.0 * k) / 256.0
+			var v_keep := 1.0 - (96.0 - 4.0 * k) / 256.0
+			vel.x *= h_keep
+			vel.z *= h_keep
+			vel.y = -vel.y * v_keep
+			angular_spin_y *= 0.65
+		else:
+			vel.y = 0.0
+			state = BallState.ROLLING
+
+	# Goalpost & crossbar collisions
+	pos = _collide_goalposts(pos)
+
+	global_position = pos
+	_roll_visual(vel, delta)
+	_update_shadow()
+
+	if is_active_play:
+		_check_pitch_boundaries(pos)
+
+func _roll_visual(v: Vector3, delta: float) -> void:
+	if _mesh_node == null:
+		return
+	var horiz := Vector3(v.x, 0.0, v.z)
+	var speed := horiz.length()
+	if speed > 0.05:
+		var axis := Vector3.UP.cross(horiz.normalized()).normalized()
+		if axis.length_squared() > 0.01:
+			_mesh_node.rotate(axis, (speed / BALL_RADIUS) * delta)
+
+func _update_shadow() -> void:
+	if _shadow_node == null:
+		return
+	_shadow_node.global_position = Vector3(global_position.x, 0.02, global_position.z)
+	var height_factor := clampf(1.0 - (global_position.y - BALL_RADIUS) * 0.12, 0.35, 1.0)
+	_shadow_node.scale = Vector3(height_factor, 1.0, height_factor)
+
+func _collide_goalposts(pos: Vector3) -> Vector3:
+	var post_r := 0.06 + BALL_RADIUS
+	for gx: float in [-PitchBuilder.HALF_LEN, PitchBuilder.HALF_LEN]:
+		# Left and right posts
+		if pos.y < PitchBuilder.GOAL_HEIGHT + BALL_RADIUS:
+			for gz: float in [-PitchBuilder.GOAL_HALF_W, PitchBuilder.GOAL_HALF_W]:
+				var dx := pos.x - gx
+				var dz := pos.z - gz
+				var dist := sqrt(dx * dx + dz * dz)
+				if dist < post_r and dist > 0.0001:
+					var nx := dx / dist
+					var nz := dz / dist
+					pos.x = gx + nx * post_r
+					pos.z = gz + nz * post_r
+					var dot := vel.x * nx + vel.z * nz
+					if dot < 0.0:
+						vel.x -= 1.65 * dot * nx
+						vel.z -= 1.65 * dot * nz
+						SoundFX.play_sfx("post")
+		# Crossbar
+		if absf(pos.z) <= PitchBuilder.GOAL_HALF_W + BALL_RADIUS:
+			var dx := pos.x - gx
+			var dy := pos.y - PitchBuilder.GOAL_HEIGHT
+			var dist := sqrt(dx * dx + dy * dy)
+			if dist < post_r and dist > 0.0001:
+				var nx := dx / dist
+				var ny := dy / dist
+				pos.x = gx + nx * post_r
+				pos.y = PitchBuilder.GOAL_HEIGHT + ny * post_r
+				var dot := vel.x * nx + vel.y * ny
+				if dot < 0.0:
+					vel.x -= 1.65 * dot * nx
+					vel.y -= 1.65 * dot * ny
+	return pos
+
+func _check_pitch_boundaries(pos: Vector3) -> void:
+	# Goal detection: Home (team 0) attacks +X, Away (team 1) attacks -X
+	if absf(pos.z) < PitchBuilder.GOAL_HALF_W - BALL_RADIUS * 0.3 and pos.y < PitchBuilder.GOAL_HEIGHT:
+		if pos.x > PitchBuilder.HALF_LEN + BALL_RADIUS:
+			is_active_play = false
+			goal_detected.emit(0) # Home scored!
+			return
+		elif pos.x < -PitchBuilder.HALF_LEN - BALL_RADIUS:
+			is_active_play = false
+			goal_detected.emit(1) # Away scored!
+			return
+
+	# Touchline (Throw-in)
+	if absf(pos.z) > PitchBuilder.HALF_WID + BALL_RADIUS:
+		is_active_play = false
+		var clamped_x := clampf(pos.x, -PitchBuilder.HALF_LEN + 0.5, PitchBuilder.HALF_LEN - 0.5)
+		var edge_z := signf(pos.z) * (PitchBuilder.HALF_WID - 0.3)
+		out_of_bounds_detected.emit("throw_in", Vector3(clamped_x, 0.0, edge_z), 1 - last_touch_team)
+		return
+
+	# Goal line (Corner or Goal Kick)
+	if absf(pos.x) > PitchBuilder.HALF_LEN + BALL_RADIUS:
+		is_active_play = false
+		var defending_team := 1 if pos.x > 0.0 else 0
+		if last_touch_team == defending_team:
+			# Corner kick for attacking team
+			var corner_x := signf(pos.x) * (PitchBuilder.HALF_LEN - 0.6)
+			var corner_z := signf(pos.z) * (PitchBuilder.HALF_WID - 0.6)
+			out_of_bounds_detected.emit("corner", Vector3(corner_x, 0.0, corner_z), 1 - defending_team)
+		else:
+			# Goal kick for defending team
+			var gk_x := signf(pos.x) * (PitchBuilder.HALF_LEN - 5.5)
+			out_of_bounds_detected.emit("goal_kick", Vector3(gk_x, 0.0, 0.0), defending_team)

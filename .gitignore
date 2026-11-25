@@ -1,0 +1,12 @@
+# Godot 4+ cache & build artifacts
+.godot/
+.mono/
+export_presets.cfg
+*.translation
+
+# OS / Editor junk
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.log

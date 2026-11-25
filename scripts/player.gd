@@ -1,0 +1,1060 @@
+class_name Player
+extends Node3D
+## Represents a single footballer with WE3 12-bone animation, kit texture, and human/AI control.
+
+enum Role { GK, DF, MF, FW }
+
+const WALK_SPEED := 5.6
+const SPRINT_SPEED := 7.8
+const DRIBBLE_SPEED := 5.2
+const ACCEL := 26.0
+const TURN_SPEED := 14.0
+const PICKUP_RADIUS := 0.85
+
+@export var team_side: int = 0       # 0 = Home (attacks +X), 1 = Away (attacks -X)
+@export var team_id: int = 0         # Index into GameData.teams
+@export var slot_index: int = 0      # 0..10
+@export var player_name: String = "Player"
+@export var role: Role = Role.MF
+@export var home_anchor: Vector3 = Vector3.ZERO
+
+var is_human: bool = false
+var is_controlled: bool = false
+var yellow_cards: int = 0
+var is_sent_off: bool = false
+var vel: Vector3 = Vector3.ZERO
+var stamina: float = 100.0
+var action_lock_timer: float = 0.0
+var tackle_timer: float = 0.0
+var tackle_dir: Vector3 = Vector3.FORWARD
+var shot_charge: float = 0.0
+var is_charging_shot: bool = false
+var _pending_kick_timer: float = 0.0
+var _pending_kick_vel: Vector3 = Vector3.ZERO
+var _pending_kick_spin: float = 0.0
+var _pending_is_shot: bool = false
+var _one_touch_action: String = ""
+var _one_touch_timer: float = 0.0
+var _ai_hold_timer: float = 0.0
+
+var _model_root: Node3D = null
+var _anim_player: AnimationPlayer = null
+var _current_anim: String = ""
+var _ring_mesh: MeshInstance3D = null
+var _shadow_mesh: MeshInstance3D = null
+var _name_label: Label3D = null
+var _ball: Ball = null
+var _all_players: Array[Player] = []
+
+func setup(p_team_side: int, p_team_id: int, p_slot: int, p_name: String, p_role: Role, p_anchor: Vector3, p_ball: Ball, p_all_players: Array[Player]) -> void:
+	team_side = p_team_side
+	team_id = p_team_id
+	slot_index = p_slot
+	player_name = p_name
+	role = p_role
+	home_anchor = p_anchor
+	_ball = p_ball
+	_all_players = p_all_players
+
+func _ready() -> void:
+	_build_model()
+	_build_indicators()
+
+func _build_model() -> void:
+	var rec_idx := (team_side * 11 + slot_index) % 22
+	var rec_path := "res://assets/3d/players/record_%02d.gltf" % rec_idx
+	if not ResourceLoader.exists(rec_path):
+		rec_path = "res://assets/3d/players/record_00.gltf"
+	var packed := load(rec_path) as PackedScene
+	if packed != null:
+		_model_root = packed.instantiate()
+		# WE3 models face +Z; rotate 180 deg so -Z is forward in Godot
+		_model_root.rotation.y = PI
+		add_child(_model_root)
+		_apply_kit_material(_model_root)
+		_anim_player = _find_anim_player(_model_root)
+		if _anim_player != null:
+			var lib := PlayerAnimCache.get_library()
+			if not _anim_player.has_animation_library("we3"):
+				_anim_player.add_animation_library("we3", lib)
+			_play_anim("idle")
+
+func _apply_kit_material(root: Node) -> void:
+	var kit_tex := GameData.get_team_kit_texture(team_id)
+	var extra_tex := GameData.get_team_extra_kit_texture(team_id)
+	var jersey_col := Color(0.95, 0.78, 0.12) if (role == Role.GK and team_side == 0) else (Color(0.18, 0.75, 0.42) if role == Role.GK else GameData.get_team_primary_color(team_id))
+	var skin_col := Color(0.88, 0.68, 0.54)
+	var boot_col := Color(0.10, 0.10, 0.12)
+
+	var skin_variants := [
+		"res://assets/textures/players/skin_black_hair.png",
+		"res://assets/textures/players/skin_brown_hair.png",
+		"res://assets/textures/players/skin_blonde_hair.png",
+	]
+	var skin_path: String = skin_variants[(team_id * 7 + slot_index) % 3]
+	var skin_tex: Texture2D = load(skin_path) as Texture2D if ResourceLoader.exists(skin_path) else null
+
+	# Authentic WE3 256x256 unified atlas:
+	#   Top-Left  (0, 0)   = tpage 512 (tex_XX_<Team>.png: jersey, shorts, socks, #2)
+	#   Top-Right (128, 0) = tpage 576 (tex_XX_blk01_128x128.png: real back numbers 3..22 + GK kit)
+	#   Bot-Left  (0, 128) = tpage 384 (skin_*.png: face, hair, neck, arms, knees)
+	var atlas_tex := _build_player_atlas_texture(kit_tex, extra_tex, skin_tex, jersey_col, skin_col)
+	var mat_atlas := StandardMaterial3D.new()
+	mat_atlas.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat_atlas.albedo_texture = atlas_tex
+	mat_atlas.albedo_color = Color.WHITE
+	mat_atlas.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	mat_atlas.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	var mat_boots := StandardMaterial3D.new()
+	mat_boots.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	if ResourceLoader.exists("res://assets/3d/players/boots_tex.png"):
+		mat_boots.albedo_texture = load("res://assets/3d/players/boots_tex.png") as Texture2D
+		mat_boots.albedo_color = Color.WHITE
+		mat_boots.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	else:
+		mat_boots.albedo_color = boot_col
+	mat_boots.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	_attach_boots(root, mat_boots)
+	_apply_part_mats_recursive(root, mat_atlas, mat_atlas, mat_atlas, mat_atlas, mat_atlas, mat_boots)
+
+func _build_player_atlas_texture(kit_tex: Texture2D, extra_tex: Texture2D, skin_tex: Texture2D, fallback_kit: Color, fallback_skin: Color) -> ImageTexture:
+	var atlas := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	atlas.fill_rect(Rect2i(0, 0, 256, 128), fallback_kit)
+	atlas.fill_rect(Rect2i(0, 128, 256, 128), fallback_skin)
+	# For GK (rec 0), top-left uses extra_tex (GK green/alt kit); for outfielders, top-left = kit_tex, top-right = extra_tex (real back numbers 3..22!)
+	var tl_tex := extra_tex if (role == Role.GK and extra_tex != null) else kit_tex
+	if tl_tex != null:
+		var ki := tl_tex.get_image()
+		if ki != null:
+			ki.convert(Image.FORMAT_RGBA8)
+			atlas.blit_rect(ki, Rect2i(0, 0, mini(128, ki.get_width()), mini(128, ki.get_height())), Vector2i(0, 0))
+	if extra_tex != null:
+		var ei := extra_tex.get_image()
+		if ei != null:
+			ei.convert(Image.FORMAT_RGBA8)
+			atlas.blit_rect(ei, Rect2i(0, 0, mini(128, ei.get_width()), mini(128, ei.get_height())), Vector2i(128, 0))
+	if skin_tex != null:
+		var si := skin_tex.get_image()
+		if si != null:
+			si.convert(Image.FORMAT_RGBA8)
+			atlas.blit_rect(si, Rect2i(0, 0, mini(128, si.get_width()), mini(128, si.get_height())), Vector2i(0, 128))
+			atlas.blit_rect(si, Rect2i(0, 0, mini(128, si.get_width()), mini(128, si.get_height())), Vector2i(128, 128))
+	return ImageTexture.create_from_image(atlas)
+
+func _stamp_back_number(atlas: Image, num: int) -> void:
+	# Sample original digit color from the template '2' (x=62..72, y=40..55) vs clean jersey edge (x=60, y=44)
+	var ref_bg := atlas.get_pixel(60, 44)
+	var num_col := Color(0.05, 0.35, 0.12)
+	var best_diff := 0.0
+	for y in range(40, 55):
+		for x in range(62, 73):
+			var c := atlas.get_pixel(x, y)
+			var d := absf(c.r - ref_bg.r) + absf(c.g - ref_bg.g) + absf(c.b - ref_bg.b)
+			if d > best_diff:
+				best_diff = d
+				num_col = c
+	# Erase template '2' row-by-row using each row's own left/right jersey color so shading gradient is preserved!
+	for y in range(39, 57):
+		var c_left := atlas.get_pixel(59, y)
+		var c_right := atlas.get_pixel(74, y)
+		for x in range(61, 74):
+			var t := float(x - 61) / 12.0
+			atlas.set_pixel(x, y, c_left.lerp(c_right, t))
+	const DIGITS := {
+		"0": ["111", "101", "101", "101", "111"],
+		"1": ["010", "110", "010", "010", "111"],
+		"2": ["111", "001", "111", "100", "111"],
+		"3": ["111", "001", "111", "001", "111"],
+		"4": ["101", "101", "111", "001", "001"],
+		"5": ["111", "100", "111", "001", "111"],
+		"6": ["111", "100", "111", "101", "111"],
+		"7": ["111", "001", "001", "010", "010"],
+		"8": ["111", "101", "111", "101", "111"],
+		"9": ["111", "101", "111", "001", "111"],
+	}
+	var s := str(clampi(num, 1, 99))
+	var scale_px := 2
+	var total_w := s.length() * (3 * scale_px) + (s.length() - 1) * 1
+	var start_x := 67 - total_w / 2
+	var start_y := 42
+	for ci in range(s.length()):
+		var glyph: Array = DIGITS.get(s[ci], DIGITS["1"])
+		var ox := start_x + ci * (3 * scale_px + 1)
+		for row in range(5):
+			for col in range(3):
+				if glyph[row][col] == "1":
+					atlas.fill_rect(Rect2i(ox + col * scale_px, start_y + row * scale_px, scale_px, scale_px), num_col)
+
+func _pick_hair_color(tid: int, slot: int) -> Color:
+	const HAIR_PALETTE := [
+		Color(0.08, 0.07, 0.06), # Black
+		Color(0.22, 0.14, 0.08), # Dark Brown
+		Color(0.38, 0.24, 0.12), # Chestnut
+		Color(0.75, 0.60, 0.28), # Blonde
+		Color(0.12, 0.10, 0.09), # Charcoal
+	]
+	return HAIR_PALETTE[(tid * 7 + slot * 3) % HAIR_PALETTE.size()]
+
+func _create_head_hair_material(skin_col: Color, hair_col: Color) -> ShaderMaterial:
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode cull_disabled;
+uniform vec4 skin_color : source_color;
+uniform vec4 hair_color : source_color;
+varying vec3 local_pos;
+void vertex() {
+	local_pos = VERTEX;
+}
+void fragment() {
+	// Top and back of 00_Head mesh are hair; front face is skin
+	bool is_hair = (local_pos.y > 0.082) || (local_pos.z < -0.022 && local_pos.y > 0.005);
+	ALBEDO = is_hair ? hair_color.rgb : skin_color.rgb;
+	ROUGHNESS = is_hair ? 0.85 : 0.68;
+}
+"""
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	sm.set_shader_parameter("skin_color", skin_col)
+	sm.set_shader_parameter("hair_color", hair_col)
+	return sm
+
+func _attach_boots(root: Node, mat_boots: Material) -> void:
+	var boot_r_mesh: Variant = load("res://assets/3d/players/tmd_60_off_0E328_v8_p5.obj")
+	var boot_l_mesh: Variant = load("res://assets/3d/players/tmd_61_off_0E45C_v8_p5.obj")
+	var r_foot := root.find_child("08_R_Foot", true, false)
+	if r_foot != null and boot_r_mesh is Mesh:
+		var mi_r := MeshInstance3D.new()
+		mi_r.name = "BootMesh_R"
+		mi_r.mesh = boot_r_mesh
+		mi_r.material_override = mat_boots
+		r_foot.add_child(mi_r)
+	var l_foot := root.find_child("11_L_Foot", true, false)
+	if l_foot != null and boot_l_mesh is Mesh:
+		var mi_l := MeshInstance3D.new()
+		mi_l.name = "BootMesh_L"
+		mi_l.mesh = boot_l_mesh
+		mi_l.material_override = mat_boots
+		l_foot.add_child(mi_l)
+
+func _apply_part_mats_recursive(n: Node, mat_jersey: Material, mat_shorts: Material, mat_socks: Material, mat_skin: Material, mat_head: Material, mat_boots: Material) -> void:
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		var bname := mi.name
+		if bname.begins_with("00_"):
+			mi.material_override = mat_head
+		elif bname.begins_with("03_") or bname.begins_with("05_"):
+			mi.material_override = mat_skin
+		elif bname.begins_with("06_") or bname.begins_with("09_"):
+			mi.material_override = mat_shorts
+		elif bname.begins_with("07_") or bname.begins_with("10_"):
+			mi.material_override = mat_socks
+		elif bname.begins_with("08_") or bname.begins_with("11_"):
+			mi.material_override = mat_boots
+		else:
+			mi.material_override = mat_jersey
+	for c in n.get_children():
+		_apply_part_mats_recursive(c, mat_jersey, mat_shorts, mat_socks, mat_skin, mat_head, mat_boots)
+
+func _build_indicators() -> void:
+	# Ground shadow
+	_shadow_mesh = MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.36
+	cyl.bottom_radius = 0.36
+	cyl.height = 0.01
+	_shadow_mesh.mesh = cyl
+	var sh_mat := StandardMaterial3D.new()
+	sh_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.35)
+	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_shadow_mesh.material_override = sh_mat
+	_shadow_mesh.position = Vector3(0.0, 0.02, 0.0)
+	add_child(_shadow_mesh)
+
+	# Controlled player ring
+	_ring_mesh = MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.44
+	torus.outer_radius = 0.56
+	torus.rings = 16
+	torus.ring_segments = 12
+	_ring_mesh.mesh = torus
+	var r_mat := StandardMaterial3D.new()
+	r_mat.albedo_color = Color(0.15, 0.92, 1.0) if team_side == 0 else Color(1.0, 0.35, 0.25)
+	r_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ring_mesh.material_override = r_mat
+	_ring_mesh.position = Vector3(0.0, 0.03, 0.0)
+	_ring_mesh.visible = false
+	add_child(_ring_mesh)
+
+	_name_label = Label3D.new()
+	_name_label.text = player_name
+	_name_label.font_size = 36
+	_name_label.pixel_size = 0.008
+	_name_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_name_label.modulate = Color(1.0, 0.95, 0.45)
+	_name_label.outline_size = 6
+	_name_label.position = Vector3(0.0, 2.25, 0.0)
+	_name_label.visible = false
+	add_child(_name_label)
+
+func set_controlled(val: bool) -> void:
+	is_controlled = val
+	if _ring_mesh != null:
+		_ring_mesh.visible = val
+	if _name_label != null:
+		_name_label.visible = val
+
+func _play_anim(anim_key: String, blend: float = 0.12, speed_scale: float = 1.0) -> void:
+	if _anim_player == null:
+		return
+	_anim_player.speed_scale = speed_scale
+	if _current_anim == anim_key:
+		return
+	var full_name := "we3/" + anim_key
+	if _anim_player.has_animation(full_name):
+		_anim_player.play(full_name, blend)
+		_current_anim = anim_key
+
+func _find_anim_player(n: Node) -> AnimationPlayer:
+	if n is AnimationPlayer:
+		return n
+	for c in n.get_children():
+		var found := _find_anim_player(c)
+		if found != null:
+			return found
+	return null
+
+func has_ball() -> bool:
+	return _ball != null and _ball.owner_player == self
+
+func _physics_process(delta: float) -> void:
+	if is_sent_off:
+		return
+	if MatchState.phase == MatchState.Phase.FULLTIME:
+		vel = Vector3.ZERO
+		var won := (team_side == 0 and MatchState.home_score > MatchState.away_score) or (team_side == 1 and MatchState.away_score > MatchState.home_score)
+		_play_anim("ending_celebrate" if won else "idle")
+		return
+
+	if MatchState.phase == MatchState.Phase.PAUSED or MatchState.phase == MatchState.Phase.HALFTIME:
+		return
+
+	if MatchState.phase == MatchState.Phase.GOAL_CELEBRATION:
+		vel = Vector3.ZERO
+		if team_side == MatchState.last_touch_team:
+			const CEL_ANIMS := ["celebrate", "celebrate_alt", "celebrate_jump", "celebrate_3", "celebrate_4"]
+			_play_anim(CEL_ANIMS[slot_index % CEL_ANIMS.size()])
+		else:
+			_play_anim("idle")
+		return
+
+	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
+		vel = Vector3.ZERO
+		_play_anim("idle")
+		return
+
+	if action_lock_timer > 0.0:
+		action_lock_timer = maxf(0.0, action_lock_timer - delta)
+	if _one_touch_timer > 0.0:
+		_one_touch_timer = maxf(0.0, _one_touch_timer - delta)
+		if _one_touch_timer <= 0.0:
+			_one_touch_action = ""
+
+	if _pending_kick_timer > 0.0:
+		_pending_kick_timer -= delta
+		if _pending_kick_timer <= 0.0 and has_ball():
+			_ball.kick(_pending_kick_vel, self, team_side, _pending_kick_spin)
+			if _pending_is_shot:
+				MatchState.shots[team_side] += 1
+			else:
+				MatchState.passes_completed[team_side] += 1
+
+	if tackle_timer > 0.0:
+		tackle_timer = maxf(0.0, tackle_timer - delta)
+		# WE3 func_80040324.c: full slide first half, 20% grass friction decay second half
+		if tackle_timer > 0.16:
+			vel = tackle_dir * 8.4
+		else:
+			vel *= pow(0.8, delta * 30.0)
+		_move_and_clamp(delta)
+		_try_pickup_ball()
+		if tackle_timer <= 0.0:
+			_play_anim("recover", 0.08)
+		return
+
+	if is_controlled and is_human:
+		_process_human(delta)
+	else:
+		_process_ai(delta)
+
+	_move_and_clamp(delta)
+	_try_pickup_ball()
+	_update_locomotion_anim()
+
+func _process_human(delta: float) -> void:
+	var input_vec := Vector2(
+		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
+		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
+	)
+	var move_dir := Vector3(input_vec.x, 0.0, input_vec.y)
+	if move_dir.length() > 1.0:
+		move_dir = move_dir.normalized()
+
+	var sprinting := Input.is_action_pressed("sprint") and stamina > 5.0 and move_dir.length() > 0.1
+	# WE3 Knock-on burst (func_80027140.c): pressing sprint while dribbling knocks ball ahead
+	if has_ball() and Input.is_action_just_pressed("sprint") and stamina > 10.0 and action_lock_timer <= 0.0:
+		var ko_dir := move_dir if move_dir.length() > 0.1 else -global_transform.basis.z
+		ko_dir.y = 0.0
+		_ball.kick(ko_dir.normalized() * 10.2 + Vector3(0.0, 0.35, 0.0), self, team_side)
+		stamina = maxf(0.0, stamina - 4.0)
+
+	if sprinting:
+		stamina = maxf(0.0, stamina - 18.0 * delta)
+	else:
+		stamina = minf(100.0, stamina + 12.0 * delta)
+
+	var max_spd := SPRINT_SPEED if sprinting else (DRIBBLE_SPEED if has_ball() else WALK_SPEED)
+	# WE3 Sprint Turn Limit (func_800259F0.c): cap speed when turning 46..134 deg while sprinting
+	var turn_rate := TURN_SPEED
+	if sprinting and Vector2(vel.x, vel.z).length() > 4.0 and move_dir.length() > 0.1:
+		var cur_dir := Vector3(vel.x, 0.0, vel.z).normalized()
+		var dot_turn := cur_dir.dot(move_dir)
+		if dot_turn > 0.7:
+			turn_rate = TURN_SPEED * 0.55
+		elif dot_turn > -0.7:
+			max_spd = minf(max_spd, 5.6)
+
+	if action_lock_timer > 0.0:
+		max_spd *= 0.35
+
+	var target_vel := move_dir * max_spd
+	# WE3 sharp-turn brake (func_80054A68.c): >90 deg reversal at speed triggers anim 14
+	if move_dir.length() > 0.5 and Vector2(vel.x, vel.z).length() > 4.4:
+		var cur_dir := Vector3(vel.x, 0.0, vel.z).normalized()
+		if cur_dir.dot(move_dir) < -0.25:
+			_play_anim("turn_brake", 0.05)
+			action_lock_timer = 0.16
+			vel *= 0.45
+
+	vel = vel.lerp(target_vel, clampf(ACCEL * delta, 0.0, 1.0))
+
+	if move_dir.length() > 0.1:
+		_face_direction_rate(move_dir, delta, turn_rate)
+
+	# Ball actions when in possession
+	if has_ball() and action_lock_timer <= 0.0:
+		if Input.is_action_just_pressed("pass_short"):
+			_perform_pass(move_dir, false, false)
+		elif Input.is_action_just_pressed("pass_through"):
+			_perform_pass(move_dir, true, false)
+		elif Input.is_action_just_pressed("pass_loft"):
+			_perform_pass(move_dir, false, true)
+		elif Input.is_action_just_pressed("shoot"):
+			is_charging_shot = true
+			shot_charge = 0.2
+		elif is_charging_shot and Input.is_action_pressed("shoot"):
+			shot_charge = minf(1.0, shot_charge + 1.35 * delta)
+		elif is_charging_shot and Input.is_action_just_released("shoot"):
+			_perform_shoot(move_dir, shot_charge)
+			is_charging_shot = false
+			shot_charge = 0.0
+	else:
+		is_charging_shot = false
+		shot_charge = 0.0
+		# WE3 One-Touch buffer (SUT_MOT_CHAM_CHON_CHAN_VA_NE_BONG_WE3.md)
+		if Input.is_action_just_pressed("pass_short"):
+			_one_touch_action = "pass_short"
+			_one_touch_timer = 0.35
+		elif Input.is_action_just_pressed("pass_through"):
+			_one_touch_action = "pass_through"
+			_one_touch_timer = 0.35
+		elif Input.is_action_just_pressed("shoot") and action_lock_timer <= 0.0:
+			if _ball != null and global_position.distance_to(_ball.global_position) < 3.2 and _ball.owner_player == null:
+				_one_touch_action = "shoot"
+				_one_touch_timer = 0.35
+			else:
+				_perform_slide_tackle(move_dir)
+
+func _process_ai(delta: float) -> void:
+	if _ball == null:
+		return
+	if action_lock_timer > 0.0 or _pending_kick_timer > 0.0:
+		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+		return
+
+	if role == Role.GK:
+		_process_gk_ai(delta)
+		return
+
+	var attack_dir := 1.0 if team_side == 0 else -1.0
+	var opp_goal := Vector3(attack_dir * PitchBuilder.HALF_LEN, 0.0, 0.0)
+
+	if has_ball():
+		_ai_hold_timer += delta
+		# Decision scoring: Shoot (only in good angle), Cross (only if teammate in box), Pass to real open teammate, or Dribble
+		var dist_to_goal := global_position.distance_to(opp_goal)
+		if dist_to_goal < 23.5 and absf(global_position.z) < 16.5:
+			# Aim toward far corner away from opponent GK
+			var corner_z := -2.4 if global_position.z >= 0.0 else 2.4
+			var aim_pt := Vector3(attack_dir * PitchBuilder.HALF_LEN, 0.0, corner_z)
+			_perform_shoot((aim_pt - global_position).normalized(), randf_range(0.62, 0.92))
+			_ai_hold_timer = 0.0
+			return
+
+		# Wing cross into the penalty box (only if a teammate is inside/near box)
+		if _ai_hold_timer > 0.25 and (global_position.x * attack_dir) > 34.0 and absf(global_position.z) > 15.0:
+			var box_dir := (Vector3(attack_dir * 42.0, 0.0, 0.0) - global_position).normalized()
+			if _find_pass_target(box_dir, false) != null:
+				_perform_pass(box_dir, false, true)
+				_ai_hold_timer = 0.0
+				return
+
+		var nearest_opp := _find_nearest_opponent(global_position)
+		var opp_dist := nearest_opp.global_position.distance_to(global_position) if nearest_opp != null else 99.0
+
+		# Real WE3 func_80033B88.c: in own defensive third (<-27.9m) under <=3.25m pressure & facing away (>=112.5 deg) -> clear to nearest touchline!
+		var in_own_def_third := (global_position.x * attack_dir) < -27.9
+		if in_own_def_third and opp_dist <= 3.25:
+			var fwd := -global_transform.basis.z
+			fwd.y = 0.0
+			var facing_atk := fwd.normalized().dot(Vector3(attack_dir, 0.0, 0.0)) if fwd.length_squared() > 0.01 else 1.0
+			if facing_atk < -0.38:
+				var touch_z := PitchBuilder.HALF_WID if global_position.z >= 0.0 else -PitchBuilder.HALF_WID
+				var clear_dir := (Vector3(global_position.x + attack_dir * 8.0, 0.0, touch_z) - global_position).normalized()
+				_perform_pass(clear_dir, false, true)
+				_ai_hold_timer = 0.0
+				return
+
+		# Avoid instant hot-potato passing: hold/dribble >=0.38s unless under immediate pressure (<2.6m)
+		var urgent_pass := opp_dist < 2.6
+		var can_pass := urgent_pass or _ai_hold_timer >= 0.38
+		var should_pass := opp_dist < 5.5 or (role == Role.DF and opp_dist < 8.5)
+		if can_pass and (should_pass or (role != Role.FW and _ai_hold_timer >= 0.85)):
+			var open_mate := _find_best_open_teammate(attack_dir)
+			if open_mate != null:
+				var mate_ahead := (open_mate.global_position.x - global_position.x) * attack_dir > 5.0
+				if urgent_pass or should_pass or mate_ahead:
+					var use_through := open_mate.role == Role.FW and (open_mate.global_position.x * attack_dir) > (global_position.x * attack_dir) + 4.0
+					_kick_pass_to_target(open_mate, use_through, false)
+					_ai_hold_timer = 0.0
+					return
+
+		# Dribble toward goal, steering slightly away from nearest opponent if close
+		var dir := (opp_goal - global_position).normalized()
+		if nearest_opp != null and opp_dist < 5.5:
+			var away := (global_position - nearest_opp.global_position)
+			away.y = 0.0
+			if away.length_squared() > 0.01:
+				dir = (dir * 0.62 + away.normalized() * 0.38).normalized()
+		vel = vel.lerp(dir * DRIBBLE_SPEED, clampf(ACCEL * delta, 0.0, 1.0))
+		_face_direction(dir, delta)
+		return
+
+	_ai_hold_timer = 0.0
+
+	# Off-ball AI (role-aware + WE3 func_800807F0 predictive path-cutting)
+	var team_has_ball: bool = _ball.owner_player != null and (_ball.owner_player as Player).team_side == team_side
+	var team_in_attack: bool = team_has_ball or (_ball.owner_player == null and _ball.last_touch_team == team_side)
+	var target_pos := home_anchor
+
+	if _ball.owner_player == null and _is_closest_presser():
+		target_pos = _ball.predict_landing_point(20)
+	elif team_in_attack:
+		var offside_lim := _get_offside_line_x(attack_dir)
+		match role:
+			Role.DF:
+				var df_min_x := -PitchBuilder.HALF_LEN + 6.0 if attack_dir > 0.0 else -6.0
+				var df_max_x := 6.0 if attack_dir > 0.0 else PitchBuilder.HALF_LEN - 6.0
+				target_pos.x = clampf(lerpf(home_anchor.x, _ball.global_position.x - attack_dir * 16.0, 0.45), df_min_x, df_max_x)
+				target_pos.z = lerpf(home_anchor.z, _ball.global_position.z, 0.25)
+			Role.MF:
+				target_pos.x = clampf(lerpf(home_anchor.x, _ball.global_position.x + attack_dir * 12.0, 0.45), -PitchBuilder.HALF_LEN + 8.0, PitchBuilder.HALF_LEN - 8.0)
+				target_pos.z = lerpf(home_anchor.z, _ball.global_position.z, 0.35)
+			Role.FW:
+				# Attack space behind midfield while staying onside
+				var desired_x := lerpf(home_anchor.x, _ball.global_position.x + attack_dir * 20.0, 0.55)
+				if attack_dir > 0.0:
+					target_pos.x = clampf(minf(desired_x, offside_lim - 1.2), -PitchBuilder.HALF_LEN + 10.0, PitchBuilder.HALF_LEN - 6.0)
+				else:
+					target_pos.x = clampf(maxf(desired_x, offside_lim + 1.2), -PitchBuilder.HALF_LEN + 6.0, PitchBuilder.HALF_LEN - 10.0)
+				target_pos.z = home_anchor.z * 0.85
+	else:
+		if _is_closest_presser():
+			if _ball.owner_player != null:
+				var carrier := _ball.owner_player as Player
+				var dist_to_carrier := global_position.distance_to(carrier.global_position)
+				if dist_to_carrier > 3.2:
+					# WE3 func_800807F0.c: cut off lane ~2.05m ahead when chasing from distance
+					var carrier_fwd := -carrier.global_transform.basis.z
+					carrier_fwd.y = 0.0
+					target_pos = carrier.global_position + carrier_fwd.normalized() * 2.05
+				else:
+					# Close directly onto the ball to challenge/steal!
+					target_pos = _ball.global_position
+			else:
+				target_pos = _ball.predict_landing_point(20)
+		else:
+			# Defensive shape by role
+			var shift_ratio := 0.28 if role == Role.DF else 0.42
+			target_pos.x = lerpf(home_anchor.x, _ball.global_position.x - attack_dir * 10.0, shift_ratio)
+			if role == Role.DF:
+				# Keep DF behind the ball when defending
+				if attack_dir > 0.0:
+					target_pos.x = minf(target_pos.x, _ball.global_position.x - 4.0)
+				else:
+					target_pos.x = maxf(target_pos.x, _ball.global_position.x + 4.0)
+			target_pos.z = lerpf(home_anchor.z, _ball.global_position.z, 0.35)
+
+	# Pass-lane avoidance (func_8003172C.c): sidestep +-90 deg if teammate's fast pass is crossing close
+	if _ball.owner_player == null and _ball.last_touch_team == team_side and _ball.vel.length() > 7.5:
+		var to_me := global_position - _ball.global_position
+		to_me.y = 0.0
+		if to_me.length() < 4.1 and to_me.length() > 0.4:
+			var bdir := Vector3(_ball.vel.x, 0.0, _ball.vel.z).normalized()
+			if bdir.dot(to_me.normalized()) > 0.85 and not _is_closest_presser():
+				var side_vec := Vector3(-bdir.z, 0.0, bdir.x)
+				var sign_s := 1.0 if side_vec.dot(to_me) >= 0.0 else -1.0
+				target_pos = global_position + side_vec * (sign_s * 1.5)
+
+	# Gentle teammate separation so players never stack on top of each other
+	for mate in _all_players:
+		if mate != self and mate.team_side == team_side and not mate.is_sent_off:
+			var sep := global_position - mate.global_position
+			sep.y = 0.0
+			var d := sep.length()
+			if d > 0.01 and d < 1.8:
+				target_pos += (sep / d) * (1.8 - d)
+
+	var to_target := target_pos - global_position
+	to_target.y = 0.0
+	var diff_mult: float = [0.82, 0.95, 1.06][clampi(GameData.ai_difficulty, 0, 2)]
+	if to_target.length() > 0.6:
+		var dir := to_target.normalized()
+		var spd: float = (SPRINT_SPEED * 0.90 if _is_closest_presser() else WALK_SPEED * 0.92) * diff_mult
+		vel = vel.lerp(dir * spd, clampf(ACCEL * delta, 0.0, 1.0))
+		_face_direction(dir, delta)
+	else:
+		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+		_face_direction((_ball.global_position - global_position).normalized(), delta)
+
+func _process_gk_ai(delta: float) -> void:
+	var own_goal_x := -PitchBuilder.HALF_LEN if team_side == 0 else PitchBuilder.HALF_LEN
+	var inward := 1.0 if team_side == 0 else -1.0
+	var goal_center := Vector3(own_goal_x, 0.0, 0.0)
+
+	if has_ball():
+		_ai_hold_timer += delta
+		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+		_face_direction(Vector3(inward, 0.0, 0.0), delta)
+		if _ai_hold_timer < 0.90:
+			return
+		_ai_hold_timer = 0.0
+		# Distribute ball to an open teammate (or punt upfield if none)
+		var open_mate := _find_best_open_teammate(inward)
+		if open_mate != null:
+			_kick_pass_to_target(open_mate, false, true)
+		else:
+			var clear_dir := Vector3(inward, 0.0, randf_range(-0.25, 0.25)).normalized()
+			_perform_pass(clear_dir, false, true)
+		return
+	_ai_hold_timer = 0.0
+
+	var ball_pos := _ball.global_position
+	# WE3 bisector positioning (GOALKEEPER_AND_PITCH.md)
+	var to_ball := ball_pos - goal_center
+	to_ball.y = 0.0
+	var bisector_dist := clampf(to_ball.length() * 0.14, 1.4, 4.2)
+	var bisector_dir := to_ball.normalized() if to_ball.length_squared() > 0.01 else Vector3(inward, 0.0, 0.0)
+	var target := goal_center + bisector_dir * bisector_dist
+	target.z = clampf(target.z, -3.4, 3.4)
+
+	# Predictive dive (anim 109) if a fast shot is heading toward own goal
+	var shot_coming := (_ball.owner_player == null) and ((_ball.vel.x * inward) < -9.0) and absf(ball_pos.x - own_goal_x) < 18.0
+	if shot_coming:
+		var pred := _ball.predict_landing_point(7)
+		if absf(pred.z) < 4.5:
+			target = Vector3(own_goal_x + inward * 1.2, 0.0, clampf(pred.z, -3.6, 3.6))
+			_update_mirror_foot()
+			_play_anim("gk_dive", 0.05)
+
+	# Rush out if ball is loose inside the 18-yard box and close
+	elif _ball.owner_player == null and absf(ball_pos.x - own_goal_x) < 14.0 and absf(ball_pos.z) < 12.0:
+		target = ball_pos
+
+	var to_t := target - global_position
+	to_t.y = 0.0
+	if to_t.length() > 0.2:
+		var dir := to_t.normalized()
+		var spd := SPRINT_SPEED * 0.95 if shot_coming else WALK_SPEED * 1.05
+		vel = vel.lerp(dir * spd, clampf(ACCEL * delta, 0.0, 1.0))
+	else:
+		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+	_face_direction((ball_pos - global_position).normalized(), delta)
+
+func _is_closest_presser() -> bool:
+	var target_pos: Vector3 = _ball.global_position
+	if _ball.owner_player == null:
+		target_pos = _ball.predict_landing_point(18)
+		# Avoid chasing our own pass right after kicking
+		if action_lock_timer > 0.1:
+			return false
+	var my_dist := global_position.distance_squared_to(target_pos)
+	for p in _all_players:
+		if p != self and p.team_side == team_side and p.role != Role.GK and not p.is_sent_off:
+			if p.is_controlled:
+				if _ball.owner_player == null and p.global_position.distance_squared_to(target_pos) < 12.25:
+					return false
+				continue
+			if p.tackle_timer > 0.0 or p.action_lock_timer > 0.1:
+				continue
+			if p.global_position.distance_squared_to(target_pos) < my_dist:
+				return false
+	return true
+
+func _find_nearest_opponent(from_pos: Vector3) -> Player:
+	# WE3 func_800494C0.c: track closest_1 and closest_2 backup if closest_1 is busy/tackling
+	var best: Player = null
+	var second: Player = null
+	var best_d2 := INF
+	var second_d2 := INF
+	for p in _all_players:
+		if p.team_side != team_side:
+			var d2 := p.global_position.distance_squared_to(from_pos)
+			if d2 < best_d2:
+				second = best
+				second_d2 = best_d2
+				best = p
+				best_d2 = d2
+			elif d2 < second_d2:
+				second = p
+				second_d2 = d2
+	if best != null and (best.tackle_timer > 0.0 or best.action_lock_timer > 0.25) and second != null:
+		return second
+	return best
+
+func _find_best_open_teammate(attack_dir: float) -> Player:
+	var best: Player = null
+	var best_score := -INF
+	for p in _all_players:
+		if p == self or p.team_side != team_side or p.role == Role.GK or p.is_sent_off:
+			continue
+		var dist := global_position.distance_to(p.global_position)
+		if dist < 4.5 or dist > 38.0:
+			continue
+		if _is_player_offside(p):
+			continue
+		var forward_gain := (p.global_position.x - global_position.x) * attack_dir
+		var opp := _find_nearest_opponent(p.global_position)
+		var space := opp.global_position.distance_to(p.global_position) if opp != null else 15.0
+		var lane_bonus := 4.0 if _is_pass_lane_clear(global_position, p.global_position) else -8.0
+		var score := forward_gain * 0.25 + minf(space, 12.0) * 0.6 - dist * 0.12 + lane_bonus
+		if score > best_score:
+			best_score = score
+			best = p
+	return best
+
+func _is_pass_lane_clear(from_pos: Vector3, to_pos: Vector3) -> bool:
+	var seg := to_pos - from_pos
+	seg.y = 0.0
+	var seg_len := seg.length()
+	if seg_len < 1.0:
+		return true
+	var seg_dir := seg / seg_len
+	for p in _all_players:
+		if p.team_side != team_side and not p.is_sent_off:
+			var rel := p.global_position - from_pos
+			rel.y = 0.0
+			var proj := rel.dot(seg_dir)
+			if proj > 1.0 and proj < seg_len - 1.0:
+				var perp := (rel - seg_dir * proj).length()
+				if perp < 1.8:
+					return false
+	return true
+
+func _get_offside_line_x(atk_dir: float) -> float:
+	var opp_xs: Array[float] = []
+	for p in _all_players:
+		if p.team_side != team_side and not p.is_sent_off:
+			opp_xs.append(p.global_position.x)
+	if opp_xs.size() < 2:
+		return PitchBuilder.HALF_LEN * atk_dir
+	opp_xs.sort()
+	if atk_dir > 0.0:
+		return opp_xs[opp_xs.size() - 2]
+	return opp_xs[1]
+
+func _solve_pass_speed(dist_m: float, min_arrival_spd: float) -> float:
+	# Ported directly from src/resident/func_8002EB3C.c using ball.gd's 0.968/tick rolling friction
+	var dt := 1.0 / 60.0
+	var trial := min_arrival_spd + 1.5
+	while trial <= 28.0:
+		var sim_x := 0.0
+		var sim_v := trial
+		var steps := 0
+		while sim_x < dist_m and sim_v > min_arrival_spd and steps < 240:
+			sim_x += sim_v * dt
+			sim_v *= 0.968
+			steps += 1
+		if sim_x >= dist_m and sim_v >= min_arrival_spd:
+			return trial
+		trial += 1.2
+	return 28.0
+
+func _kick_pass_to_target(target: Player, is_through: bool, is_loft: bool) -> void:
+	var lead := target.vel * (0.45 if is_through else 0.18)
+	var dest := target.global_position + lead
+	var to_dest := dest - global_position
+	to_dest.y = 0.0
+	var dist := to_dest.length()
+	var kick_dir := to_dest.normalized() if dist > 0.01 else -global_transform.basis.z
+	var min_arrive := 6.5 if is_through else 4.2
+	var speed := _solve_pass_speed(dist, min_arrive)
+	var kick_vel := kick_dir * speed
+	kick_vel.y = 7.8 if is_loft else (1.4 if is_through else 0.6)
+	_face_direction(kick_dir, 1.0)
+	_ball.kick(kick_vel, self, team_side)
+	if _is_player_offside(target):
+		_ball.offside_target = target
+		_ball.offside_defending_team = 1 - team_side
+	MatchState.passes_completed[team_side] += 1
+	action_lock_timer = 0.22
+	_play_anim("pass_long" if is_loft else "pass", 0.06)
+
+func _find_pass_target(aim_dir: Vector3, is_through: bool) -> Player:
+	var dir := aim_dir if aim_dir.length_squared() > 0.05 else -global_transform.basis.z
+	dir.y = 0.0
+	dir = dir.normalized()
+
+	var best: Player = null
+	var best_score := -INF
+	for p in _all_players:
+		if p == self or p.team_side != team_side:
+			continue
+		var to_p := p.global_position - global_position
+		to_p.y = 0.0
+		var dist := to_p.length()
+		if dist < 2.0 or dist > 48.0:
+			continue
+		var align := dir.dot(to_p / dist)
+		if align < 0.15:
+			continue
+		var score := align * 2.2 - (dist / 45.0)
+		if is_through and p.role == Role.FW:
+			score += 0.4
+		if score > best_score:
+			best_score = score
+			best = p
+	return best
+
+func _perform_pass(aim_dir: Vector3, is_through: bool, is_loft: bool) -> void:
+	var target := _find_pass_target(aim_dir, is_through)
+	var kick_dir := aim_dir if aim_dir.length_squared() > 0.05 else -global_transform.basis.z
+	kick_dir.y = 0.0
+	kick_dir = kick_dir.normalized()
+
+	var speed := 16.0
+	if target != null:
+		var lead := target.vel * (0.45 if is_through else 0.18)
+		var dest := target.global_position + lead
+		var to_dest := dest - global_position
+		to_dest.y = 0.0
+		if to_dest.length() > 0.5:
+			kick_dir = to_dest.normalized()
+			speed = _solve_pass_speed(to_dest.length(), 6.5 if is_through else 4.2)
+
+	var kick_vel := kick_dir * speed
+	if is_loft:
+		kick_vel.y = 7.8
+	elif is_through:
+		kick_vel.y = 1.4
+	else:
+		kick_vel.y = 0.6
+
+	_face_direction(kick_dir, 1.0)
+	_ball.kick(kick_vel, self, team_side)
+	# WE3 Offside check (BAT_VIET_VI_VA_THE_PHAT_WE3.md / func_8001F2D0.c)
+	if target != null and _is_player_offside(target):
+		_ball.offside_target = target
+		_ball.offside_defending_team = 1 - team_side
+	MatchState.passes_completed[team_side] += 1
+	action_lock_timer = 0.22
+	_play_anim("pass_long" if is_loft else "pass", 0.06)
+
+func _is_player_offside(target: Player) -> bool:
+	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
+		return false
+	var atk_dir := 1.0 if team_side == 0 else -1.0
+	var tx := target.global_position.x * atk_dir
+	var bx := _ball.global_position.x * atk_dir
+	if tx <= 0.0 or tx <= bx:
+		return false
+	# Find 2nd-last opponent along attack direction
+	var opp_xs: Array[float] = []
+	for p in _all_players:
+		if p.team_side != team_side and not p.is_sent_off:
+			opp_xs.append(p.global_position.x * atk_dir)
+	opp_xs.sort()
+	opp_xs.reverse()
+	var line_x := opp_xs[1] if opp_xs.size() >= 2 else PitchBuilder.HALF_LEN
+	return tx > line_x + 0.5
+
+func _perform_shoot(aim_dir: Vector3, power: float) -> void:
+	var attack_x := PitchBuilder.HALF_LEN if team_side == 0 else -PitchBuilder.HALF_LEN
+	var goal_center := Vector3(attack_x, 0.0, 0.0)
+	var base_dir := (goal_center - global_position).normalized()
+	if aim_dir.length_squared() > 0.05:
+		base_dir = (base_dir * 0.65 + aim_dir.normalized() * 0.35).normalized()
+	base_dir.y = 0.0
+
+	var spd := lerpf(18.0, 32.0, clampf(power, 0.2, 1.0))
+	var loft := lerpf(1.8, 7.2, clampf(power, 0.2, 1.0))
+	var kick_vel := base_dir * spd + Vector3(0.0, loft, 0.0)
+	var spin := randf_range(-2.5, 2.5)
+
+	var ball_h := _ball.global_position.y
+	_update_mirror_foot()
+	_face_direction(base_dir, 1.0)
+	_pending_kick_vel = kick_vel
+	_pending_kick_spin = spin
+	_pending_is_shot = true
+	_pending_kick_timer = 0.14
+	action_lock_timer = 0.34
+	if ball_h > 1.35:
+		_play_anim("header", 0.05)
+	elif ball_h > 0.75:
+		_play_anim("volley", 0.05)
+	else:
+		_play_anim("shoot", 0.06)
+
+func _update_mirror_foot() -> void:
+	if _model_root == null or _ball == null:
+		return
+	var local_x := global_transform.basis.x.dot(_ball.global_position - global_position)
+	_model_root.scale.x = -1.0 if local_x < 0.0 else 1.0
+
+func _perform_slide_tackle(aim_dir: Vector3) -> void:
+	var dir := aim_dir if aim_dir.length_squared() > 0.05 else -global_transform.basis.z
+	dir.y = 0.0
+	tackle_dir = dir.normalized()
+	tackle_timer = 0.36
+	action_lock_timer = 0.55
+	_face_direction(tackle_dir, 1.0)
+	_play_anim("tackle", 0.05)
+
+func _try_pickup_ball() -> void:
+	if _ball == null or _ball.pickup_cooldown > 0.0:
+		return
+	var max_h := 2.25 if role == Role.GK else 1.35
+	var radius := 1.25 if role == Role.GK else PICKUP_RADIUS
+	if _ball.global_position.y > max_h:
+		return
+	var dist := Vector2(global_position.x - _ball.global_position.x, global_position.z - _ball.global_position.z).length()
+	if dist > radius:
+		return
+
+	var incoming_speed := _ball.vel.length()
+	if role == Role.GK and _ball.owner_player == null:
+		if incoming_speed > 10.0:
+			_play_anim("gk_dive", 0.05)
+			action_lock_timer = 0.35
+		elif incoming_speed > 4.0:
+			_play_anim("gk_catch", 0.05)
+			action_lock_timer = 0.25
+
+	if _ball.owner_player == null:
+		if _ball.offside_target == self:
+			var def_team := _ball.offside_defending_team
+			_ball.offside_target = null
+			_ball.out_of_bounds_detected.emit("offside", global_position, def_team)
+			return
+		if role != Role.GK and incoming_speed > 8.5:
+			_play_anim("trap", 0.05)
+			action_lock_timer = 0.16
+		_ball.set_owner_player(self, team_side)
+		MatchState.last_touch_team = team_side
+		MatchState.last_touch_player_name = player_name
+		# Execute buffered One-Touch action immediately on arrival!
+		if _one_touch_timer > 0.0 and _one_touch_action != "":
+			var act := _one_touch_action
+			_one_touch_action = ""
+			_one_touch_timer = 0.0
+			var fwd := -global_transform.basis.z
+			if act == "pass_short":
+				_perform_pass(fwd, false, false)
+			elif act == "pass_through":
+				_perform_pass(fwd, true, false)
+			elif act == "shoot":
+				_perform_shoot(fwd, 0.72)
+	elif _ball.owner_player != self and (_ball.owner_player as Player).team_side != team_side:
+		# Steal / tackle challenge (with WE3 foul + yellow/red card check)
+		var carrier := _ball.owner_player as Player
+		var steal_chance := 0.80 if tackle_timer > 0.0 else 0.18
+		if randf() < steal_chance:
+			carrier.action_lock_timer = 0.45
+			_ball.set_owner_player(self, team_side)
+			MatchState.last_touch_team = team_side
+			MatchState.last_touch_player_name = player_name
+		elif tackle_timer > 0.0 and dist > 0.58:
+			# Reckless slide missed the ball -> Foul & Yellow/Red Card (func_8007CC00.c)
+			tackle_timer = 0.0
+			action_lock_timer = 0.65
+			_play_anim("foul_react", 0.05)
+			_apply_foul_card()
+			# Check if foul occurred inside defending team's 18-yard box -> Penalty Kick!
+			var def_goal_x := -PitchBuilder.HALF_LEN if team_side == 0 else PitchBuilder.HALF_LEN
+			if absf(carrier.global_position.x - def_goal_x) < 16.5 and absf(carrier.global_position.z) < 20.16:
+				var pen_x := def_goal_x + (11.0 if team_side == 0 else -11.0)
+				_ball.out_of_bounds_detected.emit("penalty", Vector3(pen_x, 0.0, 0.0), carrier.team_side)
+			else:
+				_ball.out_of_bounds_detected.emit("foul", carrier.global_position, carrier.team_side)
+
+func _apply_foul_card() -> void:
+	if randf() < 0.15:
+		is_sent_off = true
+		visible = false
+		global_position = Vector3(0.0, -10.0, -50.0)
+		MatchState.log_event("RED CARD! %s sent off!" % player_name)
+	elif randf() < 0.55:
+		yellow_cards += 1
+		if yellow_cards >= 2:
+			is_sent_off = true
+			visible = false
+			global_position = Vector3(0.0, -10.0, -50.0)
+			MatchState.log_event("2nd YELLOW -> RED CARD! %s sent off!" % player_name)
+		else:
+			MatchState.log_event("YELLOW CARD: %s" % player_name)
+
+func _move_and_clamp(delta: float) -> void:
+	global_position += vel * delta
+	global_position.x = clampf(global_position.x, -PitchBuilder.HALF_LEN - 2.0, PitchBuilder.HALF_LEN + 2.0)
+	global_position.z = clampf(global_position.z, -PitchBuilder.HALF_WID - 2.0, PitchBuilder.HALF_WID + 2.0)
+	global_position.y = 0.0
+
+func _face_direction(dir: Vector3, delta: float) -> void:
+	_face_direction_rate(dir, delta, TURN_SPEED)
+
+func _face_direction_rate(dir: Vector3, delta: float, rate: float) -> void:
+	var flat := Vector3(dir.x, 0.0, dir.z)
+	if flat.length_squared() < 0.001:
+		return
+	var target_yaw := atan2(-flat.x, -flat.z)
+	rotation.y = lerp_angle(rotation.y, target_yaw, clampf(rate * delta, 0.0, 1.0))
+
+func _update_locomotion_anim() -> void:
+	if action_lock_timer > 0.0 or tackle_timer > 0.0 or _pending_kick_timer > 0.0:
+		return
+	if _model_root != null and _model_root.scale.x != 1.0:
+		_model_root.scale.x = 1.0
+	var spd := Vector2(vel.x, vel.z).length()
+	if spd < 0.35 or (_current_anim == "idle" and spd < 0.65):
+		_play_anim("idle", 0.18, 1.0)
+	elif has_ball():
+		_play_anim("dribble", 0.14, clampf(spd / 5.2, 0.85, 1.25))
+	elif spd > 6.6 or (_current_anim == "sprint" and spd > 5.8):
+		_play_anim("sprint", 0.16, 1.15)
+	else:
+		_play_anim("run", 0.16, clampf(spd / 5.6, 0.85, 1.15))

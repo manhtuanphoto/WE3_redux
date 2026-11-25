@@ -1,0 +1,4048 @@
+{
+  "teams": [
+    {
+      "team_id": 0,
+      "team_name": "Germany",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Kopke"
+        },
+        {
+          "slot": 2,
+          "name": "Matthaus"
+        },
+        {
+          "slot": 3,
+          "name": "Kohler"
+        },
+        {
+          "slot": 4,
+          "name": "Worns"
+        },
+        {
+          "slot": 5,
+          "name": "Hamann"
+        },
+        {
+          "slot": 6,
+          "name": "Jeremies"
+        },
+        {
+          "slot": 7,
+          "name": "Tarnat"
+        },
+        {
+          "slot": 8,
+          "name": "Heinrich"
+        },
+        {
+          "slot": 9,
+          "name": "Heassler"
+        },
+        {
+          "slot": 10,
+          "name": "Klinsman"
+        },
+        {
+          "slot": 11,
+          "name": "Bierhoff"
+        },
+        {
+          "slot": 12,
+          "name": "Thon"
+        },
+        {
+          "slot": 13,
+          "name": "Helmer"
+        },
+        {
+          "slot": 14,
+          "name": "Babbel"
+        },
+        {
+          "slot": 15,
+          "name": "Reuter"
+        },
+        {
+          "slot": 16,
+          "name": "Fruend"
+        },
+        {
+          "slot": 17,
+          "name": "Ziege"
+        },
+        {
+          "slot": 18,
+          "name": "Moller"
+        },
+        {
+          "slot": 19,
+          "name": "Kirsten"
+        },
+        {
+          "slot": 20,
+          "name": "Marschal"
+        },
+        {
+          "slot": 21,
+          "name": "Kahn"
+        },
+        {
+          "slot": 22,
+          "name": "Lehmann"
+        }
+      ]
+    },
+    {
+      "team_id": 1,
+      "team_name": "Spain",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Zubizare"
+        },
+        {
+          "slot": 2,
+          "name": "Alkorta"
+        },
+        {
+          "slot": 3,
+          "name": "Nadal"
+        },
+        {
+          "slot": 4,
+          "name": "Sergi"
+        },
+        {
+          "slot": 5,
+          "name": "Ferrer"
+        },
+        {
+          "slot": 6,
+          "name": "Hierro"
+        },
+        {
+          "slot": 7,
+          "name": "Amor"
+        },
+        {
+          "slot": 8,
+          "name": "Raul"
+        },
+        {
+          "slot": 9,
+          "name": "Enrique"
+        },
+        {
+          "slot": 10,
+          "name": "Alfonso"
+        },
+        {
+          "slot": 11,
+          "name": "Kiko"
+        },
+        {
+          "slot": 12,
+          "name": "Aranzaba"
+        },
+        {
+          "slot": 13,
+          "name": "Abelardo"
+        },
+        {
+          "slot": 14,
+          "name": "Campo"
+        },
+        {
+          "slot": 15,
+          "name": "Aguilera"
+        },
+        {
+          "slot": 16,
+          "name": "Guerrero"
+        },
+        {
+          "slot": 17,
+          "name": "Celades"
+        },
+        {
+          "slot": 18,
+          "name": "Moriente"
+        },
+        {
+          "slot": 19,
+          "name": "Pizzi"
+        },
+        {
+          "slot": 20,
+          "name": "Etxeberr"
+        },
+        {
+          "slot": 21,
+          "name": "Canizare"
+        },
+        {
+          "slot": 22,
+          "name": "Molina"
+        }
+      ]
+    },
+    {
+      "team_id": 2,
+      "team_name": "Romania",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Stelea"
+        },
+        {
+          "slot": 2,
+          "name": "Gh.Popes"
+        },
+        {
+          "slot": 3,
+          "name": "Filipesc"
+        },
+        {
+          "slot": 4,
+          "name": "Ciobotar"
+        },
+        {
+          "slot": 5,
+          "name": "D.Muntea"
+        },
+        {
+          "slot": 6,
+          "name": "Petrescu"
+        },
+        {
+          "slot": 7,
+          "name": "Ga.Popes"
+        },
+        {
+          "slot": 8,
+          "name": "Galca"
+        },
+        {
+          "slot": 9,
+          "name": "Hagi"
+        },
+        {
+          "slot": 10,
+          "name": "Ilie"
+        },
+        {
+          "slot": 11,
+          "name": "Moldovan"
+        },
+        {
+          "slot": 12,
+          "name": "Dobos"
+        },
+        {
+          "slot": 13,
+          "name": "Dulca"
+        },
+        {
+          "slot": 14,
+          "name": "Selymes"
+        },
+        {
+          "slot": 15,
+          "name": "Marinesc"
+        },
+        {
+          "slot": 16,
+          "name": "Stinga"
+        },
+        {
+          "slot": 17,
+          "name": "Dumitres"
+        },
+        {
+          "slot": 18,
+          "name": "Lacatus"
+        },
+        {
+          "slot": 19,
+          "name": "Niculesc"
+        },
+        {
+          "slot": 20,
+          "name": "Craiovea"
+        },
+        {
+          "slot": 21,
+          "name": "Stangaci"
+        },
+        {
+          "slot": 22,
+          "name": "Prunea"
+        }
+      ]
+    },
+    {
+      "team_id": 3,
+      "team_name": "England",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Seaman"
+        },
+        {
+          "slot": 2,
+          "name": "Adams"
+        },
+        {
+          "slot": 3,
+          "name": "Campbell"
+        },
+        {
+          "slot": 4,
+          "name": "G.Nevill"
+        },
+        {
+          "slot": 5,
+          "name": "Ince"
+        },
+        {
+          "slot": 6,
+          "name": "Le Saux"
+        },
+        {
+          "slot": 7,
+          "name": "Anderton"
+        },
+        {
+          "slot": 8,
+          "name": "Scholes"
+        },
+        {
+          "slot": 9,
+          "name": "Beckham"
+        },
+        {
+          "slot": 10,
+          "name": "Owen"
+        },
+        {
+          "slot": 11,
+          "name": "Shearer"
+        },
+        {
+          "slot": 12,
+          "name": "Southgat"
+        },
+        {
+          "slot": 13,
+          "name": "Keown"
+        },
+        {
+          "slot": 14,
+          "name": "R.Ferdin"
+        },
+        {
+          "slot": 15,
+          "name": "Merson"
+        },
+        {
+          "slot": 16,
+          "name": "Batty"
+        },
+        {
+          "slot": 17,
+          "name": "R.Lee"
+        },
+        {
+          "slot": 18,
+          "name": "McManama"
+        },
+        {
+          "slot": 19,
+          "name": "L.Ferdin"
+        },
+        {
+          "slot": 20,
+          "name": "Sheringh"
+        },
+        {
+          "slot": 21,
+          "name": "Martyn"
+        },
+        {
+          "slot": 22,
+          "name": "Flowers"
+        }
+      ]
+    },
+    {
+      "team_id": 4,
+      "team_name": "France",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Barthez"
+        },
+        {
+          "slot": 2,
+          "name": "Desailly"
+        },
+        {
+          "slot": 3,
+          "name": "Blanc"
+        },
+        {
+          "slot": 4,
+          "name": "Lizarazu"
+        },
+        {
+          "slot": 5,
+          "name": "Thuram"
+        },
+        {
+          "slot": 6,
+          "name": "Petit"
+        },
+        {
+          "slot": 7,
+          "name": "Deschamp"
+        },
+        {
+          "slot": 8,
+          "name": "Zidane"
+        },
+        {
+          "slot": 9,
+          "name": "Djorkaef"
+        },
+        {
+          "slot": 10,
+          "name": "Henry"
+        },
+        {
+          "slot": 11,
+          "name": "Guivarch"
+        },
+        {
+          "slot": 12,
+          "name": "Leboeuf"
+        },
+        {
+          "slot": 13,
+          "name": "Candela"
+        },
+        {
+          "slot": 14,
+          "name": "Vieira"
+        },
+        {
+          "slot": 15,
+          "name": "Boghossi"
+        },
+        {
+          "slot": 16,
+          "name": "Pires"
+        },
+        {
+          "slot": 17,
+          "name": "Diomede"
+        },
+        {
+          "slot": 18,
+          "name": "Karembeu"
+        },
+        {
+          "slot": 19,
+          "name": "Trezegue"
+        },
+        {
+          "slot": 20,
+          "name": "Dugarry"
+        },
+        {
+          "slot": 21,
+          "name": "Lama"
+        },
+        {
+          "slot": 22,
+          "name": "Charbonn"
+        }
+      ]
+    },
+    {
+      "team_id": 5,
+      "team_name": "Denmark",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Schmeich"
+        },
+        {
+          "slot": 2,
+          "name": "Rieper"
+        },
+        {
+          "slot": 3,
+          "name": "Hogh"
+        },
+        {
+          "slot": 4,
+          "name": "Heintze"
+        },
+        {
+          "slot": 5,
+          "name": "Colding"
+        },
+        {
+          "slot": 6,
+          "name": "Helveg"
+        },
+        {
+          "slot": 7,
+          "name": "Nielsen"
+        },
+        {
+          "slot": 8,
+          "name": "Jorgense"
+        },
+        {
+          "slot": 9,
+          "name": "M.Laudru"
+        },
+        {
+          "slot": 10,
+          "name": "Moller"
+        },
+        {
+          "slot": 11,
+          "name": "B.Laudru"
+        },
+        {
+          "slot": 12,
+          "name": "Schjonbe"
+        },
+        {
+          "slot": 13,
+          "name": "Laursen"
+        },
+        {
+          "slot": 14,
+          "name": "Henrikse"
+        },
+        {
+          "slot": 15,
+          "name": "Frandsen"
+        },
+        {
+          "slot": 16,
+          "name": "Wieghors"
+        },
+        {
+          "slot": 17,
+          "name": "Tofting"
+        },
+        {
+          "slot": 18,
+          "name": "Goldbaek"
+        },
+        {
+          "slot": 19,
+          "name": "Molnar"
+        },
+        {
+          "slot": 20,
+          "name": "Sand"
+        },
+        {
+          "slot": 21,
+          "name": "Krogh"
+        },
+        {
+          "slot": 22,
+          "name": "Kjaer"
+        }
+      ]
+    },
+    {
+      "team_id": 6,
+      "team_name": "Italy",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Pagliuca"
+        },
+        {
+          "slot": 2,
+          "name": "Costacur"
+        },
+        {
+          "slot": 3,
+          "name": "Cannavar"
+        },
+        {
+          "slot": 4,
+          "name": "Bergomi"
+        },
+        {
+          "slot": 5,
+          "name": "Maldini"
+        },
+        {
+          "slot": 6,
+          "name": "Moriero"
+        },
+        {
+          "slot": 7,
+          "name": "DiBiagio"
+        },
+        {
+          "slot": 8,
+          "name": "D.Baggio"
+        },
+        {
+          "slot": 9,
+          "name": "Albertin"
+        },
+        {
+          "slot": 10,
+          "name": "R.Baggio"
+        },
+        {
+          "slot": 11,
+          "name": "Vieri"
+        },
+        {
+          "slot": 12,
+          "name": "Nesta"
+        },
+        {
+          "slot": 13,
+          "name": "Pessotto"
+        },
+        {
+          "slot": 14,
+          "name": "Torricel"
+        },
+        {
+          "slot": 15,
+          "name": "Cois"
+        },
+        {
+          "slot": 16,
+          "name": "Di Livio"
+        },
+        {
+          "slot": 17,
+          "name": "Di Matte"
+        },
+        {
+          "slot": 18,
+          "name": "DelPiero"
+        },
+        {
+          "slot": 19,
+          "name": "Chiesa"
+        },
+        {
+          "slot": 20,
+          "name": "Inzaghi"
+        },
+        {
+          "slot": 21,
+          "name": "Buffon"
+        },
+        {
+          "slot": 22,
+          "name": "Toldo"
+        }
+      ]
+    },
+    {
+      "team_id": 7,
+      "team_name": "Netherlands",
+      "players": [
+        {
+          "slot": 1,
+          "name": "VanDerSa"
+        },
+        {
+          "slot": 2,
+          "name": "Stam"
+        },
+        {
+          "slot": 3,
+          "name": "F.DeBoer"
+        },
+        {
+          "slot": 4,
+          "name": "Numan"
+        },
+        {
+          "slot": 5,
+          "name": "Reiziger"
+        },
+        {
+          "slot": 6,
+          "name": "Jonk"
+        },
+        {
+          "slot": 7,
+          "name": "Cocu"
+        },
+        {
+          "slot": 8,
+          "name": "R.DeBoer"
+        },
+        {
+          "slot": 9,
+          "name": "Davids"
+        },
+        {
+          "slot": 10,
+          "name": "Bergkamp"
+        },
+        {
+          "slot": 11,
+          "name": "Kluivert"
+        },
+        {
+          "slot": 12,
+          "name": "Bogarde"
+        },
+        {
+          "slot": 13,
+          "name": "Ooijer"
+        },
+        {
+          "slot": 14,
+          "name": "Winter"
+        },
+        {
+          "slot": 15,
+          "name": "Seedorf"
+        },
+        {
+          "slot": 16,
+          "name": "Zenden"
+        },
+        {
+          "slot": 17,
+          "name": "Overmars"
+        },
+        {
+          "slot": 18,
+          "name": "Bronckho"
+        },
+        {
+          "slot": 19,
+          "name": "Hooijdon"
+        },
+        {
+          "slot": 20,
+          "name": "Hasselba"
+        },
+        {
+          "slot": 21,
+          "name": "De Goey"
+        },
+        {
+          "slot": 22,
+          "name": "Hesp"
+        }
+      ]
+    },
+    {
+      "team_id": 8,
+      "team_name": "Norway",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Grodas"
+        },
+        {
+          "slot": 2,
+          "name": "Johnsen"
+        },
+        {
+          "slot": 3,
+          "name": "Eggen"
+        },
+        {
+          "slot": 4,
+          "name": "Bjorneby"
+        },
+        {
+          "slot": 5,
+          "name": "Berg"
+        },
+        {
+          "slot": 6,
+          "name": "Rekdal"
+        },
+        {
+          "slot": 7,
+          "name": "Mykland"
+        },
+        {
+          "slot": 8,
+          "name": "Leonhard"
+        },
+        {
+          "slot": 9,
+          "name": "Riseth"
+        },
+        {
+          "slot": 10,
+          "name": "H.Flo"
+        },
+        {
+          "slot": 11,
+          "name": "T.A.Flo"
+        },
+        {
+          "slot": 12,
+          "name": "Halle"
+        },
+        {
+          "slot": 13,
+          "name": "Heggem"
+        },
+        {
+          "slot": 14,
+          "name": "Hoftun"
+        },
+        {
+          "slot": 15,
+          "name": "Strand"
+        },
+        {
+          "slot": 16,
+          "name": "Solbakke"
+        },
+        {
+          "slot": 17,
+          "name": "J.Flo"
+        },
+        {
+          "slot": 18,
+          "name": "Jakobsen"
+        },
+        {
+          "slot": 19,
+          "name": "Ostensta"
+        },
+        {
+          "slot": 20,
+          "name": "Solskjae"
+        },
+        {
+          "slot": 21,
+          "name": "Myhre"
+        },
+        {
+          "slot": 22,
+          "name": "Baardsen"
+        }
+      ]
+    },
+    {
+      "team_id": 9,
+      "team_name": "Sweden",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Ravelli"
+        },
+        {
+          "slot": 2,
+          "name": "Bjorklun"
+        },
+        {
+          "slot": 3,
+          "name": "P.Anders"
+        },
+        {
+          "slot": 4,
+          "name": "Sundgren"
+        },
+        {
+          "slot": 5,
+          "name": "Nilsson"
+        },
+        {
+          "slot": 6,
+          "name": "Thern"
+        },
+        {
+          "slot": 7,
+          "name": "Zetterbe"
+        },
+        {
+          "slot": 8,
+          "name": "Blomqvis"
+        },
+        {
+          "slot": 9,
+          "name": "Mild"
+        },
+        {
+          "slot": 10,
+          "name": "K.Anders"
+        },
+        {
+          "slot": 11,
+          "name": "Dahlin"
+        },
+        {
+          "slot": 12,
+          "name": "Ericsson"
+        },
+        {
+          "slot": 13,
+          "name": "Schwarz"
+        },
+        {
+          "slot": 14,
+          "name": "Ljung"
+        },
+        {
+          "slot": 15,
+          "name": "Ingesson"
+        },
+        {
+          "slot": 16,
+          "name": "Kamark"
+        },
+        {
+          "slot": 17,
+          "name": "Larsson"
+        },
+        {
+          "slot": 18,
+          "name": "Anders"
+        },
+        {
+          "slot": 19,
+          "name": "Alexande"
+        },
+        {
+          "slot": 20,
+          "name": "A.Anders"
+        },
+        {
+          "slot": 21,
+          "name": "Hedman"
+        },
+        {
+          "slot": 22,
+          "name": "Bengt"
+        }
+      ]
+    },
+    {
+      "team_id": 10,
+      "team_name": "Croatia",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Ladic"
+        },
+        {
+          "slot": 2,
+          "name": "Stimac"
+        },
+        {
+          "slot": 3,
+          "name": "Bilic"
+        },
+        {
+          "slot": 4,
+          "name": "Simic"
+        },
+        {
+          "slot": 5,
+          "name": "Soldo"
+        },
+        {
+          "slot": 6,
+          "name": "Jarni"
+        },
+        {
+          "slot": 7,
+          "name": "Stanic"
+        },
+        {
+          "slot": 8,
+          "name": "Asanovic"
+        },
+        {
+          "slot": 9,
+          "name": "Boban"
+        },
+        {
+          "slot": 10,
+          "name": "Suker"
+        },
+        {
+          "slot": 11,
+          "name": "Vlaovic"
+        },
+        {
+          "slot": 12,
+          "name": "Juric"
+        },
+        {
+          "slot": 13,
+          "name": "Tudor"
+        },
+        {
+          "slot": 14,
+          "name": "Mamic"
+        },
+        {
+          "slot": 15,
+          "name": "Seric"
+        },
+        {
+          "slot": 16,
+          "name": "Maric"
+        },
+        {
+          "slot": 17,
+          "name": "Jurcic"
+        },
+        {
+          "slot": 18,
+          "name": "Prosinec"
+        },
+        {
+          "slot": 19,
+          "name": "Krpan"
+        },
+        {
+          "slot": 20,
+          "name": "Kozniku"
+        },
+        {
+          "slot": 21,
+          "name": "Mrmic"
+        },
+        {
+          "slot": 22,
+          "name": "Vasilj"
+        }
+      ]
+    },
+    {
+      "team_id": 11,
+      "team_name": "Yugoslavia",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Kralj"
+        },
+        {
+          "slot": 2,
+          "name": "Mihajlov"
+        },
+        {
+          "slot": 3,
+          "name": "Djorovic"
+        },
+        {
+          "slot": 4,
+          "name": "Petrovic"
+        },
+        {
+          "slot": 5,
+          "name": "Komljeno"
+        },
+        {
+          "slot": 6,
+          "name": "Jokanovi"
+        },
+        {
+          "slot": 7,
+          "name": "Jugovic"
+        },
+        {
+          "slot": 8,
+          "name": "Milosevi"
+        },
+        {
+          "slot": 9,
+          "name": "Stankovi"
+        },
+        {
+          "slot": 10,
+          "name": "Stojkovi"
+        },
+        {
+          "slot": 11,
+          "name": "Mijatovi"
+        },
+        {
+          "slot": 12,
+          "name": "Djukic"
+        },
+        {
+          "slot": 13,
+          "name": "Saveljic"
+        },
+        {
+          "slot": 14,
+          "name": "Mirkovic"
+        },
+        {
+          "slot": 15,
+          "name": "Brnovic"
+        },
+        {
+          "slot": 16,
+          "name": "Govedari"
+        },
+        {
+          "slot": 17,
+          "name": "Stevic"
+        },
+        {
+          "slot": 18,
+          "name": "Savicevi"
+        },
+        {
+          "slot": 19,
+          "name": "Ognjenov"
+        },
+        {
+          "slot": 20,
+          "name": "Kovacevi"
+        },
+        {
+          "slot": 21,
+          "name": "Kocic"
+        },
+        {
+          "slot": 22,
+          "name": "Lekovic"
+        }
+      ]
+    },
+    {
+      "team_id": 12,
+      "team_name": "Bulgaria",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Zdravkov"
+        },
+        {
+          "slot": 2,
+          "name": "T.Ivanov"
+        },
+        {
+          "slot": 3,
+          "name": "Kishishe"
+        },
+        {
+          "slot": 4,
+          "name": "I.Petkov"
+        },
+        {
+          "slot": 5,
+          "name": "Ginchev"
+        },
+        {
+          "slot": 6,
+          "name": "Yankov"
+        },
+        {
+          "slot": 7,
+          "name": "Balakov"
+        },
+        {
+          "slot": 8,
+          "name": "Borimiro"
+        },
+        {
+          "slot": 9,
+          "name": "Iliev"
+        },
+        {
+          "slot": 10,
+          "name": "Stoichko"
+        },
+        {
+          "slot": 11,
+          "name": "Kostadin"
+        },
+        {
+          "slot": 12,
+          "name": "Yordanov"
+        },
+        {
+          "slot": 13,
+          "name": "M.Petkov"
+        },
+        {
+          "slot": 14,
+          "name": "Kirilov"
+        },
+        {
+          "slot": 15,
+          "name": "Stoilov"
+        },
+        {
+          "slot": 16,
+          "name": "Nankov"
+        },
+        {
+          "slot": 17,
+          "name": "Hristov"
+        },
+        {
+          "slot": 18,
+          "name": "Bachev"
+        },
+        {
+          "slot": 19,
+          "name": "G.Ivanov"
+        },
+        {
+          "slot": 20,
+          "name": "Penev"
+        },
+        {
+          "slot": 21,
+          "name": "Popov"
+        },
+        {
+          "slot": 22,
+          "name": "Mihailov"
+        }
+      ]
+    },
+    {
+      "team_id": 13,
+      "team_name": "Austria",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Konsel"
+        },
+        {
+          "slot": 2,
+          "name": "Schottel"
+        },
+        {
+          "slot": 3,
+          "name": "Pfeffer"
+        },
+        {
+          "slot": 4,
+          "name": "Feirsing"
+        },
+        {
+          "slot": 5,
+          "name": "P.Berger"
+        },
+        {
+          "slot": 6,
+          "name": "Wetl"
+        },
+        {
+          "slot": 7,
+          "name": "Mahlich"
+        },
+        {
+          "slot": 8,
+          "name": "Kuhbauer"
+        },
+        {
+          "slot": 9,
+          "name": "Herzog"
+        },
+        {
+          "slot": 10,
+          "name": "Polster"
+        },
+        {
+          "slot": 11,
+          "name": "Cerny"
+        },
+        {
+          "slot": 12,
+          "name": "Kogler"
+        },
+        {
+          "slot": 13,
+          "name": "Hiden"
+        },
+        {
+          "slot": 14,
+          "name": "Reinmayr"
+        },
+        {
+          "slot": 15,
+          "name": "Schopp"
+        },
+        {
+          "slot": 16,
+          "name": "Amerhaus"
+        },
+        {
+          "slot": 17,
+          "name": "Stoger"
+        },
+        {
+          "slot": 18,
+          "name": "Heraf"
+        },
+        {
+          "slot": 19,
+          "name": "Haas"
+        },
+        {
+          "slot": 20,
+          "name": "Vastic"
+        },
+        {
+          "slot": 21,
+          "name": "Wohlfhar"
+        },
+        {
+          "slot": 22,
+          "name": "Knaller"
+        }
+      ]
+    },
+    {
+      "team_id": 14,
+      "team_name": "Portugal",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Baia"
+        },
+        {
+          "slot": 2,
+          "name": "Helder"
+        },
+        {
+          "slot": 3,
+          "name": "Coutto"
+        },
+        {
+          "slot": 4,
+          "name": "Dimas"
+        },
+        {
+          "slot": 5,
+          "name": "Secretar"
+        },
+        {
+          "slot": 6,
+          "name": "Oceano"
+        },
+        {
+          "slot": 7,
+          "name": "P.Sousa"
+        },
+        {
+          "slot": 8,
+          "name": "R.Costa"
+        },
+        {
+          "slot": 9,
+          "name": "Figo"
+        },
+        {
+          "slot": 10,
+          "name": "Jo.Pinto"
+        },
+        {
+          "slot": 11,
+          "name": "Domingos"
+        },
+        {
+          "slot": 12,
+          "name": "Costa"
+        },
+        {
+          "slot": 13,
+          "name": "Santos"
+        },
+        {
+          "slot": 14,
+          "name": "Beto"
+        },
+        {
+          "slot": 15,
+          "name": "Xavier"
+        },
+        {
+          "slot": 16,
+          "name": "Conceica"
+        },
+        {
+          "slot": 17,
+          "name": "Barbosa"
+        },
+        {
+          "slot": 18,
+          "name": "Dani"
+        },
+        {
+          "slot": 19,
+          "name": "Sa.Pinto"
+        },
+        {
+          "slot": 20,
+          "name": "Pauleta"
+        },
+        {
+          "slot": 21,
+          "name": "Correia"
+        },
+        {
+          "slot": 22,
+          "name": "Silvino"
+        }
+      ]
+    },
+    {
+      "team_id": 15,
+      "team_name": "Scotland",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Leighton"
+        },
+        {
+          "slot": 2,
+          "name": "Calderwo"
+        },
+        {
+          "slot": 3,
+          "name": "Hendry"
+        },
+        {
+          "slot": 4,
+          "name": "Boyd"
+        },
+        {
+          "slot": 5,
+          "name": "Dailly"
+        },
+        {
+          "slot": 6,
+          "name": "Collins"
+        },
+        {
+          "slot": 7,
+          "name": "Lambert"
+        },
+        {
+          "slot": 8,
+          "name": "Burley"
+        },
+        {
+          "slot": 9,
+          "name": "Durie"
+        },
+        {
+          "slot": 10,
+          "name": "Gallache"
+        },
+        {
+          "slot": 11,
+          "name": "Jackson"
+        },
+        {
+          "slot": 12,
+          "name": "Weir"
+        },
+        {
+          "slot": 13,
+          "name": "Elliott"
+        },
+        {
+          "slot": 14,
+          "name": "Whyte"
+        },
+        {
+          "slot": 15,
+          "name": "T.McKinl"
+        },
+        {
+          "slot": 16,
+          "name": "B.McKinl"
+        },
+        {
+          "slot": 17,
+          "name": "McNamara"
+        },
+        {
+          "slot": 18,
+          "name": "Gemmill"
+        },
+        {
+          "slot": 19,
+          "name": "Donnelly"
+        },
+        {
+          "slot": 20,
+          "name": "Booth"
+        },
+        {
+          "slot": 21,
+          "name": "Sullivan"
+        },
+        {
+          "slot": 22,
+          "name": "Gould"
+        }
+      ]
+    },
+    {
+      "team_id": 16,
+      "team_name": "Greece",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Atmatsid"
+        },
+        {
+          "slot": 2,
+          "name": "Kalitzak"
+        },
+        {
+          "slot": 3,
+          "name": "Kasapis"
+        },
+        {
+          "slot": 4,
+          "name": "Karataid"
+        },
+        {
+          "slot": 5,
+          "name": "Apostola"
+        },
+        {
+          "slot": 6,
+          "name": "Dabizas"
+        },
+        {
+          "slot": 7,
+          "name": "Zagoraki"
+        },
+        {
+          "slot": 8,
+          "name": "Frantzes"
+        },
+        {
+          "slot": 9,
+          "name": "Poursani"
+        },
+        {
+          "slot": 10,
+          "name": "Nikolaid"
+        },
+        {
+          "slot": 11,
+          "name": "Donis"
+        },
+        {
+          "slot": 12,
+          "name": "Konstant"
+        },
+        {
+          "slot": 13,
+          "name": "Georgato"
+        },
+        {
+          "slot": 14,
+          "name": "Ouzounid"
+        },
+        {
+          "slot": 15,
+          "name": "Vryzas"
+        },
+        {
+          "slot": 16,
+          "name": "Ntonpisa"
+        },
+        {
+          "slot": 17,
+          "name": "Batista"
+        },
+        {
+          "slot": 18,
+          "name": "Alexandi"
+        },
+        {
+          "slot": 19,
+          "name": "Tsiartas"
+        },
+        {
+          "slot": 20,
+          "name": "Machlas"
+        },
+        {
+          "slot": 21,
+          "name": "Dimitrio"
+        },
+        {
+          "slot": 22,
+          "name": "Alekis"
+        }
+      ]
+    },
+    {
+      "team_id": 17,
+      "team_name": "Belgium",
+      "players": [
+        {
+          "slot": 1,
+          "name": "De Wilde"
+        },
+        {
+          "slot": 2,
+          "name": "Vidovic"
+        },
+        {
+          "slot": 3,
+          "name": "Staelens"
+        },
+        {
+          "slot": 4,
+          "name": "Borkelma"
+        },
+        {
+          "slot": 5,
+          "name": "Deflandr"
+        },
+        {
+          "slot": 6,
+          "name": "Elst"
+        },
+        {
+          "slot": 7,
+          "name": "Clement"
+        },
+        {
+          "slot": 8,
+          "name": "Scifo"
+        },
+        {
+          "slot": 9,
+          "name": "Wilmots"
+        },
+        {
+          "slot": 10,
+          "name": "Nilis"
+        },
+        {
+          "slot": 11,
+          "name": "Oliveira"
+        },
+        {
+          "slot": 12,
+          "name": "Van Meir"
+        },
+        {
+          "slot": 13,
+          "name": "Crasson"
+        },
+        {
+          "slot": 14,
+          "name": "De Boeck"
+        },
+        {
+          "slot": 15,
+          "name": "Verstrae"
+        },
+        {
+          "slot": 16,
+          "name": "Kerckhov"
+        },
+        {
+          "slot": 17,
+          "name": "Verheyen"
+        },
+        {
+          "slot": 18,
+          "name": "Boffin"
+        },
+        {
+          "slot": 19,
+          "name": "M.Mpenza"
+        },
+        {
+          "slot": 20,
+          "name": "E.Mpenza"
+        },
+        {
+          "slot": 21,
+          "name": "Walle"
+        },
+        {
+          "slot": 22,
+          "name": "Verlinde"
+        }
+      ]
+    },
+    {
+      "team_id": 18,
+      "team_name": "Turkey",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Rustu"
+        },
+        {
+          "slot": 2,
+          "name": "Ogen"
+        },
+        {
+          "slot": 3,
+          "name": "Alpay"
+        },
+        {
+          "slot": 4,
+          "name": "Bulent"
+        },
+        {
+          "slot": 5,
+          "name": "Tugay"
+        },
+        {
+          "slot": 6,
+          "name": "Abdullah"
+        },
+        {
+          "slot": 7,
+          "name": "Recep"
+        },
+        {
+          "slot": 8,
+          "name": "Tayfur"
+        },
+        {
+          "slot": 9,
+          "name": "Tolunay"
+        },
+        {
+          "slot": 10,
+          "name": "H.Sukur"
+        },
+        {
+          "slot": 11,
+          "name": "Arif"
+        },
+        {
+          "slot": 12,
+          "name": "Bedut"
+        },
+        {
+          "slot": 13,
+          "name": "Rasim"
+        },
+        {
+          "slot": 14,
+          "name": "Osman"
+        },
+        {
+          "slot": 15,
+          "name": "Tayfun"
+        },
+        {
+          "slot": 16,
+          "name": "Sergen"
+        },
+        {
+          "slot": 17,
+          "name": "Kemalett"
+        },
+        {
+          "slot": 18,
+          "name": "Oktay"
+        },
+        {
+          "slot": 19,
+          "name": "Celil"
+        },
+        {
+          "slot": 20,
+          "name": "Hami"
+        },
+        {
+          "slot": 21,
+          "name": "Orkun"
+        },
+        {
+          "slot": 22,
+          "name": "Volkan"
+        }
+      ]
+    },
+    {
+      "team_id": 19,
+      "team_name": "Ireland",
+      "players": [
+        {
+          "slot": 1,
+          "name": "A.Kelly"
+        },
+        {
+          "slot": 2,
+          "name": "Breen"
+        },
+        {
+          "slot": 3,
+          "name": "Kenna"
+        },
+        {
+          "slot": 4,
+          "name": "Staunton"
+        },
+        {
+          "slot": 5,
+          "name": "Irwin"
+        },
+        {
+          "slot": 6,
+          "name": "R.Keane"
+        },
+        {
+          "slot": 7,
+          "name": "McAteer"
+        },
+        {
+          "slot": 8,
+          "name": "I.Harte"
+        },
+        {
+          "slot": 9,
+          "name": "Townsend"
+        },
+        {
+          "slot": 10,
+          "name": "Cascarin"
+        },
+        {
+          "slot": 11,
+          "name": "Connoly"
+        },
+        {
+          "slot": 12,
+          "name": "Babb"
+        },
+        {
+          "slot": 13,
+          "name": "McLoughl"
+        },
+        {
+          "slot": 14,
+          "name": "G.Kelly"
+        },
+        {
+          "slot": 15,
+          "name": "Houghton"
+        },
+        {
+          "slot": 16,
+          "name": "Carsley"
+        },
+        {
+          "slot": 17,
+          "name": "Kennedy"
+        },
+        {
+          "slot": 18,
+          "name": "N.Quinn"
+        },
+        {
+          "slot": 19,
+          "name": "Kilbane"
+        },
+        {
+          "slot": 20,
+          "name": "D.Kelly"
+        },
+        {
+          "slot": 21,
+          "name": "Cunningh"
+        },
+        {
+          "slot": 22,
+          "name": "Given"
+        }
+      ]
+    },
+    {
+      "team_id": 20,
+      "team_name": "Northern Ireland",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Wright"
+        },
+        {
+          "slot": 2,
+          "name": "Hill"
+        },
+        {
+          "slot": 3,
+          "name": "Morrow"
+        },
+        {
+          "slot": 4,
+          "name": "Taggert"
+        },
+        {
+          "slot": 5,
+          "name": "Nolan"
+        },
+        {
+          "slot": 6,
+          "name": "Lennon"
+        },
+        {
+          "slot": 7,
+          "name": "Lomas"
+        },
+        {
+          "slot": 8,
+          "name": "Horlock"
+        },
+        {
+          "slot": 9,
+          "name": "Gillespi"
+        },
+        {
+          "slot": 10,
+          "name": "Hughes"
+        },
+        {
+          "slot": 11,
+          "name": "Dowie"
+        },
+        {
+          "slot": 12,
+          "name": "Griffin"
+        },
+        {
+          "slot": 13,
+          "name": "Rowland"
+        },
+        {
+          "slot": 14,
+          "name": "McMahon"
+        },
+        {
+          "slot": 15,
+          "name": "Magilton"
+        },
+        {
+          "slot": 16,
+          "name": "Hunter"
+        },
+        {
+          "slot": 17,
+          "name": "Worthing"
+        },
+        {
+          "slot": 18,
+          "name": "O'Neill"
+        },
+        {
+          "slot": 19,
+          "name": "Quinn"
+        },
+        {
+          "slot": 20,
+          "name": "Gray"
+        },
+        {
+          "slot": 21,
+          "name": "Fettis"
+        },
+        {
+          "slot": 22,
+          "name": "Davison"
+        }
+      ]
+    },
+    {
+      "team_id": 21,
+      "team_name": "Wales",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Southall"
+        },
+        {
+          "slot": 2,
+          "name": "Page"
+        },
+        {
+          "slot": 3,
+          "name": "Coleman"
+        },
+        {
+          "slot": 4,
+          "name": "Melville"
+        },
+        {
+          "slot": 5,
+          "name": "Pembridg"
+        },
+        {
+          "slot": 6,
+          "name": "Robinson"
+        },
+        {
+          "slot": 7,
+          "name": "Speed"
+        },
+        {
+          "slot": 8,
+          "name": "Savage"
+        },
+        {
+          "slot": 9,
+          "name": "M.Hughes"
+        },
+        {
+          "slot": 10,
+          "name": "Geggs"
+        },
+        {
+          "slot": 11,
+          "name": "Saunders"
+        },
+        {
+          "slot": 12,
+          "name": "B.Jones"
+        },
+        {
+          "slot": 13,
+          "name": "Bowen"
+        },
+        {
+          "slot": 14,
+          "name": "Ready"
+        },
+        {
+          "slot": 15,
+          "name": "Jenkins"
+        },
+        {
+          "slot": 16,
+          "name": "Green"
+        },
+        {
+          "slot": 17,
+          "name": "Sanders"
+        },
+        {
+          "slot": 18,
+          "name": "Wettally"
+        },
+        {
+          "slot": 19,
+          "name": "Hartson"
+        },
+        {
+          "slot": 20,
+          "name": "Haworth"
+        },
+        {
+          "slot": 21,
+          "name": "Marriott"
+        },
+        {
+          "slot": 22,
+          "name": "P.Jones"
+        }
+      ]
+    },
+    {
+      "team_id": 22,
+      "team_name": "Morocco",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Benzekri"
+        },
+        {
+          "slot": 2,
+          "name": "Rossi"
+        },
+        {
+          "slot": 3,
+          "name": "Naybet"
+        },
+        {
+          "slot": 4,
+          "name": "Hadrioui"
+        },
+        {
+          "slot": 5,
+          "name": "Saber"
+        },
+        {
+          "slot": 6,
+          "name": "Chippo"
+        },
+        {
+          "slot": 7,
+          "name": "Khalej"
+        },
+        {
+          "slot": 8,
+          "name": "Hadji"
+        },
+        {
+          "slot": 9,
+          "name": "Chiba"
+        },
+        {
+          "slot": 10,
+          "name": "Bassir"
+        },
+        {
+          "slot": 11,
+          "name": "Hadda"
+        },
+        {
+          "slot": 12,
+          "name": "Nekrouz"
+        },
+        {
+          "slot": 13,
+          "name": "Triki"
+        },
+        {
+          "slot": 14,
+          "name": "Abrami"
+        },
+        {
+          "slot": 15,
+          "name": "Azzouzi"
+        },
+        {
+          "slot": 16,
+          "name": "Ouakili"
+        },
+        {
+          "slot": 17,
+          "name": "Sellami"
+        },
+        {
+          "slot": 18,
+          "name": "Amzine"
+        },
+        {
+          "slot": 19,
+          "name": "Rokki"
+        },
+        {
+          "slot": 20,
+          "name": "Khattabi"
+        },
+        {
+          "slot": 21,
+          "name": "Brazi"
+        },
+        {
+          "slot": 22,
+          "name": "Chadili"
+        }
+      ]
+    },
+    {
+      "team_id": 23,
+      "team_name": "Tunisia",
+      "players": [
+        {
+          "slot": 1,
+          "name": "El Ouaer"
+        },
+        {
+          "slot": 2,
+          "name": "Badra"
+        },
+        {
+          "slot": 3,
+          "name": "S.Trabel"
+        },
+        {
+          "slot": 4,
+          "name": "Bouazizi"
+        },
+        {
+          "slot": 5,
+          "name": "Chihi"
+        },
+        {
+          "slot": 6,
+          "name": "Clayton"
+        },
+        {
+          "slot": 7,
+          "name": "Thabet"
+        },
+        {
+          "slot": 8,
+          "name": "Beya"
+        },
+        {
+          "slot": 9,
+          "name": "Souayah"
+        },
+        {
+          "slot": 10,
+          "name": "Slimane"
+        },
+        {
+          "slot": 11,
+          "name": "Sellimi"
+        },
+        {
+          "slot": 12,
+          "name": "Chouchan"
+        },
+        {
+          "slot": 13,
+          "name": "Jaballah"
+        },
+        {
+          "slot": 14,
+          "name": "Boukadid"
+        },
+        {
+          "slot": 15,
+          "name": "H.Trabel"
+        },
+        {
+          "slot": 16,
+          "name": "Ghodhban"
+        },
+        {
+          "slot": 17,
+          "name": "Ahmed"
+        },
+        {
+          "slot": 18,
+          "name": "Jelassi"
+        },
+        {
+          "slot": 19,
+          "name": "Younes"
+        },
+        {
+          "slot": 20,
+          "name": "Melki"
+        },
+        {
+          "slot": 21,
+          "name": "Salhi"
+        },
+        {
+          "slot": 22,
+          "name": "Boumnije"
+        }
+      ]
+    },
+    {
+      "team_id": 24,
+      "team_name": "South Africa",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Vonk"
+        },
+        {
+          "slot": 2,
+          "name": "Fish"
+        },
+        {
+          "slot": 3,
+          "name": "Radebe"
+        },
+        {
+          "slot": 4,
+          "name": "Issa"
+        },
+        {
+          "slot": 5,
+          "name": "Nyathi"
+        },
+        {
+          "slot": 6,
+          "name": "Jackson"
+        },
+        {
+          "slot": 7,
+          "name": "Fortune"
+        },
+        {
+          "slot": 8,
+          "name": "Moshoeu"
+        },
+        {
+          "slot": 9,
+          "name": "Augustin"
+        },
+        {
+          "slot": 10,
+          "name": "Bartlett"
+        },
+        {
+          "slot": 11,
+          "name": "McCarthy"
+        },
+        {
+          "slot": 12,
+          "name": "Mnguni"
+        },
+        {
+          "slot": 13,
+          "name": "Buckley"
+        },
+        {
+          "slot": 14,
+          "name": "Mkhalele"
+        },
+        {
+          "slot": 15,
+          "name": "Phiri"
+        },
+        {
+          "slot": 16,
+          "name": "Khumalo"
+        },
+        {
+          "slot": 17,
+          "name": "Morula"
+        },
+        {
+          "slot": 18,
+          "name": "Sikhosan"
+        },
+        {
+          "slot": 19,
+          "name": "W.Mokoen"
+        },
+        {
+          "slot": 20,
+          "name": "Masinga"
+        },
+        {
+          "slot": 21,
+          "name": "Baloyi"
+        },
+        {
+          "slot": 22,
+          "name": "Gopane"
+        }
+      ]
+    },
+    {
+      "team_id": 25,
+      "team_name": "Cameroon",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Songo'o"
+        },
+        {
+          "slot": 2,
+          "name": "Kalla"
+        },
+        {
+          "slot": 3,
+          "name": "Njanka"
+        },
+        {
+          "slot": 4,
+          "name": "Song"
+        },
+        {
+          "slot": 5,
+          "name": "Olembe"
+        },
+        {
+          "slot": 6,
+          "name": "Wome"
+        },
+        {
+          "slot": 7,
+          "name": "N'do"
+        },
+        {
+          "slot": 8,
+          "name": "Angibeau"
+        },
+        {
+          "slot": 9,
+          "name": "Job"
+        },
+        {
+          "slot": 10,
+          "name": "Mboma"
+        },
+        {
+          "slot": 11,
+          "name": "OmamBiyi"
+        },
+        {
+          "slot": 12,
+          "name": "Pensee"
+        },
+        {
+          "slot": 13,
+          "name": "Abanda"
+        },
+        {
+          "slot": 14,
+          "name": "Elanga"
+        },
+        {
+          "slot": 15,
+          "name": "Etame"
+        },
+        {
+          "slot": 16,
+          "name": "Mahouve"
+        },
+        {
+          "slot": 17,
+          "name": "Eto'o"
+        },
+        {
+          "slot": 18,
+          "name": "Simo"
+        },
+        {
+          "slot": 19,
+          "name": "Tchami"
+        },
+        {
+          "slot": 20,
+          "name": "Ipoua"
+        },
+        {
+          "slot": 21,
+          "name": "Andem"
+        },
+        {
+          "slot": 22,
+          "name": "Boukar"
+        }
+      ]
+    },
+    {
+      "team_id": 26,
+      "team_name": "Nigeria",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Rufai"
+        },
+        {
+          "slot": 2,
+          "name": "West"
+        },
+        {
+          "slot": 3,
+          "name": "Okechukw"
+        },
+        {
+          "slot": 4,
+          "name": "Babayaro"
+        },
+        {
+          "slot": 5,
+          "name": "Adepoju"
+        },
+        {
+          "slot": 6,
+          "name": "Oliseh"
+        },
+        {
+          "slot": 7,
+          "name": "Lawal"
+        },
+        {
+          "slot": 8,
+          "name": "Finidi"
+        },
+        {
+          "slot": 9,
+          "name": "Okocha"
+        },
+        {
+          "slot": 10,
+          "name": "Amokachi"
+        },
+        {
+          "slot": 11,
+          "name": "Ikpeba"
+        },
+        {
+          "slot": 12,
+          "name": "Eguavoen"
+        },
+        {
+          "slot": 13,
+          "name": "Okafor"
+        },
+        {
+          "slot": 14,
+          "name": "G.Okpara"
+        },
+        {
+          "slot": 15,
+          "name": "Iroha"
+        },
+        {
+          "slot": 16,
+          "name": "Oparaku"
+        },
+        {
+          "slot": 17,
+          "name": "Oruma"
+        },
+        {
+          "slot": 18,
+          "name": "Babangid"
+        },
+        {
+          "slot": 19,
+          "name": "Kanu"
+        },
+        {
+          "slot": 20,
+          "name": "Yekini"
+        },
+        {
+          "slot": 21,
+          "name": "W.Okpara"
+        },
+        {
+          "slot": 22,
+          "name": "Baruwa"
+        }
+      ]
+    },
+    {
+      "team_id": 27,
+      "team_name": "Mexico",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Campos"
+        },
+        {
+          "slot": 2,
+          "name": "Suarez"
+        },
+        {
+          "slot": 3,
+          "name": "Davino"
+        },
+        {
+          "slot": 4,
+          "name": "J.Sanche"
+        },
+        {
+          "slot": 5,
+          "name": "G.Aspe"
+        },
+        {
+          "slot": 6,
+          "name": "Villa"
+        },
+        {
+          "slot": 7,
+          "name": "Ramires"
+        },
+        {
+          "slot": 8,
+          "name": "Pardo"
+        },
+        {
+          "slot": 9,
+          "name": "Palencia"
+        },
+        {
+          "slot": 10,
+          "name": "Blanco"
+        },
+        {
+          "slot": 11,
+          "name": "Hernande"
+        },
+        {
+          "slot": 12,
+          "name": "Terrazas"
+        },
+        {
+          "slot": 13,
+          "name": "Carmona"
+        },
+        {
+          "slot": 14,
+          "name": "Bernal"
+        },
+        {
+          "slot": 15,
+          "name": "Lara"
+        },
+        {
+          "slot": 16,
+          "name": "Luna"
+        },
+        {
+          "slot": 17,
+          "name": "Ordiales"
+        },
+        {
+          "slot": 18,
+          "name": "Arellano"
+        },
+        {
+          "slot": 19,
+          "name": "L.Garcia"
+        },
+        {
+          "slot": 20,
+          "name": "Pelaez"
+        },
+        {
+          "slot": 21,
+          "name": "O.Sanche"
+        },
+        {
+          "slot": 22,
+          "name": "Perez"
+        }
+      ]
+    },
+    {
+      "team_id": 28,
+      "team_name": "United States",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Keller"
+        },
+        {
+          "slot": 2,
+          "name": "Dooley"
+        },
+        {
+          "slot": 3,
+          "name": "Regis"
+        },
+        {
+          "slot": 4,
+          "name": "Pope"
+        },
+        {
+          "slot": 5,
+          "name": "Jones"
+        },
+        {
+          "slot": 6,
+          "name": "Burns"
+        },
+        {
+          "slot": 7,
+          "name": "Maisonne"
+        },
+        {
+          "slot": 8,
+          "name": "Deering"
+        },
+        {
+          "slot": 9,
+          "name": "Stewart"
+        },
+        {
+          "slot": 10,
+          "name": "Reyna"
+        },
+        {
+          "slot": 11,
+          "name": "McBride"
+        },
+        {
+          "slot": 12,
+          "name": "Lalas"
+        },
+        {
+          "slot": 13,
+          "name": "Balboa"
+        },
+        {
+          "slot": 14,
+          "name": "Hejduk"
+        },
+        {
+          "slot": 15,
+          "name": "Agoos"
+        },
+        {
+          "slot": 16,
+          "name": "Moore"
+        },
+        {
+          "slot": 17,
+          "name": "Ramos"
+        },
+        {
+          "slot": 18,
+          "name": "Wegerle"
+        },
+        {
+          "slot": 19,
+          "name": "Wynalda"
+        },
+        {
+          "slot": 20,
+          "name": "Predrag"
+        },
+        {
+          "slot": 21,
+          "name": "Friedel"
+        },
+        {
+          "slot": 22,
+          "name": "Sommer"
+        }
+      ]
+    },
+    {
+      "team_id": 29,
+      "team_name": "Jamaica",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Barrett"
+        },
+        {
+          "slot": 2,
+          "name": "Lowe"
+        },
+        {
+          "slot": 3,
+          "name": "Goodison"
+        },
+        {
+          "slot": 4,
+          "name": "Sinclair"
+        },
+        {
+          "slot": 5,
+          "name": "Dawes"
+        },
+        {
+          "slot": 6,
+          "name": "Gardner"
+        },
+        {
+          "slot": 7,
+          "name": "Malcolm"
+        },
+        {
+          "slot": 8,
+          "name": "Whitmore"
+        },
+        {
+          "slot": 9,
+          "name": "Simpson"
+        },
+        {
+          "slot": 10,
+          "name": "Hall"
+        },
+        {
+          "slot": 11,
+          "name": "Burton"
+        },
+        {
+          "slot": 12,
+          "name": "Dixon"
+        },
+        {
+          "slot": 13,
+          "name": "Brown"
+        },
+        {
+          "slot": 14,
+          "name": "Sewell"
+        },
+        {
+          "slot": 15,
+          "name": "Cargill"
+        },
+        {
+          "slot": 16,
+          "name": "Williams"
+        },
+        {
+          "slot": 17,
+          "name": "Earle"
+        },
+        {
+          "slot": 18,
+          "name": "Powell"
+        },
+        {
+          "slot": 19,
+          "name": "Boyd"
+        },
+        {
+          "slot": 20,
+          "name": "Gayle"
+        },
+        {
+          "slot": 21,
+          "name": "Lawrence"
+        },
+        {
+          "slot": 22,
+          "name": "Ricketts"
+        }
+      ]
+    },
+    {
+      "team_id": 30,
+      "team_name": "Brazil",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Taffarel"
+        },
+        {
+          "slot": 2,
+          "name": "Aldair"
+        },
+        {
+          "slot": 3,
+          "name": "Baiano"
+        },
+        {
+          "slot": 4,
+          "name": "R.Carlos"
+        },
+        {
+          "slot": 5,
+          "name": "Cafu"
+        },
+        {
+          "slot": 6,
+          "name": "Dunga"
+        },
+        {
+          "slot": 7,
+          "name": "Sampaio"
+        },
+        {
+          "slot": 8,
+          "name": "Rivaldo"
+        },
+        {
+          "slot": 9,
+          "name": "Leonardo"
+        },
+        {
+          "slot": 10,
+          "name": "Bebeto"
+        },
+        {
+          "slot": 11,
+          "name": "Ronaldo"
+        },
+        {
+          "slot": 12,
+          "name": "Goncalve"
+        },
+        {
+          "slot": 13,
+          "name": "Cruz"
+        },
+        {
+          "slot": 14,
+          "name": "Ze Carlo"
+        },
+        {
+          "slot": 15,
+          "name": "Ze Rober"
+        },
+        {
+          "slot": 16,
+          "name": "Doriva"
+        },
+        {
+          "slot": 17,
+          "name": "Giovanni"
+        },
+        {
+          "slot": 18,
+          "name": "Emerson"
+        },
+        {
+          "slot": 19,
+          "name": "Denilson"
+        },
+        {
+          "slot": 20,
+          "name": "Edmundo"
+        },
+        {
+          "slot": 21,
+          "name": "Germano"
+        },
+        {
+          "slot": 22,
+          "name": "Dida"
+        }
+      ]
+    },
+    {
+      "team_id": 31,
+      "team_name": "Colombia",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Mondrago"
+        },
+        {
+          "slot": 2,
+          "name": "Palacios"
+        },
+        {
+          "slot": 3,
+          "name": "Bermudez"
+        },
+        {
+          "slot": 4,
+          "name": "Santa"
+        },
+        {
+          "slot": 5,
+          "name": "Cabrera"
+        },
+        {
+          "slot": 6,
+          "name": "Serna"
+        },
+        {
+          "slot": 7,
+          "name": "Lozano"
+        },
+        {
+          "slot": 8,
+          "name": "Valderra"
+        },
+        {
+          "slot": 9,
+          "name": "Rincon"
+        },
+        {
+          "slot": 10,
+          "name": "De Avila"
+        },
+        {
+          "slot": 11,
+          "name": "Preciado"
+        },
+        {
+          "slot": 12,
+          "name": "I.Cordob"
+        },
+        {
+          "slot": 13,
+          "name": "Moreno"
+        },
+        {
+          "slot": 14,
+          "name": "Bolano"
+        },
+        {
+          "slot": 15,
+          "name": "Perez"
+        },
+        {
+          "slot": 16,
+          "name": "Estrada"
+        },
+        {
+          "slot": 17,
+          "name": "Aristiza"
+        },
+        {
+          "slot": 18,
+          "name": "Valencia"
+        },
+        {
+          "slot": 19,
+          "name": "Ricard"
+        },
+        {
+          "slot": 20,
+          "name": "Asprilla"
+        },
+        {
+          "slot": 21,
+          "name": "Calero"
+        },
+        {
+          "slot": 22,
+          "name": "O.Cordob"
+        }
+      ]
+    },
+    {
+      "team_id": 32,
+      "team_name": "Chile",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Tapia"
+        },
+        {
+          "slot": 2,
+          "name": "Reyes"
+        },
+        {
+          "slot": 3,
+          "name": "Margas"
+        },
+        {
+          "slot": 4,
+          "name": "Fuentes"
+        },
+        {
+          "slot": 5,
+          "name": "Rojas"
+        },
+        {
+          "slot": 6,
+          "name": "Villarro"
+        },
+        {
+          "slot": 7,
+          "name": "Acuna"
+        },
+        {
+          "slot": 8,
+          "name": "Sierra"
+        },
+        {
+          "slot": 9,
+          "name": "Parraque"
+        },
+        {
+          "slot": 10,
+          "name": "Salas"
+        },
+        {
+          "slot": 11,
+          "name": "Zamorano"
+        },
+        {
+          "slot": 12,
+          "name": "Castaned"
+        },
+        {
+          "slot": 13,
+          "name": "Mi.Ramir"
+        },
+        {
+          "slot": 14,
+          "name": "Aros"
+        },
+        {
+          "slot": 15,
+          "name": "Vega"
+        },
+        {
+          "slot": 16,
+          "name": "Musrri"
+        },
+        {
+          "slot": 17,
+          "name": "Cornejo"
+        },
+        {
+          "slot": 18,
+          "name": "Estay"
+        },
+        {
+          "slot": 19,
+          "name": "Neira"
+        },
+        {
+          "slot": 20,
+          "name": "Barrera"
+        },
+        {
+          "slot": 21,
+          "name": "Ma.Ramir"
+        },
+        {
+          "slot": 22,
+          "name": "Tejas"
+        }
+      ]
+    },
+    {
+      "team_id": 33,
+      "team_name": "Argentina",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Roa"
+        },
+        {
+          "slot": 2,
+          "name": "Ayala"
+        },
+        {
+          "slot": 3,
+          "name": "Chamot"
+        },
+        {
+          "slot": 4,
+          "name": "Sensini"
+        },
+        {
+          "slot": 5,
+          "name": "Almeyda"
+        },
+        {
+          "slot": 6,
+          "name": "Simeone"
+        },
+        {
+          "slot": 7,
+          "name": "Zanetti"
+        },
+        {
+          "slot": 8,
+          "name": "Veron"
+        },
+        {
+          "slot": 9,
+          "name": "Ortega"
+        },
+        {
+          "slot": 10,
+          "name": "C.Lopez"
+        },
+        {
+          "slot": 11,
+          "name": "Batistut"
+        },
+        {
+          "slot": 12,
+          "name": "Paz"
+        },
+        {
+          "slot": 13,
+          "name": "Pineda"
+        },
+        {
+          "slot": 14,
+          "name": "Vivas"
+        },
+        {
+          "slot": 15,
+          "name": "Astrada"
+        },
+        {
+          "slot": 16,
+          "name": "Berti"
+        },
+        {
+          "slot": 17,
+          "name": "Gallardo"
+        },
+        {
+          "slot": 18,
+          "name": "Delgado"
+        },
+        {
+          "slot": 19,
+          "name": "Crespo"
+        },
+        {
+          "slot": 20,
+          "name": "Balbo"
+        },
+        {
+          "slot": 21,
+          "name": "Burgos"
+        },
+        {
+          "slot": 22,
+          "name": "Cavaller"
+        }
+      ]
+    },
+    {
+      "team_id": 34,
+      "team_name": "Paraguay",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Chilaver"
+        },
+        {
+          "slot": 2,
+          "name": "Gamarra"
+        },
+        {
+          "slot": 3,
+          "name": "C.Ayala"
+        },
+        {
+          "slot": 4,
+          "name": "Sarabia"
+        },
+        {
+          "slot": 5,
+          "name": "Paredes"
+        },
+        {
+          "slot": 6,
+          "name": "Enciso"
+        },
+        {
+          "slot": 7,
+          "name": "R.Acuna"
+        },
+        {
+          "slot": 8,
+          "name": "Morales"
+        },
+        {
+          "slot": 9,
+          "name": "Benitez"
+        },
+        {
+          "slot": 10,
+          "name": "Cardozo"
+        },
+        {
+          "slot": 11,
+          "name": "Campos"
+        },
+        {
+          "slot": 12,
+          "name": "Rivarola"
+        },
+        {
+          "slot": 13,
+          "name": "Caniza"
+        },
+        {
+          "slot": 14,
+          "name": "Arce"
+        },
+        {
+          "slot": 15,
+          "name": "R.Rojas"
+        },
+        {
+          "slot": 16,
+          "name": "Aguilera"
+        },
+        {
+          "slot": 17,
+          "name": "Brizuela"
+        },
+        {
+          "slot": 18,
+          "name": "A.Rojas"
+        },
+        {
+          "slot": 19,
+          "name": "Yegros"
+        },
+        {
+          "slot": 20,
+          "name": "Ramirez"
+        },
+        {
+          "slot": 21,
+          "name": "Aceval"
+        },
+        {
+          "slot": 22,
+          "name": "Diaz"
+        }
+      ]
+    },
+    {
+      "team_id": 35,
+      "team_name": "Japan",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Kawaguch"
+        },
+        {
+          "slot": 2,
+          "name": "井原"
+        },
+        {
+          "slot": 3,
+          "name": "秋田"
+        },
+        {
+          "slot": 4,
+          "name": "中西"
+        },
+        {
+          "slot": 5,
+          "name": "相馬"
+        },
+        {
+          "slot": 6,
+          "name": "名良橋"
+        },
+        {
+          "slot": 7,
+          "name": "名波"
+        },
+        {
+          "slot": 8,
+          "name": "山口"
+        },
+        {
+          "slot": 9,
+          "name": "中田"
+        },
+        {
+          "slot": 10,
+          "name": "城"
+        },
+        {
+          "slot": 11,
+          "name": "中山"
+        },
+        {
+          "slot": 12,
+          "name": "斎藤"
+        },
+        {
+          "slot": 13,
+          "name": "小村"
+        },
+        {
+          "slot": 14,
+          "name": "服部"
+        },
+        {
+          "slot": 15,
+          "name": "伊藤"
+        },
+        {
+          "slot": 16,
+          "name": "小野"
+        },
+        {
+          "slot": 17,
+          "name": "森島"
+        },
+        {
+          "slot": 18,
+          "name": "平野"
+        },
+        {
+          "slot": 19,
+          "name": "呂比須"
+        },
+        {
+          "slot": 20,
+          "name": "岡野"
+        },
+        {
+          "slot": 21,
+          "name": "小島"
+        },
+        {
+          "slot": 22,
+          "name": "楢崎"
+        }
+      ]
+    },
+    {
+      "team_id": 36,
+      "team_name": "Korea",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Byung Ji"
+        },
+        {
+          "slot": 2,
+          "name": "Myung Bo"
+        },
+        {
+          "slot": 3,
+          "name": "Tae Youn"
+        },
+        {
+          "slot": 4,
+          "name": "Min Sung"
+        },
+        {
+          "slot": 5,
+          "name": "Sang Chu"
+        },
+        {
+          "slot": 6,
+          "name": "Seok Ju"
+        },
+        {
+          "slot": 7,
+          "name": "Sung Yon"
+        },
+        {
+          "slot": 8,
+          "name": "Do Keun"
+        },
+        {
+          "slot": 9,
+          "name": "Jung Won"
+        },
+        {
+          "slot": 10,
+          "name": "Do Hoon"
+        },
+        {
+          "slot": 11,
+          "name": "Yong Soo"
+        },
+        {
+          "slot": 12,
+          "name": "Young Il"
+        },
+        {
+          "slot": 13,
+          "name": "Samg Hun"
+        },
+        {
+          "slot": 14,
+          "name": "J.Dae Il"
+        },
+        {
+          "slot": 15,
+          "name": "Hyung Se"
+        },
+        {
+          "slot": 16,
+          "name": "Sang Yoo"
+        },
+        {
+          "slot": 17,
+          "name": "Jong Soo"
+        },
+        {
+          "slot": 18,
+          "name": "Jung Yoo"
+        },
+        {
+          "slot": 19,
+          "name": "Dong Goo"
+        },
+        {
+          "slot": 20,
+          "name": "Sun Hong"
+        },
+        {
+          "slot": 21,
+          "name": "Lim Saen"
+        },
+        {
+          "slot": 22,
+          "name": "Dong Myu"
+        }
+      ]
+    },
+    {
+      "team_id": 37,
+      "team_name": "Saudi Arabia",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Deayea"
+        },
+        {
+          "slot": 2,
+          "name": "Khilaiwi"
+        },
+        {
+          "slot": 3,
+          "name": "Zebermaw"
+        },
+        {
+          "slot": 4,
+          "name": "Jahani"
+        },
+        {
+          "slot": 5,
+          "name": "Sulimani"
+        },
+        {
+          "slot": 6,
+          "name": "Amin"
+        },
+        {
+          "slot": 7,
+          "name": "Kh.Owair"
+        },
+        {
+          "slot": 8,
+          "name": "Muwalid"
+        },
+        {
+          "slot": 9,
+          "name": "S.Owaira"
+        },
+        {
+          "slot": 10,
+          "name": "Jaber"
+        },
+        {
+          "slot": 11,
+          "name": "Shahrani"
+        },
+        {
+          "slot": 12,
+          "name": "Madani"
+        },
+        {
+          "slot": 13,
+          "name": "A.Dokhi"
+        },
+        {
+          "slot": 14,
+          "name": "Janoubi"
+        },
+        {
+          "slot": 15,
+          "name": "Harbi"
+        },
+        {
+          "slot": 16,
+          "name": "Saleh"
+        },
+        {
+          "slot": 17,
+          "name": "Temyat"
+        },
+        {
+          "slot": 18,
+          "name": "Thunayan"
+        },
+        {
+          "slot": 19,
+          "name": "O.Dosari"
+        },
+        {
+          "slot": 20,
+          "name": "Mehallel"
+        },
+        {
+          "slot": 21,
+          "name": "Sadiq"
+        },
+        {
+          "slot": 22,
+          "name": "Antaif"
+        }
+      ]
+    },
+    {
+      "team_id": 38,
+      "team_name": "Iran",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Abedzad"
+        },
+        {
+          "slot": 2,
+          "name": "Khakpour"
+        },
+        {
+          "slot": 3,
+          "name": "Pashazad"
+        },
+        {
+          "slot": 4,
+          "name": "Zarinche"
+        },
+        {
+          "slot": 5,
+          "name": "Mohammed"
+        },
+        {
+          "slot": 6,
+          "name": "Minavand"
+        },
+        {
+          "slot": 7,
+          "name": "Mhadavik"
+        },
+        {
+          "slot": 8,
+          "name": "Estili"
+        },
+        {
+          "slot": 9,
+          "name": "Bagheri"
+        },
+        {
+          "slot": 10,
+          "name": "Azizi"
+        },
+        {
+          "slot": 11,
+          "name": "Daei"
+        },
+        {
+          "slot": 12,
+          "name": "Peyravan"
+        },
+        {
+          "slot": 13,
+          "name": "Ostadaza"
+        },
+        {
+          "slot": 14,
+          "name": "Sadavi"
+        },
+        {
+          "slot": 15,
+          "name": "Mansoria"
+        },
+        {
+          "slot": 16,
+          "name": "Dinmoham"
+        },
+        {
+          "slot": 17,
+          "name": "Shahrodi"
+        },
+        {
+          "slot": 18,
+          "name": "Latifi"
+        },
+        {
+          "slot": 19,
+          "name": "Hamedani"
+        },
+        {
+          "slot": 20,
+          "name": "Seraj"
+        },
+        {
+          "slot": 21,
+          "name": "Nakisa"
+        },
+        {
+          "slot": 22,
+          "name": "Boromand"
+        }
+      ]
+    },
+    {
+      "team_id": 39,
+      "team_name": "Australia",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Bosnich"
+        },
+        {
+          "slot": 2,
+          "name": "Ivanovic"
+        },
+        {
+          "slot": 3,
+          "name": "Lazaridi"
+        },
+        {
+          "slot": 4,
+          "name": "Tobin"
+        },
+        {
+          "slot": 5,
+          "name": "Slater"
+        },
+        {
+          "slot": 6,
+          "name": "Mori"
+        },
+        {
+          "slot": 7,
+          "name": "Zelic"
+        },
+        {
+          "slot": 8,
+          "name": "Foster"
+        },
+        {
+          "slot": 9,
+          "name": "A.Vidmar"
+        },
+        {
+          "slot": 10,
+          "name": "Arnold"
+        },
+        {
+          "slot": 11,
+          "name": "Aloisi"
+        },
+        {
+          "slot": 12,
+          "name": "Bingley"
+        },
+        {
+          "slot": 13,
+          "name": "Popovic"
+        },
+        {
+          "slot": 14,
+          "name": "Horvat"
+        },
+        {
+          "slot": 15,
+          "name": "Muscat"
+        },
+        {
+          "slot": 16,
+          "name": "Enes"
+        },
+        {
+          "slot": 17,
+          "name": "Trimboli"
+        },
+        {
+          "slot": 18,
+          "name": "Viduka"
+        },
+        {
+          "slot": 19,
+          "name": "Moore"
+        },
+        {
+          "slot": 20,
+          "name": "Skoko"
+        },
+        {
+          "slot": 21,
+          "name": "Kalac"
+        },
+        {
+          "slot": 22,
+          "name": "Petkovic"
+        }
+      ]
+    },
+    {
+      "team_id": 40,
+      "team_name": "World All Stars",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Chilaver"
+        },
+        {
+          "slot": 2,
+          "name": "Njanka"
+        },
+        {
+          "slot": 3,
+          "name": "Ayala"
+        },
+        {
+          "slot": 4,
+          "name": "R.Carlos"
+        },
+        {
+          "slot": 5,
+          "name": "Zanetti"
+        },
+        {
+          "slot": 6,
+          "name": "Dunga"
+        },
+        {
+          "slot": 7,
+          "name": "Hadji"
+        },
+        {
+          "slot": 8,
+          "name": "Ortega"
+        },
+        {
+          "slot": 9,
+          "name": "Mboma"
+        },
+        {
+          "slot": 10,
+          "name": "Ronaldo"
+        },
+        {
+          "slot": 11,
+          "name": "Batistut"
+        },
+        {
+          "slot": 12,
+          "name": "Myung Bo"
+        },
+        {
+          "slot": 13,
+          "name": "Cafu"
+        },
+        {
+          "slot": 14,
+          "name": "Mhadavik"
+        },
+        {
+          "slot": 15,
+          "name": "R.Acuna"
+        },
+        {
+          "slot": 16,
+          "name": "Nakata"
+        },
+        {
+          "slot": 17,
+          "name": "Rivaldo"
+        },
+        {
+          "slot": 18,
+          "name": "Preciado"
+        },
+        {
+          "slot": 19,
+          "name": "Salas"
+        },
+        {
+          "slot": 20,
+          "name": "Hernande"
+        },
+        {
+          "slot": 21,
+          "name": "Mondrago"
+        },
+        {
+          "slot": 22,
+          "name": "Campos"
+        }
+      ]
+    },
+    {
+      "team_id": 41,
+      "team_name": "European All Stars",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Schmeich"
+        },
+        {
+          "slot": 2,
+          "name": "Costacur"
+        },
+        {
+          "slot": 3,
+          "name": "F.DeBoer"
+        },
+        {
+          "slot": 4,
+          "name": "Desailly"
+        },
+        {
+          "slot": 5,
+          "name": "DiBiagio"
+        },
+        {
+          "slot": 6,
+          "name": "Raul"
+        },
+        {
+          "slot": 7,
+          "name": "Davids"
+        },
+        {
+          "slot": 8,
+          "name": "Zidane"
+        },
+        {
+          "slot": 9,
+          "name": "Bierhoff"
+        },
+        {
+          "slot": 10,
+          "name": "Suker"
+        },
+        {
+          "slot": 11,
+          "name": "Owen"
+        },
+        {
+          "slot": 12,
+          "name": "Maldini"
+        },
+        {
+          "slot": 13,
+          "name": "Thuram"
+        },
+        {
+          "slot": 14,
+          "name": "Petit"
+        },
+        {
+          "slot": 15,
+          "name": "Jarni"
+        },
+        {
+          "slot": 16,
+          "name": "Hagi"
+        },
+        {
+          "slot": 17,
+          "name": "Stojkovi"
+        },
+        {
+          "slot": 18,
+          "name": "R.Baggio"
+        },
+        {
+          "slot": 19,
+          "name": "T.A.Flo"
+        },
+        {
+          "slot": 20,
+          "name": "Vieri"
+        },
+        {
+          "slot": 21,
+          "name": "Barthez"
+        },
+        {
+          "slot": 22,
+          "name": "VanDerSa"
+        }
+      ]
+    },
+    {
+      "team_id": 42,
+      "team_name": "All Stars / Secret (Team 42)",
+      "players": [
+        {
+          "slot": 1,
+          "name": "Perruzi"
+        },
+        {
+          "slot": 2,
+          "name": "Sammer"
+        },
+        {
+          "slot": 3,
+          "name": "Montero"
+        },
+        {
+          "slot": 4,
+          "name": "F.Nevill"
+        },
+        {
+          "slot": 5,
+          "name": "Ferrara"
+        },
+        {
+          "slot": 6,
+          "name": "Redondo"
+        },
+        {
+          "slot": 7,
+          "name": "Juninho"
+        },
+        {
+          "slot": 8,
+          "name": "Gascoign"
+        },
+        {
+          "slot": 9,
+          "name": "Guardiol"
+        },
+        {
+          "slot": 10,
+          "name": "Romario"
+        },
+        {
+          "slot": 11,
+          "name": "Boksic"
+        },
+        {
+          "slot": 12,
+          "name": "Belodedi"
+        },
+        {
+          "slot": 13,
+          "name": "Benarriv"
+        },
+        {
+          "slot": 14,
+          "name": "Panucci"
+        },
+        {
+          "slot": 15,
+          "name": "M.Silva"
+        },
+        {
+          "slot": 16,
+          "name": "Reckin"
+        },
+        {
+          "slot": 17,
+          "name": "I.Ba"
+        },
+        {
+          "slot": 18,
+          "name": "Ravanell"
+        },
+        {
+          "slot": 19,
+          "name": "J.Cruyff"
+        },
+        {
+          "slot": 20,
+          "name": "Kazu"
+        },
+        {
+          "slot": 21,
+          "name": "Illgner"
+        },
+        {
+          "slot": 22,
+          "name": "Siboldi"
+        }
+      ]
+    }
+  ],
+  "total_teams": 43,
+  "total_players": 946
+}
