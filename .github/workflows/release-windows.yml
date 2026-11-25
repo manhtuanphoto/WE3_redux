@@ -1,0 +1,97 @@
+name: Build & Release Windows (.exe)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Optional release tag (e.g. v1.0.0) to publish a GitHub Release'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: '4.7.2-stable'
+  EXPORT_NAME: 'WE3_Redux'
+
+jobs:
+  build-windows:
+    name: Build Windows x64 Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Godot ${{ env.GODOT_VERSION }} & Export Templates
+        shell: pwsh
+        run: |
+          $ver = $env:GODOT_VERSION
+          $tplVer = $ver.Replace('-', '.')
+          $godotDir = "$env:RUNNER_TEMP\godot"
+          $tplDir = "$env:APPDATA\Godot\export_templates\$tplVer"
+          New-Item -ItemType Directory -Force -Path $godotDir, $tplDir | Out-Null
+
+          $godotUrl = "https://github.com/godotengine/godot/releases/download/$ver/Godot_v${ver}_win64.exe.zip"
+          $tplUrl   = "https://github.com/godotengine/godot/releases/download/$ver/Godot_v${ver}_export_templates.tpz"
+
+          Write-Host "Downloading Godot: $godotUrl"
+          curl.exe -L --fail --retry 3 -o "$godotDir\godot.zip" $godotUrl
+          Expand-Archive -Path "$godotDir\godot.zip" -DestinationPath $godotDir -Force
+
+          Write-Host "Downloading Export Templates: $tplUrl"
+          curl.exe -L --fail --retry 3 -o "$godotDir\templates.zip" $tplUrl
+          Expand-Archive -Path "$godotDir\templates.zip" -DestinationPath "$godotDir\tpl_extract" -Force
+          Move-Item -Path "$godotDir\tpl_extract\templates\*" -Destination $tplDir -Force
+
+          $exe = (Get-ChildItem -Path $godotDir -Filter "Godot_v*_win64_console.exe" | Select-Object -First 1).FullName
+          if (-not $exe) {
+            $exe = (Get-ChildItem -Path $godotDir -Filter "Godot_v*_win64.exe" | Select-Object -First 1).FullName
+          }
+          "GODOT_EXE=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Using Godot binary: $exe"
+
+      - name: Import Godot assets
+        shell: pwsh
+        run: |
+          & "$env:GODOT_EXE" --headless --path . --import --quit
+
+      - name: Run automated headless verification tests
+        shell: pwsh
+        run: |
+          & "$env:GODOT_EXE" --headless --path . "res://tests/test_runner.tscn"
+
+      - name: Export Windows x64 Release (.exe)
+        shell: pwsh
+        run: |
+          $outDir = "build\WE3_Redux_Windows"
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          & "$env:GODOT_EXE" --headless --path . --export-release "Windows Desktop" "$outDir\$($env:EXPORT_NAME).exe"
+          if (-not (Test-Path "$outDir\$($env:EXPORT_NAME).exe")) {
+            Write-Error "Export failed: $outDir\$($env:EXPORT_NAME).exe not found!"
+            exit 1
+          }
+          Copy-Item -Path "README.md" -Destination "$outDir\README.md" -Force
+          Compress-Archive -Path "$outDir\*" -DestinationPath "build\WE3_Redux_Windows_x64.zip" -Force
+          Get-ChildItem "build" -Recurse | Select-Object FullName, Length
+
+      - name: Upload Windows Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WE3_Redux_Windows_x64
+          path: build/WE3_Redux_Windows_x64.zip
+          retention-days: 30
+
+      - name: Publish GitHub Release (on tag push or manual release_tag)
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || inputs.release_tag }}
+          name: "WE3 Redux ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || inputs.release_tag }} (Windows x64)"
+          generate_release_notes: true
+          files: |
+            build/WE3_Redux_Windows_x64.zip
