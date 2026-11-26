@@ -53,7 +53,7 @@
   - **Original Commentary Clips** decoded at native `27,781 Hz` from `VAGp` headers.
 - **Reverse-Engineered Gameplay & AI**:
   - **Authentic player database (946 players)**: real shirt numbers, positions, heights and the 9 WE3 stat levels (offense, defense, speed, acceleration, kick power, technique, header, stamina, curve) read from `SLPM_861.62`. Stats drive sprint speed, acceleration, fatigue (`func_80023078`), shot power, pass/shot error window (`func_80036230`), AI shooting range and tackle strength. Each national team's lineup and formation (3-5-2, 5-3-2, 4-5-1, 3-4-3...) is derived from its real starting XI.
-  - Ball drag, ground friction, spin & Magnus curve synced with WE3 physics (`0.992` air drag, `0.968` ground friction, `0.18` Magnus).
+  - Ball physics read straight from `func_8004BAA4`: 30 Hz logic frame, gravity 736 raw/frame² (10.35 m/s²), rolling friction `h -= h>>6` plus quadratic drag, `0x5BF` bounce-stop threshold. Player motion uses the real 30 Hz model (body/move angles 12/24 units per frame, 4 while dashing, 34-unit turning cap, skid when reversing >90°).
   - Pass speed solver (`func_8002EB3C`) and defensive-third pressure clearance (`func_80033B88`) ported from the C decompilation.
   - Full match rules: kick-off, throw-ins, corners, goal kicks, fouls/cards, offside, halftime, fulltime, instant replay, and **11v11 AI vs AI** mode.
 - **Classic Broadcast UI & HUD**:
@@ -80,7 +80,7 @@
   - **Giọng bình luận gốc** giải mã đúng tần số `27,781 Hz` từ header `VAGp`.
 - **Vật lý & AI đối chiếu từ mã nguồn C gốc**:
   - **CSDL cầu thủ gốc (946 cầu thủ)**: số áo, vị trí, chiều cao và 9 chỉ số WE3 (tấn công, phòng ngự, tốc độ, gia tốc, lực sút, kỹ thuật, đánh đầu, thể lực, bóng xoáy) đọc trực tiếp từ `SLPM_861.62`. Chỉ số ảnh hưởng tốc độ chạy, gia tốc, mệt mỏi (`func_80023078`), lực sút, sai số chuyền/sút (`func_80036230`), tầm sút của AI và sức tranh bóng. Đội hình mỗi đội tuyển (3-5-2, 5-3-2, 4-5-1, 3-4-3...) được suy ra từ đúng 11 cầu thủ đá chính gốc.
-  - Ma sát cỏ, lực cản không khí, độ xoáy bóng (Magnus) đồng bộ từ mã C vật lý WE3.
+  - Vật lý bóng đọc trực tiếp từ `func_8004BAA4`: nhịp logic 30 Hz, trọng lực 736 raw/frame² (10,35 m/s²), ma sát lăn `h -= h>>6` + lực cản bậc hai, ngưỡng dừng nảy `0x5BF`. Chuyển động cầu thủ dùng đúng mô hình 30 Hz (góc thân/góc chạy 12/24 đơn vị mỗi frame, 4 khi nước rút, trần rẽ 34, phanh trượt khi quay đầu >90°).
   - Thuật toán tính lực chuyền (`func_8002EB3C`) và phá bóng khu vực phòng ngự (`func_80033B88`) chuyển thể trực tiếp từ mã decomp.
   - Đầy đủ luật thi đấu: giao bóng, ném biên, phạt góc, phát bóng lên, phạm lỗi/thẻ phạt, hiệp 1/hiệp 2, phát lại bàn thắng (Replay) và chế độ **11v11 AI vs AI**.
 - **Giao diện & HUD phong cách truyền hình 1998**:

@@ -8,7 +8,9 @@ signal out_of_bounds_detected(event_type: String, restart_pos: Vector3, restart_
 enum BallState { STOPPED, AIRBORNE, ROLLING, ATTACHED }
 
 const BALL_RADIUS := 0.16
-const GRAVITY := 24.0
+const GRAVITY := 10.35   # 736 raw/frame^2 (func_8004BAA4): 2.875 u * 0.12 m/s per 30 Hz frame
+const TICK := 1.0 / 30.0  # WE3 logic frame
+const DRAG_K := 6881.0    # ((s3*h)>>21)/7 expressed in m/s per frame: dv = s3*v/6881
 const GROUND_FRICTION := 1.65
 const AIR_DRAG := 0.28
 
@@ -23,6 +25,7 @@ var is_active_play: bool = true
 var offside_target: Node3D = null
 var offside_defending_team: int = 0
 
+var _tick_acc: float = 0.0
 var _mesh_node: MeshInstance3D
 var _shadow_node: MeshInstance3D
 
@@ -107,24 +110,47 @@ func kick(kick_vel: Vector3, kicker: Node3D, team_idx: int, spin_y: float = 0.0)
 	SoundFX.play_sfx("kick")
 
 func predict_landing_point(max_steps: int = 45) -> Vector3:
-	# Mirrors WE3 func_8004B2E0: simulate forward to find ball intercept/landing point
+	# Mirrors WE3 func_8004B2E0: simulate forward (30 Hz frames) to find ball intercept/landing point
 	if owner_player != null or state == BallState.STOPPED:
 		return global_position
 	var sim_pos := global_position
 	var sim_vel := vel
-	var dt := 1.0 / 30.0
 	for _i in range(max_steps):
-		if sim_pos.y > BALL_RADIUS + 0.02 or sim_vel.y > 0.0:
-			sim_vel.y -= GRAVITY * dt
-		sim_pos += sim_vel * dt
+		var h := Vector2(sim_vel.x, sim_vel.z).length()
+		var air := sim_pos.y > BALL_RADIUS + 0.02 or sim_vel.y > 0.0
+		if air:
+			var s3 := sqrt(h * h + sim_vel.y * sim_vel.y)
+			if h > 0.0:
+				var nh := maxf(0.0, h - s3 * h / DRAG_K)
+				sim_vel.x *= nh / h
+				sim_vel.z *= nh / h
+			sim_vel.y -= s3 * sim_vel.y / (DRAG_K * 4.0)
+			sim_vel.y -= GRAVITY * TICK
+		else:
+			var nh2 := maxf(0.0, h * (1.0 - 1.0 / 64.0) - h * h / DRAG_K)
+			if h > 0.0:
+				sim_vel.x *= nh2 / h
+				sim_vel.z *= nh2 / h
+		sim_pos += sim_vel * TICK
 		if sim_pos.y <= BALL_RADIUS:
 			sim_pos.y = BALL_RADIUS
-			if absf(sim_vel.y) < 1.5:
+			if absf(sim_vel.y) < 0.7:
 				return sim_pos
 			sim_vel.y = -sim_vel.y * 0.65
 			sim_vel.x *= 0.8
 			sim_vel.z *= 0.8
 	return sim_pos
+
+## Distance (m) a ground ball rolls from speed v0 until it slows to v_min (authentic WE3 rolling friction).
+static func roll_distance(v0: float, v_min: float) -> float:
+	var v := v0
+	var d := 0.0
+	var n := 0
+	while v > v_min and n < 400:
+		d += v * (1.0 / 30.0)
+		v = v * (1.0 - 1.0 / 64.0) - v * v / 6881.0
+		n += 1
+	return d
 
 func _physics_process(delta: float) -> void:
 	if pickup_cooldown > 0.0:
@@ -148,35 +174,45 @@ func _physics_process(delta: float) -> void:
 		_update_shadow()
 		return
 
-	# Free-flight / rolling physics synced 1:1 with we3_native_engine/src/we3_physics.c
+	# Free-flight / rolling physics: authentic WE3 ball step (func_8004BAA4), run at the 30 Hz logic rate
 	var pos := global_position
-	var dt60 := delta * 60.0
-	if pos.y > BALL_RADIUS + 0.005 or vel.y > 0.0:
-		state = BallState.AIRBORNE
-		vel.y -= GRAVITY * delta
-		# Magnus / curve effect (we3_physics.c: 0.18 perp to XZ vel)
-		var speed_xz := Vector2(vel.x, vel.z).length()
-		if speed_xz > 0.1 and absf(angular_spin_y) > 0.01:
-			var nx := -vel.z / speed_xz
-			var nz := vel.x / speed_xz
-			vel.x += nx * angular_spin_y * 0.18 * delta * 10.0
-			vel.z += nz * angular_spin_y * 0.18 * delta * 10.0
-		var air_d := pow(0.992, dt60)
-		vel.x *= air_d
-		vel.z *= air_d
-	else:
-		pos.y = BALL_RADIUS
-		vel.y = 0.0
-		angular_spin_y *= pow(0.94, dt60)
-		var ground_d := pow(0.968, dt60)
-		vel.x *= ground_d
-		vel.z *= ground_d
-		if Vector2(vel.x, vel.z).length() < 0.12:
-			vel.x = 0.0
-			vel.z = 0.0
-			state = BallState.STOPPED
+	_tick_acc += delta
+	var guard := 0
+	while _tick_acc >= TICK and guard < 4:
+		_tick_acc -= TICK
+		guard += 1
+		var in_air := pos.y > BALL_RADIUS + 0.005 or vel.y > 0.0
+		var h := Vector2(vel.x, vel.z).length()
+		if in_air:
+			state = BallState.AIRBORNE
+			var s3 := sqrt(h * h + vel.y * vel.y)
+			if h > 0.0:
+				var nh := maxf(0.0, h - s3 * h / DRAG_K)
+				vel.x *= nh / h
+				vel.z *= nh / h
+			vel.y -= s3 * vel.y / (DRAG_K * 4.0)
+			vel.y -= GRAVITY * TICK
+			# curve: heading drifts with spin while airborne (func_8004BAA4 spin_interval)
+			if h > 0.1 and absf(angular_spin_y) > 0.01:
+				var turn := signf(angular_spin_y) * deg_to_rad(1.40625) * clampf(absf(angular_spin_y) / 2.5, 0.0, 1.0)
+				var hv := Vector2(vel.x, vel.z).rotated(turn)
+				vel.x = hv.x
+				vel.z = hv.y
 		else:
-			state = BallState.ROLLING
+			pos.y = BALL_RADIUS
+			vel.y = 0.0
+			angular_spin_y = 0.0
+			# rolling: h -= h>>6 ; h -= ((h*h)>>21)/7
+			var nh2 := maxf(0.0, h * (1.0 - 1.0 / 64.0) - h * h / DRAG_K)
+			if h > 0.0:
+				vel.x *= nh2 / h
+				vel.z *= nh2 / h
+			if nh2 < 0.12:   # h_speed < 256 raw (1 unit/frame)
+				vel.x = 0.0
+				vel.z = 0.0
+				state = BallState.STOPPED
+			else:
+				state = BallState.ROLLING
 
 	pos += vel * delta
 
@@ -192,6 +228,9 @@ func _physics_process(delta: float) -> void:
 			vel.z *= h_keep
 			vel.y = -vel.y * v_keep
 			angular_spin_y *= 0.65
+			if vel.y < 0.69:
+				vel.y = 0.0
+				state = BallState.ROLLING
 		else:
 			vel.y = 0.0
 			state = BallState.ROLLING
