@@ -26,6 +26,9 @@ var selected_stadium: String = "GRDM_C"
 var home_formation: String = "4-4-2"
 var away_formation: String = "4-4-2"
 var home_formation_manual: bool = false
+var human_side: int = 0          # 0 = Home, 1 = Away (ignored when is_ai_vs_ai)
+var return_scene: String = "res://scenes/main_menu.tscn"   # where F8 / Main Menu goes (Match Preview sets its own)
+var preview_speed: float = 1.0
 var away_formation_manual: bool = false
 
 func _ready() -> void:
@@ -45,14 +48,15 @@ func _input(event: InputEvent) -> void:
 			return_to_main_menu()
 
 func reload_current_game_scene() -> void:
-	Engine.time_scale = 1.0
+	Engine.time_scale = preview_speed
 	if get_tree() != null:
 		get_tree().reload_current_scene()
 
 func return_to_main_menu() -> void:
 	Engine.time_scale = 1.0
+	preview_speed = 1.0
 	if get_tree() != null:
-		get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+		get_tree().change_scene_to_file(return_scene)
 
 func _load_teams() -> void:
 	if not FileAccess.file_exists(DB_PATH):

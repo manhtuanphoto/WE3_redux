@@ -78,6 +78,8 @@ func _set_selected(idx: int) -> void:
 
 func _activate_mode(mode_id: String) -> void:
 	GameData.is_ai_vs_ai = false
+	GameData.human_side = 0
+	GameData.return_scene = "res://scenes/main_menu.tscn"
 	SoundFX.play_sfx("whistle")
 	match mode_id:
 		"exhibition", "world_cup", "league", "cup", "option":

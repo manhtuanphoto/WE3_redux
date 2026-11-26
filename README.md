@@ -122,6 +122,15 @@
 3. Or launch the standalone **11v11 AI vs AI** test match directly via:
    - `test_tools/ai_vs_ai_11v11.tscn` (or `test_tools/run_ai_vs_ai_11v11.bat` on Windows).
 
+### Quick Match Preview tool / Công cụ test trận nhanh
+![Match Preview](docs/images/screenshot_preview.png)
+
+`test_tools/match_preview.tscn` (or `test_tools/run_match_preview.bat`) is a PES6_Match_Preview-style launcher: pick any two of the 43 teams, stadium, formations (auto = the team's real starting XI), half length, CPU difficulty, which side you control (or CPU vs CPU) and game speed, then jump straight into the match. Settings are remembered. In a match `F8` returns to the preview, `F5` restarts.
+`test_tools/match_preview.tscn` (hoặc `run_match_preview.bat`) là công cụ chạy trận nhanh kiểu PES6_Match_Preview: chọn 2 đội bất kỳ trong 43 đội, sân, sơ đồ, thời lượng hiệp, độ khó CPU, bên bạn điều khiển (hoặc CPU vs CPU) và tốc độ game rồi vào trận ngay. Thiết lập được nhớ lại; trong trận `F8` quay về màn hình này, `F5` chơi lại.
+
+```bash
+godot --path . res://test_tools/match_preview.tscn -- --home=Brazil --away=Japan --stadium=GRDM_D --form-home=3-5-2 --control=cpu --half=180 --speed=2 --autostart
+```
 ### Automated Test Suite / Chạy kiểm thử tự động
 ```bash
 godot --headless --path . "res://tests/test_runner.tscn"

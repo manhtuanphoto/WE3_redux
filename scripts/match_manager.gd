@@ -182,9 +182,10 @@ func _ready() -> void:
 	SoundFX.start_crowd_ambience()
 
 func _spawn_teams() -> void:
-	_spawn_team_side(0, GameData.home_team_id, not GameData.is_ai_vs_ai)
-	_spawn_team_side(1, GameData.away_team_id, false)
-	if not GameData.is_ai_vs_ai:
+	var hs := -1 if GameData.is_ai_vs_ai else GameData.human_side
+	_spawn_team_side(0, GameData.home_team_id, hs == 0)
+	_spawn_team_side(1, GameData.away_team_id, hs == 1)
+	if hs >= 0:
 		_select_controlled_player(_get_closest_human_outfielder(Vector3.ZERO))
 	else:
 		_select_controlled_player(null)
@@ -523,4 +524,6 @@ func _restart_match() -> void:
 
 func _go_main_menu() -> void:
 	Engine.time_scale = 1.0
-	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+	Engine.time_scale = 1.0
+	GameData.preview_speed = 1.0
+	get_tree().change_scene_to_file(GameData.return_scene)

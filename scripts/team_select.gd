@@ -186,6 +186,9 @@ func _build_ui() -> void:
 	btn_kickoff.custom_minimum_size = Vector2(200, 44)
 	btn_kickoff.pressed.connect(func():
 		GameData.is_ai_vs_ai = false
+		GameData.human_side = 0
+		GameData.return_scene = "res://scenes/main_menu.tscn"
+		GameData.preview_speed = 1.0
 		get_tree().change_scene_to_file("res://scenes/match.tscn")
 	)
 	btn_row.add_child(btn_kickoff)
