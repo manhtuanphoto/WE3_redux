@@ -37,6 +37,20 @@ var _one_touch_action: String = ""
 var _one_touch_timer: float = 0.0
 var _ai_hold_timer: float = 0.0
 
+# --- Authentic WE3 player profile (SLPM_861.62 stat words; levels 1..9) ---
+var stats: Dictionary = {"offense": 6, "defense": 5, "speed": 7, "acceleration": 7, "kick_power": 6, "technique": 6, "header_jump": 6, "stamina": 7, "curve_pass": 5}
+var shirt_number: int = 0
+var height_cm: int = 178
+var pos_group: String = ""
+var roster_slot: int = -1
+var _walk_speed: float = WALK_SPEED
+var _sprint_speed: float = SPRINT_SPEED
+var _dribble_speed: float = DRIBBLE_SPEED
+var _accel: float = ACCEL
+var _stam_drain: float = 1.0
+var _kick_mul: float = 1.0
+var _tech_err_deg: float = 0.0
+
 var _model_root: Node3D = null
 var _anim_player: AnimationPlayer = null
 var _current_anim: String = ""
@@ -55,6 +69,47 @@ func setup(p_team_side: int, p_team_id: int, p_slot: int, p_name: String, p_role
 	home_anchor = p_anchor
 	_ball = p_ball
 	_all_players = p_all_players
+
+## Applies the authentic stat record. Mapping follows the real C data flow:
+##  speed (w0 nibble 5) -> max run speed, acceleration (w1 nibble 0) -> acceleration divisor,
+##  technique -> random pass/shot error window [0 .. 9-technique] (func_80036230),
+##  stamina -> fatigue rate, kick_power -> shot power, offense/defense -> AI shoot range / tackle strength.
+func apply_profile(rec: Dictionary, p_roster_slot: int = -1) -> void:
+	roster_slot = p_roster_slot
+	if rec.is_empty():
+		return
+	var st: Variant = rec.get("stats", null)
+	if typeof(st) == TYPE_DICTIONARY:
+		for k in stats.keys():
+			stats[k] = int(st.get(k, stats[k]))
+	shirt_number = int(rec.get("shirt_number", shirt_number))
+	height_cm = int(rec.get("height_cm", height_cm))
+	pos_group = str(rec.get("pos_group", ""))
+	var spd := float(stats["speed"])
+	var acc := float(stats["acceleration"])
+	var sta := float(stats["stamina"])
+	var kp := float(stats["kick_power"])
+	var tech := float(stats["technique"])
+	var speed_mul := 1.0 + (spd - 7.0) * 0.025          # WE3 base 53 + speed level (+-3..5% across 5..9)
+	_walk_speed = WALK_SPEED * speed_mul
+	_sprint_speed = SPRINT_SPEED * speed_mul
+	_dribble_speed = DRIBBLE_SPEED * (1.0 + (spd - 7.0) * 0.018 + (tech - 6.0) * 0.006)
+	_accel = ACCEL * (1.0 + (acc - 7.0) * 0.045)
+	_stam_drain = 1.0 + (6.0 - sta) * 0.09
+	_kick_mul = 1.0 + (kp - 6.0) * 0.035
+	_tech_err_deg = maxf(0.0, 9.0 - tech) * 0.7
+
+## WE3 func_80023078: below the stamina threshold max speed drops up to ~7% and acceleration divisor grows 18 -> 28.
+func _fat_spd() -> float:
+	return 1.0 if stamina >= 40.0 else lerpf(0.93, 1.0, clampf(stamina / 40.0, 0.0, 1.0))
+
+func _fat_acc() -> float:
+	return 1.0 if stamina >= 40.0 else lerpf(0.64, 1.0, clampf(stamina / 40.0, 0.0, 1.0))
+
+func _apply_tech_error(dir: Vector3, mult: float = 1.0) -> Vector3:
+	if _tech_err_deg <= 0.0:
+		return dir
+	return dir.rotated(Vector3.UP, deg_to_rad(randf_range(-_tech_err_deg, _tech_err_deg) * mult))
 
 func _ready() -> void:
 	_build_model()
@@ -390,6 +445,11 @@ func _physics_process(delta: float) -> void:
 		_process_human(delta)
 	else:
 		_process_ai(delta)
+		var ai_sp := Vector2(vel.x, vel.z).length()
+		if ai_sp > 6.0:
+			stamina = maxf(0.0, stamina - 7.0 * _stam_drain * delta)
+		else:
+			stamina = minf(100.0, stamina + 5.0 * delta)
 
 	_move_and_clamp(delta)
 	_try_pickup_ball()
@@ -413,11 +473,11 @@ func _process_human(delta: float) -> void:
 		stamina = maxf(0.0, stamina - 4.0)
 
 	if sprinting:
-		stamina = maxf(0.0, stamina - 18.0 * delta)
+		stamina = maxf(0.0, stamina - 18.0 * _stam_drain * delta)
 	else:
 		stamina = minf(100.0, stamina + 12.0 * delta)
 
-	var max_spd := SPRINT_SPEED if sprinting else (DRIBBLE_SPEED if has_ball() else WALK_SPEED)
+	var max_spd := (_sprint_speed * _fat_spd()) if sprinting else ((_dribble_speed * _fat_spd()) if has_ball() else (_walk_speed * _fat_spd()))
 	# WE3 Sprint Turn Limit (func_800259F0.c): cap speed when turning 46..134 deg while sprinting
 	var turn_rate := TURN_SPEED
 	if sprinting and Vector2(vel.x, vel.z).length() > 4.0 and move_dir.length() > 0.1:
@@ -440,7 +500,7 @@ func _process_human(delta: float) -> void:
 			action_lock_timer = 0.16
 			vel *= 0.45
 
-	vel = vel.lerp(target_vel, clampf(ACCEL * delta, 0.0, 1.0))
+	vel = vel.lerp(target_vel, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 
 	if move_dir.length() > 0.1:
 		_face_direction_rate(move_dir, delta, turn_rate)
@@ -483,7 +543,7 @@ func _process_ai(delta: float) -> void:
 	if _ball == null:
 		return
 	if action_lock_timer > 0.0 or _pending_kick_timer > 0.0:
-		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+		vel = vel.lerp(Vector3.ZERO, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 		return
 
 	if role == Role.GK:
@@ -497,7 +557,7 @@ func _process_ai(delta: float) -> void:
 		_ai_hold_timer += delta
 		# Decision scoring: Shoot (only in good angle), Cross (only if teammate in box), Pass to real open teammate, or Dribble
 		var dist_to_goal := global_position.distance_to(opp_goal)
-		if dist_to_goal < 23.5 and absf(global_position.z) < 16.5:
+		if dist_to_goal < (18.0 + float(stats["offense"]) * 0.85) and absf(global_position.z) < 16.5:
 			# Aim toward far corner away from opponent GK
 			var corner_z := -2.4 if global_position.z >= 0.0 else 2.4
 			var aim_pt := Vector3(attack_dir * PitchBuilder.HALF_LEN, 0.0, corner_z)
@@ -550,7 +610,7 @@ func _process_ai(delta: float) -> void:
 			away.y = 0.0
 			if away.length_squared() > 0.01:
 				dir = (dir * 0.62 + away.normalized() * 0.38).normalized()
-		vel = vel.lerp(dir * DRIBBLE_SPEED, clampf(ACCEL * delta, 0.0, 1.0))
+		vel = vel.lerp(dir * (_dribble_speed * _fat_spd()), clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 		_face_direction(dir, delta)
 		return
 
@@ -634,11 +694,11 @@ func _process_ai(delta: float) -> void:
 	var diff_mult: float = [0.82, 0.95, 1.06][clampi(GameData.ai_difficulty, 0, 2)]
 	if to_target.length() > 0.6:
 		var dir := to_target.normalized()
-		var spd: float = (SPRINT_SPEED * 0.90 if _is_closest_presser() else WALK_SPEED * 0.92) * diff_mult
-		vel = vel.lerp(dir * spd, clampf(ACCEL * delta, 0.0, 1.0))
+		var spd: float = ((_sprint_speed * _fat_spd()) * 0.90 if _is_closest_presser() else (_walk_speed * _fat_spd()) * 0.92) * diff_mult
+		vel = vel.lerp(dir * spd, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 		_face_direction(dir, delta)
 	else:
-		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+		vel = vel.lerp(Vector3.ZERO, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 		_face_direction((_ball.global_position - global_position).normalized(), delta)
 
 func _process_gk_ai(delta: float) -> void:
@@ -648,7 +708,7 @@ func _process_gk_ai(delta: float) -> void:
 
 	if has_ball():
 		_ai_hold_timer += delta
-		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+		vel = vel.lerp(Vector3.ZERO, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 		_face_direction(Vector3(inward, 0.0, 0.0), delta)
 		if _ai_hold_timer < 0.90:
 			return
@@ -689,10 +749,10 @@ func _process_gk_ai(delta: float) -> void:
 	to_t.y = 0.0
 	if to_t.length() > 0.2:
 		var dir := to_t.normalized()
-		var spd := SPRINT_SPEED * 0.95 if shot_coming else WALK_SPEED * 1.05
-		vel = vel.lerp(dir * spd, clampf(ACCEL * delta, 0.0, 1.0))
+		var spd := (_sprint_speed * _fat_spd()) * 0.95 if shot_coming else (_walk_speed * _fat_spd()) * 1.05
+		vel = vel.lerp(dir * spd, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 	else:
-		vel = vel.lerp(Vector3.ZERO, clampf(ACCEL * delta, 0.0, 1.0))
+		vel = vel.lerp(Vector3.ZERO, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 	_face_direction((ball_pos - global_position).normalized(), delta)
 
 func _is_closest_presser() -> bool:
@@ -813,7 +873,8 @@ func _kick_pass_to_target(target: Player, is_through: bool, is_loft: bool) -> vo
 	var kick_dir := to_dest.normalized() if dist > 0.01 else -global_transform.basis.z
 	var min_arrive := 6.5 if is_through else 4.2
 	var speed := _solve_pass_speed(dist, min_arrive)
-	var kick_vel := kick_dir * speed
+	kick_dir = _apply_tech_error(kick_dir)
+	var kick_vel := kick_dir * minf(speed, 30.0 * _kick_mul)
 	kick_vel.y = 7.8 if is_loft else (1.4 if is_through else 0.6)
 	_face_direction(kick_dir, 1.0)
 	_ball.kick(kick_vel, self, team_side)
@@ -866,7 +927,8 @@ func _perform_pass(aim_dir: Vector3, is_through: bool, is_loft: bool) -> void:
 			kick_dir = to_dest.normalized()
 			speed = _solve_pass_speed(to_dest.length(), 6.5 if is_through else 4.2)
 
-	var kick_vel := kick_dir * speed
+	kick_dir = _apply_tech_error(kick_dir)
+	var kick_vel := kick_dir * minf(speed, 30.0 * _kick_mul)
 	if is_loft:
 		kick_vel.y = 7.8
 	elif is_through:
@@ -909,8 +971,9 @@ func _perform_shoot(aim_dir: Vector3, power: float) -> void:
 	if aim_dir.length_squared() > 0.05:
 		base_dir = (base_dir * 0.65 + aim_dir.normalized() * 0.35).normalized()
 	base_dir.y = 0.0
+	base_dir = _apply_tech_error(base_dir, 1.5)
 
-	var spd := lerpf(18.0, 32.0, clampf(power, 0.2, 1.0))
+	var spd := lerpf(18.0, 32.0, clampf(power, 0.2, 1.0)) * _kick_mul
 	var loft := lerpf(1.8, 7.2, clampf(power, 0.2, 1.0))
 	var kick_vel := base_dir * spd + Vector3(0.0, loft, 0.0)
 	var spin := randf_range(-2.5, 2.5)
@@ -993,6 +1056,7 @@ func _try_pickup_ball() -> void:
 		# Steal / tackle challenge (with WE3 foul + yellow/red card check)
 		var carrier := _ball.owner_player as Player
 		var steal_chance := 0.80 if tackle_timer > 0.0 else 0.18
+		steal_chance *= clampf((0.7 + 0.06 * float(stats["defense"])) / (0.7 + 0.06 * float(carrier.stats["technique"])), 0.6, 1.5)
 		if randf() < steal_chance:
 			carrier.action_lock_timer = 0.45
 			_ball.set_owner_player(self, team_side)

@@ -14,7 +14,7 @@ var extra_kit_files_by_id: Dictionary = {}
 var tactics_by_id: Dictionary = {}
 
 const STADIUM_NAMES := ["GRDM_C", "GRDM_D", "GRDM_E", "GRDM_F", "GRDM_FN", "GRDM_G", "GRDM_H", "GRDM_I", "GRDM_J"]
-const FORMATIONS := ["4-4-2", "4-3-3", "3-5-2"]
+const FORMATIONS := ["4-4-2", "4-3-3", "3-5-2", "5-3-2", "4-5-1", "3-4-3"]
 
 # Current match configuration (temporarily Brazil vs Argentina for 11v11)
 var home_team_id: int = 30  # Brazil
@@ -25,6 +25,8 @@ var is_ai_vs_ai: bool = false
 var selected_stadium: String = "GRDM_C"
 var home_formation: String = "4-4-2"
 var away_formation: String = "4-4-2"
+var home_formation_manual: bool = false
+var away_formation_manual: bool = false
 
 func _ready() -> void:
 	_load_teams()
@@ -141,11 +143,36 @@ func get_team_extra_kit_texture(team_id: int) -> Texture2D:
 			return load(path) as Texture2D
 	return null
 
+## Authentic WE3 starting XI = first 11 roster slots. Their position groups (GK/DF/MF/FW)
+## define each national team's real default formation (e.g. 3-5-2, 5-3-2, 4-5-1 ...).
 func get_team_default_formation(team_id: int) -> String:
-	if tactics_by_id.has(team_id):
-		var fid := int(tactics_by_id[team_id].get("formation_id", 0))
-		return FORMATIONS[fid % FORMATIONS.size()]
+	var counts := {"DF": 0, "MF": 0, "FW": 0}
+	var players: Array = get_team(team_id).get("players", [])
+	for i in range(mini(11, players.size())):
+		var g := str(players[i].get("pos_group", ""))
+		if counts.has(g):
+			counts[g] += 1
+	var key := "%d-%d-%d" % [counts["DF"], counts["MF"], counts["FW"]]
+	if FORMATIONS.has(key):
+		return key
+	# Unknown shape -> nearest known formation by defender count
+	for f in FORMATIONS:
+		if f.begins_with(str(counts["DF"])):
+			return f
 	return "4-4-2"
+
+## Formation actually used for a side: manual override from Team Select, else the team's authentic one.
+func resolve_formation(side: int) -> String:
+	if side == 0:
+		return home_formation if home_formation_manual else get_team_default_formation(home_team_id)
+	return away_formation if away_formation_manual else get_team_default_formation(away_team_id)
+
+## Authentic per-player record (stats, shirt number, position, height) for roster index 0..21.
+func get_player_record(team_id: int, roster_idx: int) -> Dictionary:
+	var players: Array = get_team(team_id).get("players", [])
+	if roster_idx >= 0 and roster_idx < players.size() and typeof(players[roster_idx]) == TYPE_DICTIONARY:
+		return players[roster_idx]
+	return {}
 
 func get_team_kit_texture(team_id: int) -> Texture2D:
 	if kit_files_by_id.has(team_id):

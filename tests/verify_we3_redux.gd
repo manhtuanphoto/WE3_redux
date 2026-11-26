@@ -29,6 +29,27 @@ func _run_tests() -> void:
 	_assert(GameData.teams.size() == 43, "Loaded 43 national teams (got %d)" % GameData.teams.size())
 	_assert(GameData.get_team_kit_texture(0) != null, "Loaded kit texture for team 0")
 
+	# 2b. Authentic WE3 player stat database (SLPM_861.62 stat words) + roster-driven lineups
+	var ronaldo := GameData.get_player_record(30, 10)
+	_assert(str(ronaldo.get("name", "")) == "Ronaldo" and int(ronaldo.get("stats", {}).get("speed", 0)) == 9, "Authentic stats: Ronaldo speed level 9 (#%d)" % int(ronaldo.get("shirt_number", 0)))
+	_assert(GameData.get_team_default_formation(30) == "4-4-2", "Brazil authentic formation derived from starting XI = 4-4-2")
+	var lineup_ok := true
+	var shapes := {}
+	for t in GameData.teams:
+		var tid := int(t["team_id"])
+		var fname := GameData.get_team_default_formation(tid)
+		shapes[fname] = true
+		var tmpl: Array = MatchManager.FORMATION_TEMPLATES[fname]
+		var lu: Array[int] = MatchManager.assign_lineup(t["players"], tmpl)
+		var seen := {}
+		for s in range(lu.size()):
+			if lu[s] < 0 or seen.has(lu[s]):
+				lineup_ok = false
+			seen[lu[s]] = true
+		if str(t["players"][lu[0]].get("pos_group", "")) != "GK":
+			lineup_ok = false
+	_assert(lineup_ok, "All 43 teams build valid unique lineups with a real GK (formations: %s)" % ", ".join(shapes.keys()))
+
 	# 3. Verify PlayerAnimCache & 8 WE3 Audio Tracks
 	var lib := PlayerAnimCache.get_library()
 	_assert(lib != null and lib.get_animation_list().size() == 36, "Loaded 36 WE3 animations into library (got %d)" % (lib.get_animation_list().size() if lib else 0))
@@ -48,6 +69,15 @@ func _run_tests() -> void:
 
 	_assert(match_inst.players.size() == 22, "Spawned 22 players (got %d)" % match_inst.players.size())
 	_assert(match_inst.ball != null, "Ball instantiated")
+	var ron: Player = null
+	var ald: Player = null
+	for pl in match_inst.players:
+		if pl.player_name == "Ronaldo" and pl.team_side == 0:
+			ron = pl
+		elif pl.player_name == "Aldair" and pl.team_side == 0:
+			ald = pl
+	_assert(ron != null and ald != null and ron._sprint_speed > ald._sprint_speed and ron.shirt_number == 9, "Player stats drive speed: Ronaldo (spd 9) faster than Aldair (spd 6), shirt #9")
+	_assert(match_inst.players[0].pos_group == "GK" and match_inst.players[0].role == Player.Role.GK, "Slot 0 is the authentic goalkeeper")
 	match_inst.ball.kick(Vector3(12.0, 5.0, 0.0), null, 0)
 	var pred: Vector3 = match_inst.ball.predict_landing_point(30)
 	_assert(pred.x > 1.0, "Ball landing predictor projects forward (x=%.2f)" % pred.x)

@@ -42,7 +42,95 @@ const FORMATION_TEMPLATES := {
 		{"role": Player.Role.FW, "x": -4.0, "z": -6.0},
 		{"role": Player.Role.FW, "x": -4.0, "z": 6.0},
 	],
+	"5-3-2": [
+		{"role": Player.Role.GK, "x": -49.5, "z": 0.0},
+		{"role": Player.Role.DF, "x": -33.0, "z": -23.0},
+		{"role": Player.Role.DF, "x": -36.0, "z": -11.5},
+		{"role": Player.Role.DF, "x": -38.0, "z": 0.0},
+		{"role": Player.Role.DF, "x": -36.0, "z": 11.5},
+		{"role": Player.Role.DF, "x": -33.0, "z": 23.0},
+		{"role": Player.Role.MF, "x": -19.0, "z": -12.0},
+		{"role": Player.Role.MF, "x": -16.0, "z": 0.0},
+		{"role": Player.Role.MF, "x": -19.0, "z": 12.0},
+		{"role": Player.Role.FW, "x": -4.0, "z": -6.0},
+		{"role": Player.Role.FW, "x": -4.0, "z": 6.0},
+	],
+	"4-5-1": [
+		{"role": Player.Role.GK, "x": -49.5, "z": 0.0},
+		{"role": Player.Role.DF, "x": -34.0, "z": -18.0},
+		{"role": Player.Role.DF, "x": -36.0, "z": -6.0},
+		{"role": Player.Role.DF, "x": -36.0, "z": 6.0},
+		{"role": Player.Role.DF, "x": -34.0, "z": 18.0},
+		{"role": Player.Role.MF, "x": -16.0, "z": -24.0},
+		{"role": Player.Role.MF, "x": -19.0, "z": -11.0},
+		{"role": Player.Role.MF, "x": -14.0, "z": 0.0},
+		{"role": Player.Role.MF, "x": -19.0, "z": 11.0},
+		{"role": Player.Role.MF, "x": -16.0, "z": 24.0},
+		{"role": Player.Role.FW, "x": -4.0, "z": 0.0},
+	],
+	"3-4-3": [
+		{"role": Player.Role.GK, "x": -49.5, "z": 0.0},
+		{"role": Player.Role.DF, "x": -36.0, "z": -13.0},
+		{"role": Player.Role.DF, "x": -37.0, "z": 0.0},
+		{"role": Player.Role.DF, "x": -36.0, "z": 13.0},
+		{"role": Player.Role.MF, "x": -17.0, "z": -20.0},
+		{"role": Player.Role.MF, "x": -19.0, "z": -6.5},
+		{"role": Player.Role.MF, "x": -19.0, "z": 6.5},
+		{"role": Player.Role.MF, "x": -17.0, "z": 20.0},
+		{"role": Player.Role.FW, "x": -5.0, "z": -16.0},
+		{"role": Player.Role.FW, "x": -3.5, "z": 0.0},
+		{"role": Player.Role.FW, "x": -5.0, "z": 16.0},
+	],
 }
+
+## Maps the authentic roster (22 entries, first 11 = starters, rest = bench) onto a formation template.
+## Each slot takes a player whose WE3 position group (GK/DF/MF/FW) matches; the DB order inside a
+## group is centre-first, so the earliest picks go to the most central slots, later ones to the flanks.
+## Returns roster indices (one per template slot).
+static func assign_lineup(roster: Array, template: Array) -> Array[int]:
+	const GROUPS := ["GK", "DF", "MF", "FW"]
+	var pools := {"GK": [], "DF": [], "MF": [], "FW": []}
+	for i in range(roster.size()):
+		var g := str(roster[i].get("pos_group", "MF")) if typeof(roster[i]) == TYPE_DICTIONARY else "MF"
+		if pools.has(g):
+			pools[g].append(i)  # starters (0..10) naturally precede bench (11..21)
+	var out: Array[int] = []
+	out.resize(template.size())
+	out.fill(-1)
+	var used := {}
+	for role_idx in range(4):
+		var slot_ids: Array = []
+		for s in range(template.size()):
+			if int(template[s]["role"]) == role_idx:
+				slot_ids.append(s)
+		# centre-first ordering by |z|
+		slot_ids.sort_custom(func(a, b): return absf(float(template[a]["z"])) < absf(float(template[b]["z"])) or (absf(float(template[a]["z"])) == absf(float(template[b]["z"])) and float(template[a]["z"]) < float(template[b]["z"])))
+		var fallback_order: Array = [GROUPS[role_idx]]
+		match role_idx:
+			1: fallback_order.append_array(["MF", "FW"])
+			2: fallback_order.append_array(["DF", "FW"])
+			3: fallback_order.append_array(["MF", "DF"])
+			0: fallback_order.append_array(["DF", "MF"])
+		for s in slot_ids:
+			for g in fallback_order:
+				var picked := -1
+				for idx in pools[g]:
+					if not used.has(idx):
+						picked = idx
+						break
+				if picked >= 0:
+					used[picked] = true
+					out[s] = picked
+					break
+	# Safety net: any unfilled slot takes the next unused roster entry
+	for s in range(out.size()):
+		if out[s] < 0:
+			for i in range(roster.size()):
+				if not used.has(i):
+					used[i] = true
+					out[s] = i
+					break
+	return out
 
 var pitch: PitchBuilder
 var ball: Ball
@@ -120,18 +208,23 @@ func _spawn_referees() -> void:
 func _spawn_team_side(side: int, tid: int, is_human_team: bool) -> void:
 	var team_data := GameData.get_team(tid)
 	var roster: Array = team_data.get("players", [])
-	var form_name := GameData.home_formation if side == 0 else GameData.away_formation
+	var form_name := GameData.resolve_formation(side)
 	var template: Array = FORMATION_TEMPLATES.get(form_name, FORMATION_TEMPLATES["4-4-2"])
+	var lineup: Array[int] = assign_lineup(roster, template)
 	for i in range(11):
 		var slot: Dictionary = template[i]
 		var px := float(slot["x"]) if side == 0 else -float(slot["x"])
 		var pz := float(slot["z"]) if side == 0 else -float(slot["z"])
 		var anchor := Vector3(px, 0.0, pz)
 		var pname := "Player %d" % (i + 1)
-		if i < roster.size() and typeof(roster[i]) == TYPE_DICTIONARY:
-			pname = str(roster[i].get("name", pname))
+		var rec: Dictionary = {}
+		var r_idx := lineup[i] if i < lineup.size() else i
+		if r_idx >= 0 and r_idx < roster.size() and typeof(roster[r_idx]) == TYPE_DICTIONARY:
+			rec = roster[r_idx]
+			pname = str(rec.get("name", pname))
 		var p := Player.new()
 		p.setup(side, tid, i, pname, slot["role"], anchor, ball, players)
+		p.apply_profile(rec, r_idx)
 		p.is_human = is_human_team
 		p.position = anchor
 		add_child(p)

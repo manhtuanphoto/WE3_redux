@@ -9,6 +9,7 @@ var _away_kit_rect: TextureRect
 var _home_roster_label: Label
 var _away_roster_label: Label
 var _formation_preview: FormationMiniPitch
+var _form_opt: OptionButton
 
 func _ready() -> void:
 	_build_ui()
@@ -151,11 +152,13 @@ func _build_ui() -> void:
 	form_lbl.text = "Formation:"
 	form_row.add_child(form_lbl)
 	var form_opt := OptionButton.new()
+	_form_opt = form_opt
 	for f_name in GameData.FORMATIONS:
 		form_opt.add_item(f_name)
-	form_opt.select(maxi(0, GameData.FORMATIONS.find(GameData.home_formation)))
+	form_opt.select(maxi(0, GameData.FORMATIONS.find(GameData.resolve_formation(0))))
 	form_opt.item_selected.connect(func(idx):
 		GameData.home_formation = GameData.FORMATIONS[idx]
+		GameData.home_formation_manual = true
 		if _formation_preview != null:
 			_formation_preview.formation_name = GameData.home_formation
 			_formation_preview.queue_redraw()
@@ -164,7 +167,7 @@ func _build_ui() -> void:
 
 	_formation_preview = FormationMiniPitch.new()
 	_formation_preview.custom_minimum_size = Vector2(220, 92)
-	_formation_preview.formation_name = GameData.home_formation
+	_formation_preview.formation_name = GameData.resolve_formation(0)
 	form_row.add_child(_formation_preview)
 
 	var btn_row := HBoxContainer.new()
@@ -195,13 +198,26 @@ func _find_item_idx(opt: OptionButton, id: int) -> int:
 
 func _sync_selection() -> void:
 	if _home_opt.item_count > 0:
-		GameData.home_team_id = _home_opt.get_selected_id()
+		var new_home := _home_opt.get_selected_id()
+		if new_home != GameData.home_team_id:
+			GameData.home_formation_manual = false
+		GameData.home_team_id = new_home
 		_home_kit_rect.texture = GameData.get_team_kit_texture(GameData.home_team_id)
 		_home_roster_label.text = _format_starting_xi(GameData.home_team_id)
 	if _away_opt.item_count > 0:
-		GameData.away_team_id = _away_opt.get_selected_id()
+		var new_away := _away_opt.get_selected_id()
+		if new_away != GameData.away_team_id:
+			GameData.away_formation_manual = false
+		GameData.away_team_id = new_away
 		_away_kit_rect.texture = GameData.get_team_kit_texture(GameData.away_team_id)
 		_away_roster_label.text = _format_starting_xi(GameData.away_team_id)
+	# Show the authentic formation of the selected home team (derived from its real starting XI)
+	if _form_opt != null:
+		var f := GameData.resolve_formation(0)
+		_form_opt.select(maxi(0, GameData.FORMATIONS.find(f)))
+		if _formation_preview != null:
+			_formation_preview.formation_name = f
+			_formation_preview.queue_redraw()
 
 func _format_starting_xi(tid: int) -> String:
 	var t := GameData.get_team(tid)
@@ -209,7 +225,7 @@ func _format_starting_xi(tid: int) -> String:
 	var lines: PackedStringArray = []
 	for i in range(mini(11, players.size())):
 		var p: Dictionary = players[i]
-		lines.append("%2d. %s" % [i + 1, str(p.get("name", ""))])
+		lines.append("%2d. %-9s %s  SPD %d" % [int(p.get("shirt_number", i + 1)), str(p.get("name", "")), str(p.get("pos_group", "")), int(p.get("stats", {}).get("speed", 0))])
 	return "\n".join(lines)
 
 
@@ -224,6 +240,9 @@ class FormationMiniPitch extends Control:
 			"4-4-2": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.5,0.18), Vector2(0.46,0.4), Vector2(0.46,0.6), Vector2(0.5,0.82), Vector2(0.76,0.38), Vector2(0.76,0.62)],
 			"4-3-3": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.48,0.28), Vector2(0.44,0.5), Vector2(0.48,0.72), Vector2(0.78,0.2), Vector2(0.82,0.5), Vector2(0.78,0.8)],
 			"3-5-2": [Vector2(0.08,0.5), Vector2(0.24,0.26), Vector2(0.22,0.5), Vector2(0.24,0.74), Vector2(0.52,0.14), Vector2(0.46,0.34), Vector2(0.54,0.5), Vector2(0.46,0.66), Vector2(0.52,0.86), Vector2(0.76,0.38), Vector2(0.76,0.62)],
+			"5-3-2": [Vector2(0.08,0.5), Vector2(0.28,0.12), Vector2(0.24,0.31), Vector2(0.22,0.5), Vector2(0.24,0.69), Vector2(0.28,0.88), Vector2(0.48,0.28), Vector2(0.44,0.5), Vector2(0.48,0.72), Vector2(0.76,0.38), Vector2(0.76,0.62)],
+			"4-5-1": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.50,0.12), Vector2(0.46,0.31), Vector2(0.54,0.5), Vector2(0.46,0.69), Vector2(0.50,0.88), Vector2(0.80,0.5)],
+			"3-4-3": [Vector2(0.08,0.5), Vector2(0.24,0.26), Vector2(0.22,0.5), Vector2(0.24,0.74), Vector2(0.50,0.16), Vector2(0.46,0.39), Vector2(0.46,0.61), Vector2(0.50,0.84), Vector2(0.78,0.2), Vector2(0.82,0.5), Vector2(0.78,0.8)],
 		}
 		var list: Array = pts.get(formation_name, pts["4-4-2"])
 		for i in range(list.size()):

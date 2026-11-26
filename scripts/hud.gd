@@ -11,6 +11,7 @@ var _score_label: Label
 var _clock_label: Label
 var _pos_badge: Label
 var _player_label: Label
+var _stats_label: Label
 var _stamina_bar: ProgressBar
 var _power_bar: ProgressBar
 var _banner_panel: PanelContainer
@@ -119,9 +120,14 @@ func _process(delta: float) -> void:
 		var r_idx := clampi(shown_player.role, 0, 3)
 		if _pos_badge != null:
 			_pos_badge.visible = true
-			_pos_badge.text = "%s %02d" % [role_names[r_idx], shown_player.slot_index + 1]
+			_pos_badge.text = "%s %02d" % [role_names[r_idx], shown_player.shirt_number if shown_player.shirt_number > 0 else shown_player.slot_index + 1]
 			_pos_badge.add_theme_color_override("font_color", role_cols[r_idx])
 		_player_label.text = shown_player.player_name.to_upper()
+		if _stats_label != null:
+			_stats_label.visible = true
+			_stats_label.text = "SPD %d  ACC %d  KCK %d  TEC %d  STA %d" % [
+				shown_player.stats["speed"], shown_player.stats["acceleration"], shown_player.stats["kick_power"],
+				shown_player.stats["technique"], shown_player.stats["stamina"]]
 		_stamina_bar.visible = true
 		_stamina_bar.value = shown_player.stamina
 		_stamina_bar.modulate = Color(0.25, 0.90, 0.35) if shown_player.stamina > 50.0 else (Color(0.98, 0.80, 0.15) if shown_player.stamina > 22.0 else Color(0.95, 0.25, 0.20))
@@ -133,6 +139,8 @@ func _process(delta: float) -> void:
 			_pos_badge.text = "CPU"
 			_pos_badge.add_theme_color_override("font_color", Color(0.95, 0.82, 0.22))
 		_player_label.text = "AI vs AI"
+		if _stats_label != null:
+			_stats_label.visible = false
 		_stamina_bar.visible = false
 		_power_bar.visible = false
 
@@ -241,6 +249,12 @@ func _build_ui() -> void:
 	_player_label.add_theme_font_size_override("font_size", 18)
 	_player_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
 	pl_row.add_child(_player_label)
+
+	_stats_label = Label.new()
+	_stats_label.add_theme_font_size_override("font_size", 10)
+	_stats_label.add_theme_color_override("font_color", Color(0.72, 0.84, 0.98))
+	_stats_label.visible = false
+	vbox_pl.add_child(_stats_label)
 
 	_stamina_bar = ProgressBar.new()
 	_stamina_bar.max_value = 100.0
