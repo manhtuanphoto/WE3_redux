@@ -39,6 +39,8 @@ var _one_touch_action: String = ""
 var _one_touch_timer: float = 0.0
 var _ai_hold_timer: float = 0.0
 var _tackle_cd: float = 0.0
+var _gk_diving: bool = false
+var _gk_dive_origin_z: float = 0.0
 
 # --- Authentic WE3 player profile (SLPM_861.62 stat words; levels 1..9) ---
 var stats: Dictionary = {"offense": 6, "defense": 5, "speed": 7, "acceleration": 7, "kick_power": 6, "technique": 6, "header_jump": 6, "stamina": 7, "curve_pass": 5}
@@ -548,7 +550,8 @@ func _process_ai(delta: float) -> void:
 		var dist_to_goal := global_position.distance_to(opp_goal)
 		if dist_to_goal < (20.0 + float(stats["offense"])) and absf(global_position.z) < 18.0:
 			# Aim toward far corner away from opponent GK
-			var corner_z := -2.4 if global_position.z >= 0.0 else 2.4
+			var corner_mag := randf_range(1.8, 3.3)
+			var corner_z := -corner_mag if global_position.z >= 0.0 else corner_mag
 			var aim_pt := Vector3(attack_dir * PitchBuilder.HALF_LEN, 0.0, corner_z)
 			_perform_shoot((aim_pt - global_position).normalized(), randf_range(0.62, 0.92))
 			_ai_hold_timer = 0.0
@@ -723,12 +726,18 @@ func _process_gk_ai(delta: float) -> void:
 	var target := goal_center + bisector_dir * bisector_dist
 	target.z = clampf(target.z, -3.4, 3.4)
 
+	if not ((_ball.owner_player == null) and ((_ball.vel.x * inward) < -9.0)):
+		_gk_diving = false
 	# Predictive dive (anim 109) if a fast shot is heading toward own goal
 	var shot_coming := (_ball.owner_player == null) and ((_ball.vel.x * inward) < -9.0) and absf(ball_pos.x - own_goal_x) < 18.0
 	if shot_coming:
 		var pred := _ball.predict_landing_point(7)
 		if absf(pred.z) < 4.5:
-			target = Vector3(own_goal_x + inward * 1.2, 0.0, clampf(pred.z, -3.6, 3.6))
+			if not _gk_diving:
+				_gk_diving = true
+				_gk_dive_origin_z = global_position.z
+			# Dive reach is limited (WE3 anim 109 touches the ball on frame 7): ~1.9 m lateral + catch radius
+			target = Vector3(own_goal_x + inward * 1.2, 0.0, clampf(pred.z, _gk_dive_origin_z - 1.9, _gk_dive_origin_z + 1.9))
 			_update_mirror_foot()
 			_play_anim("gk_dive", 0.05)
 
@@ -1083,6 +1092,15 @@ func _try_pickup_ball() -> void:
 		return
 
 	var incoming_speed := _ball.vel.length()
+	# Goalkeeper: hard shots are not always held - catch chance falls with ball speed (defense stat helps), else a parry
+	if role == Role.GK and _ball.owner_player == null and incoming_speed > 11.0 and _ball.last_touch_team != team_side:
+		var catch_p := clampf(1.05 - (incoming_speed - 11.0) * 0.13 + (float(stats["defense"]) - 5.0) * 0.04, 0.18, 0.95)
+		if randf() > catch_p:
+			_play_anim("gk_dive", 0.05)
+			action_lock_timer = 0.45
+			var out_dir := Vector3(-_ball.vel.x * 0.28, 2.2, randf_range(-1.0, 1.0) * maxf(3.0, absf(_ball.vel.x) * 0.35))
+			_ball.kick(out_dir, self, team_side)
+			return
 	if role == Role.GK and _ball.owner_player == null:
 		if incoming_speed > 10.0:
 			_play_anim("gk_dive", 0.05)
