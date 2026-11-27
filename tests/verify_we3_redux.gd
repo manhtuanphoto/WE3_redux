@@ -28,6 +28,8 @@ func _run_tests() -> void:
 	# 2. Verify GameData
 	_assert(GameData.teams.size() == 43, "Loaded 43 national teams (got %d)" % GameData.teams.size())
 	_assert(GameData.get_team_kit_texture(0) != null, "Loaded kit texture for team 0")
+	var bra_col := GameData.get_team_primary_color(30)
+	_assert(bra_col.r > 0.6 and bra_col.g > 0.5 and bra_col.b < 0.3, "Brazil CLUT-sampled primary color is yellow (got %s)" % str(bra_col))
 
 	# 2b. Authentic WE3 player stat database (SLPM_861.62 stat words) + roster-driven lineups
 	var ronaldo := GameData.get_player_record(30, 10)

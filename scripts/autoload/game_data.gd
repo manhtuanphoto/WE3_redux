@@ -12,6 +12,8 @@ var anim_index: Array[Dictionary] = []
 var kit_files_by_id: Dictionary = {}
 var extra_kit_files_by_id: Dictionary = {}
 var tactics_by_id: Dictionary = {}
+var _clut_primary_cache: Dictionary = {}
+var _clut_secondary_cache: Dictionary = {}
 
 const STADIUM_NAMES := ["GRDM_C", "GRDM_D", "GRDM_E", "GRDM_F", "GRDM_FN", "GRDM_G", "GRDM_H", "GRDM_I", "GRDM_J"]
 const FORMATIONS := ["4-4-2", "4-3-3", "3-5-2", "5-3-2", "4-5-1", "3-4-3"]
@@ -186,7 +188,22 @@ func get_team_kit_texture(team_id: int) -> Texture2D:
 	return null
 
 func get_team_primary_color(team_id: int) -> Color:
-	# Authentic national kit jersey colors
+	if _clut_primary_cache.has(team_id):
+		return _clut_primary_cache[team_id]
+	# Sample authentic PS1 CLUT-decoded jersey chest patch (x=10..26, y=36..52)
+	var tex := get_team_kit_texture(team_id)
+	if tex != null:
+		var img := tex.get_image()
+		if img != null and img.get_width() >= 32 and img.get_height() >= 56:
+			var sum_c := Color(0, 0, 0, 0)
+			var cnt := 0
+			for y in range(36, 52, 2):
+				for x in range(10, 26, 2):
+					sum_c += img.get_pixel(x, y)
+					cnt += 1
+			var col := Color(sum_c.r / cnt, sum_c.g / cnt, sum_c.b / cnt, 1.0)
+			_clut_primary_cache[team_id] = col
+			return col
 	const PALETTE := [
 		Color(0.94, 0.94, 0.97), # 0 Germany (White)
 		Color(0.82, 0.12, 0.14), # 1 Spain (Red)
@@ -205,6 +222,22 @@ func get_team_primary_color(team_id: int) -> Color:
 	return Color.from_hsv(hue, 0.75, 0.90)
 
 func get_team_secondary_color(team_id: int) -> Color:
+	if _clut_secondary_cache.has(team_id):
+		return _clut_secondary_cache[team_id]
+	# Sample authentic PS1 CLUT-decoded shorts patch (x=24..40, y=76..88)
+	var tex := get_team_kit_texture(team_id)
+	if tex != null:
+		var img := tex.get_image()
+		if img != null and img.get_width() >= 48 and img.get_height() >= 96:
+			var sum_c := Color(0, 0, 0, 0)
+			var cnt := 0
+			for y in range(76, 88, 2):
+				for x in range(24, 40, 2):
+					sum_c += img.get_pixel(x, y)
+					cnt += 1
+			var col := Color(sum_c.r / cnt, sum_c.g / cnt, sum_c.b / cnt, 1.0)
+			_clut_secondary_cache[team_id] = col
+			return col
 	const SHORTS := [
 		Color(0.12, 0.12, 0.15), # Germany (Black)
 		Color(0.10, 0.18, 0.48), # Spain (Navy)
