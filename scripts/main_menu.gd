@@ -77,6 +77,7 @@ func _set_selected(idx: int) -> void:
 		_desc_lbl.text = WE3_MODES[_selected_idx]["desc"]
 
 func _activate_mode(mode_id: String) -> void:
+	GameData.game_mode = mode_id
 	GameData.is_ai_vs_ai = false
 	GameData.human_side = 0
 	GameData.return_scene = "res://scenes/main_menu.tscn"

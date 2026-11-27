@@ -167,6 +167,19 @@ func _run_tests() -> void:
 	ai_match.queue_free()
 	await get_tree().process_frame
 	GameData.is_ai_vs_ai = false
+
+	# 8. Verify PK Shootout mode (func_800820A0)
+	GameData.game_mode = "pk"
+	var pk_match := match_sc.instantiate() as MatchManager
+	get_tree().root.add_child(pk_match)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_assert(pk_match._pk_active and pk_match._pk_kicker != null and pk_match._pk_gk != null, "PK Shootout initializes kicker & GK on penalty spot (func_800820A0)")
+	pk_match._resolve_pk_turn(true)
+	_assert(MatchState.home_score == 1 and pk_match._pk_results[0].size() == 1, "PK Shootout scores goal and logs round result")
+	pk_match.queue_free()
+	await get_tree().process_frame
+	GameData.game_mode = "exhibition"
 	PlayerAnimCache._cached_library = null
 
 	if _failures == 0:

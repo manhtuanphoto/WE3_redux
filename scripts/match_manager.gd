@@ -150,6 +150,18 @@ var _replay_buffer: Array[Dictionary] = []
 var _is_replaying: bool = false
 var _replay_cursor: float = 0.0
 
+# PK Shootout state (func_800820A0)
+var _pk_active: bool = false
+var _pk_kick_index: int = 0
+var _pk_kicker_order_idx: Array[int] = [0, 0]
+var _pk_results: Array = [[], []]
+var _pk_ai_shoot_timer: float = 0.0
+var _pk_wait_next_timer: float = 0.0
+var _pk_shot_taken: bool = false
+var _pk_shot_elapsed: float = 0.0
+var _pk_kicker: Player = null
+var _pk_gk: Player = null
+
 func _ready() -> void:
 	MatchState.reset_match()
 
@@ -177,7 +189,10 @@ func _ready() -> void:
 	hud.main_menu_requested.connect(_go_main_menu)
 	hud.next_half_requested.connect(_start_second_half)
 
-	_setup_kickoff(0)
+	if GameData.game_mode == "pk":
+		_start_pk_shootout()
+	else:
+		_setup_kickoff(0)
 	# Authentic WE3: no BGM during live match (crowd ambience, SFX, and commentary only)
 	SoundFX.stop_music()
 	SoundFX.start_crowd_ambience()
@@ -272,6 +287,10 @@ func _process(delta: float) -> void:
 			return
 
 	if MatchState.phase == MatchState.Phase.PAUSED or MatchState.phase == MatchState.Phase.HALFTIME or MatchState.phase == MatchState.Phase.FULLTIME:
+		return
+
+	if _pk_active:
+		_process_pk_shootout(delta)
 		return
 
 	if MatchState.phase == MatchState.Phase.KICKOFF:
@@ -422,6 +441,9 @@ func _physics_process(_delta: float) -> void:
 		_replay_cursor += 0.55 # Slow-motion 0.55x replay!
 
 func _on_goal_detected(scoring_team: int) -> void:
+	if _pk_active:
+		_resolve_pk_turn(true)
+		return
 	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
 		return
 	var scorer := MatchState.last_touch_player_name
@@ -467,6 +489,9 @@ func _apply_stadium_lighting() -> void:
 				sky_mat.sky_horizon_color = Color(0.55, 0.72, 0.88)
 
 func _on_out_of_bounds(event_type: String, restart_pos: Vector3, restart_team: int) -> void:
+	if _pk_active:
+		_resolve_pk_turn(false)
+		return
 	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
 		return
 	_pending_restart_type = event_type
@@ -605,6 +630,141 @@ func _restart_match() -> void:
 
 func _go_main_menu() -> void:
 	Engine.time_scale = 1.0
-	Engine.time_scale = 1.0
 	GameData.preview_speed = 1.0
 	get_tree().change_scene_to_file(GameData.return_scene)
+
+# === PK SHOOTOUT MODE (func_800820A0) ===
+func _start_pk_shootout() -> void:
+	_pk_active = true
+	_pk_kick_index = 0
+	_pk_kicker_order_idx = [0, 0]
+	_pk_results = [[], []]
+	_pk_wait_next_timer = 0.0
+	_setup_pk_turn()
+
+func _setup_pk_turn() -> void:
+	var team := _pk_kick_index & 1
+	var def_team := 1 - team
+	var goal_x := PitchBuilder.HALF_LEN
+	var spot_x := goal_x - 11.0
+	var spot := Vector3(spot_x, 0.0, 0.0)
+
+	# Pick next kicker from slots 10..1 (FW -> MF -> DF)
+	var team_players: Array[Player] = []
+	var def_gk: Player = null
+	for p in players:
+		if p.team_side == team and p.role != Player.Role.GK:
+			team_players.append(p)
+		elif p.team_side == def_team and p.role == Player.Role.GK:
+			def_gk = p
+	team_players.sort_custom(func(a, b): return a.slot_index > b.slot_index)
+	var k_idx := _pk_kicker_order_idx[team] % maxi(1, team_players.size())
+	_pk_kicker_order_idx[team] += 1
+	_pk_kicker = team_players[k_idx] if not team_players.is_empty() else null
+	_pk_gk = def_gk
+	_pk_shot_taken = false
+	_pk_shot_elapsed = 0.0
+	_pk_ai_shoot_timer = 0.9
+
+	# Park all other players at midfield
+	var mid_idx := 0
+	for p in players:
+		p.vel = Vector3.ZERO
+		p.action_lock_timer = 0.0
+		p.tackle_timer = 0.0
+		if p == _pk_kicker or p == _pk_gk:
+			continue
+		var row := mid_idx / 2
+		var side_z := -1.0 if (mid_idx % 2 == 0) else 1.0
+		p.global_position = Vector3(-4.0 + float(row) * 1.1, 0.0, side_z * 10.0)
+		p._face_direction(Vector3(1.0, 0.0, 0.0), 1.0)
+		p._play_anim("idle", 0.08)
+		mid_idx += 1
+
+	if _pk_gk != null:
+		_pk_gk.global_position = Vector3(goal_x - 0.4, 0.0, 0.0)
+		_pk_gk._face_direction(Vector3(-1.0, 0.0, 0.0), 1.0)
+		_pk_gk._play_anim("idle", 0.08)
+
+	ball.place_at(spot)
+	ball.is_active_play = true
+	if _pk_kicker != null:
+		_pk_kicker.global_position = spot + Vector3(-2.6, 0.0, 0.0)
+		_pk_kicker._face_direction(Vector3(1.0, 0.0, 0.0), 1.0)
+		ball.set_owner_player(_pk_kicker, team)
+		if not GameData.is_ai_vs_ai:
+			_select_controlled_player(_pk_kicker if team == 0 else _pk_gk)
+
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	var round_num := (_pk_kick_index / 2) + 1
+	var t_abbr := GameData.get_team_abbr(GameData.home_team_id if team == 0 else GameData.away_team_id)
+	hud.show_banner("PK ROUND %d — %s" % [round_num, t_abbr], 1.4)
+	SoundFX.play_sfx("whistle")
+
+func _process_pk_shootout(delta: float) -> void:
+	if _pk_wait_next_timer > 0.0:
+		_pk_wait_next_timer -= delta
+		if _pk_wait_next_timer <= 0.0:
+			_pk_kick_index += 1
+			_setup_pk_turn()
+		return
+
+	if not _pk_shot_taken:
+		if _pk_kicker != null and ball.owner_player == _pk_kicker:
+			if not _pk_kicker.is_human:
+				_pk_ai_shoot_timer -= delta
+				if _pk_ai_shoot_timer <= 0.0:
+					var aim := Vector3(PitchBuilder.HALF_LEN, 0.0, randf_range(-2.9, 2.9))
+					_pk_kicker._perform_shoot((aim - _pk_kicker.global_position).normalized(), randf_range(0.72, 0.94), true)
+		else:
+			_pk_shot_taken = true
+			_pk_shot_elapsed = 0.0
+	else:
+		_pk_shot_elapsed += delta
+		if _pk_gk != null and ball.owner_player == _pk_gk:
+			_resolve_pk_turn(false)
+		elif _pk_shot_elapsed > 3.2 or (_pk_shot_elapsed > 0.6 and ball.vel.length() < 0.35):
+			_resolve_pk_turn(false)
+
+func _resolve_pk_turn(scored: bool) -> void:
+	if _pk_wait_next_timer > 0.0:
+		return
+	var team := _pk_kick_index & 1
+	_pk_results[team].append("O" if scored else "X")
+	if scored:
+		if team == 0:
+			MatchState.home_score += 1
+		else:
+			MatchState.away_score += 1
+		MatchState.score_changed.emit(MatchState.home_score, MatchState.away_score)
+		SoundFX.play_sfx("cheer")
+		SoundFX.play_commentary("goal")
+	else:
+		SoundFX.play_sfx("whistle")
+
+	var h_str := "".join(_pk_results[0])
+	var a_str := "".join(_pk_results[1])
+	hud.show_banner("%s!  PK: %d [%s] - %d [%s]" % ["GOAL" if scored else "SAVED / MISS", MatchState.home_score, h_str, MatchState.away_score, a_str], 1.7)
+
+	# Check shootout completion (5 rounds + sudden death)
+	var h_taken: int = _pk_results[0].size()
+	var a_taken: int = _pk_results[1].size()
+	var finished := false
+	if h_taken <= 5 and a_taken <= 5:
+		var h_rem := 5 - h_taken
+		var a_rem := 5 - a_taken
+		if MatchState.home_score > MatchState.away_score + a_rem or MatchState.away_score > MatchState.home_score + h_rem:
+			finished = true
+		elif h_taken == 5 and a_taken == 5 and MatchState.home_score != MatchState.away_score:
+			finished = true
+	elif h_taken == a_taken and MatchState.home_score != MatchState.away_score:
+		finished = true
+
+	if finished:
+		MatchState.set_phase(MatchState.Phase.FULLTIME)
+		hud.show_half_or_full_time(true)
+		SoundFX.stop_crowd_ambience()
+		var lost := (not GameData.is_ai_vs_ai) and (MatchState.home_score < MatchState.away_score)
+		SoundFX.play_music("03G_OVER" if lost else "07RESULT")
+	else:
+		_pk_wait_next_timer = 1.8
