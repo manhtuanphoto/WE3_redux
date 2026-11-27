@@ -229,6 +229,26 @@ func _run_tests() -> void:
 	nr_match._on_substitution_requested(10, 11)
 	_assert(MatchState.subs_used[0] == 1 and nr_match.players[10].stamina == 100.0 and nr_match.players[10].player_name != old_st_name, "Substitution replaces starter with bench player at 100% stamina")
 
+	# 9d. Verify free-kick defensive wall forms at ~9.15m for direct free kicks near goal
+	var fk_pos := Vector3(PitchBuilder.HALF_LEN - 20.0, 0.0, 4.0)
+	nr_match._pending_restart_pos = fk_pos
+	nr_match._pending_restart_team = 0
+	nr_match._pending_restart_type = "foul"
+	MatchState.set_phase(MatchState.Phase.OUT_FREE_KICK)
+	nr_match._execute_set_piece_restart()
+	var wall_count := 0
+	for p in nr_match.players:
+		if p.team_side == 1 and p.role != Player.Role.GK:
+			var dist_fk := p.global_position.distance_to(fk_pos)
+			if dist_fk >= 8.8 and dist_fk <= 9.6:
+				wall_count += 1
+	_assert(wall_count >= 3, "Direct free kick near goal forms defensive wall at 9.15m (got %d)" % wall_count)
+
+	# 9e. Verify PK Shootout HUD board becomes visible and formats dots
+	nr_match._start_pk_shootout()
+	nr_match._resolve_pk_turn(true)
+	_assert(nr_match.hud._pk_panel.visible and "●" in nr_match.hud._pk_home_lbl.text, "PK Shootout HUD scoreboard displays round dots")
+
 	nr_match.queue_free()
 	await get_tree().process_frame
 	GameData.stadium_is_night = false

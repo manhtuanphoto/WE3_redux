@@ -38,6 +38,9 @@ var _log_panel: PanelContainer
 var _log_label: Label
 var _replay_badge: Label
 var _loss_time_rect: TextureRect
+var _pk_panel: PanelContainer
+var _pk_home_lbl: Label
+var _pk_away_lbl: Label
 var _card_toast: PanelContainer
 var _card_toast_rect: ColorRect
 var _card_toast_label: Label
@@ -92,6 +95,29 @@ func set_controlled_player(p: Player) -> void:
 func set_replay_badge(active: bool) -> void:
 	if _replay_badge != null:
 		_replay_badge.visible = active
+
+func update_pk_board(results: Array, active: bool) -> void:
+	if _pk_panel == null:
+		return
+	_pk_panel.visible = active
+	if not active or results.size() < 2:
+		return
+	var h_res: Array = results[0]
+	var a_res: Array = results[1]
+	var slots := maxi(5, maxi(h_res.size(), a_res.size()))
+	var h_abbr := GameData.get_team_abbr(GameData.home_team_id)
+	var a_abbr := GameData.get_team_abbr(GameData.away_team_id)
+	_pk_home_lbl.text = "%-3s %s  (%d)" % [h_abbr, _format_pk_dots(h_res, slots), h_res.count("O")]
+	_pk_away_lbl.text = "%-3s %s  (%d)" % [a_abbr, _format_pk_dots(a_res, slots), a_res.count("O")]
+
+func _format_pk_dots(res: Array, slots: int) -> String:
+	var out: Array[String] = []
+	for i in range(slots):
+		if i < res.size():
+			out.append("●" if res[i] == "O" else "✕")
+		else:
+			out.append("○")
+	return " ".join(out)
 
 func show_banner(text: String, duration: float = 2.0) -> void:
 	if _banner_panel == null or _banner_label == null:
@@ -355,6 +381,31 @@ func _build_ui() -> void:
 	_replay_badge.add_theme_color_override("font_color", Color(1.0, 0.25, 0.20))
 	_replay_badge.visible = false
 	hbox.add_child(_replay_badge)
+
+	# PK Shootout scoreboard (shown under main scoreboard during PK tiebreaker)
+	_pk_panel = PanelContainer.new()
+	_pk_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_pk_panel.offset_left = -165
+	_pk_panel.offset_right = 165
+	_pk_panel.offset_top = 66
+	_pk_panel.offset_bottom = 122
+	_pk_panel.visible = false
+	_pk_panel.add_theme_stylebox_override("panel", sb_style)
+	add_child(_pk_panel)
+
+	var pk_vbox := VBoxContainer.new()
+	pk_vbox.add_theme_constant_override("separation", 2)
+	_pk_panel.add_child(pk_vbox)
+
+	_pk_home_lbl = Label.new()
+	_pk_home_lbl.add_theme_font_size_override("font_size", 15)
+	_pk_home_lbl.add_theme_color_override("font_color", Color(0.95, 0.96, 1.0))
+	pk_vbox.add_child(_pk_home_lbl)
+
+	_pk_away_lbl = Label.new()
+	_pk_away_lbl.add_theme_font_size_override("font_size", 15)
+	_pk_away_lbl.add_theme_color_override("font_color", Color(0.95, 0.96, 1.0))
+	pk_vbox.add_child(_pk_away_lbl)
 
 	# Top-right live event log (hidden by default, F12 to toggle)
 	_log_panel = PanelContainer.new()

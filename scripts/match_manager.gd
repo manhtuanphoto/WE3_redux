@@ -581,12 +581,33 @@ func _execute_set_piece_restart() -> void:
 					p.global_position.x = atk_goal_x - signf(atk_goal_x) * (18.5 + randf() * 4.0)
 					p.vel = Vector3.ZERO
 	elif MatchState.phase == MatchState.Phase.OUT_FREE_KICK:
-		# func_800772F8: push opponents >= 9.15m back from free-kick spot
+		# func_800772F8: form defensive wall at 9.15m on direct free kicks near goal, push others >= 9.15m
 		var to_goal := (Vector3(atk_goal_x, 0.0, 0.0) - _pending_restart_pos)
 		to_goal.y = 0.0
-		var goal_dir := to_goal.normalized() if to_goal.length_squared() > 0.01 else Vector3(signf(atk_goal_x), 0.0, 0.0)
+		var dist_to_goal := to_goal.length()
+		var goal_dir := to_goal.normalized() if dist_to_goal > 0.01 else Vector3(signf(atk_goal_x), 0.0, 0.0)
+		var perp_dir := Vector3(-goal_dir.z, 0.0, goal_dir.x)
+		var wall_players: Array[Player] = []
+		if _pending_restart_type == "foul" and dist_to_goal < 34.0:
+			var wall_count := 4 if dist_to_goal < 22.0 else (3 if dist_to_goal < 28.0 else 2)
+			var cands: Array[Player] = []
+			for p in players:
+				if not p.is_sent_off and p.team_side != _pending_restart_team and p.role != Player.Role.GK:
+					cands.append(p)
+			cands.sort_custom(func(a, b): return a.global_position.distance_squared_to(_pending_restart_pos) < b.global_position.distance_squared_to(_pending_restart_pos))
+			var n := mini(wall_count, cands.size())
+			var wall_center := _pending_restart_pos + goal_dir * 9.15
+			for wi in range(n):
+				var wp: Player = cands[wi]
+				var lat := (float(wi) - float(n - 1) * 0.5) * 0.78
+				wp.global_position = wall_center + perp_dir * lat
+				wp.global_position.x = clampf(wp.global_position.x, -PitchBuilder.HALF_LEN + 1.0, PitchBuilder.HALF_LEN - 1.0)
+				wp.global_position.z = clampf(wp.global_position.z, -PitchBuilder.HALF_WID + 1.0, PitchBuilder.HALF_WID - 1.0)
+				wp.vel = Vector3.ZERO
+				wp._face_direction(-goal_dir, 1.0)
+				wall_players.append(wp)
 		for p in players:
-			if p.is_sent_off or p.team_side == _pending_restart_team or p.role == Player.Role.GK:
+			if p.is_sent_off or p.team_side == _pending_restart_team or p.role == Player.Role.GK or p in wall_players:
 				continue
 			var d := p.global_position.distance_to(_pending_restart_pos)
 			if d < 9.15:
@@ -751,6 +772,7 @@ func _setup_pk_turn() -> void:
 	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
 	var round_num := (_pk_kick_index / 2) + 1
 	var t_abbr := GameData.get_team_abbr(GameData.home_team_id if team == 0 else GameData.away_team_id)
+	hud.update_pk_board(_pk_results, true)
 	hud.show_banner("PK ROUND %d — %s" % [round_num, t_abbr], 1.4)
 	SoundFX.play_sfx("whistle")
 
@@ -797,6 +819,7 @@ func _resolve_pk_turn(scored: bool) -> void:
 
 	var h_str := "".join(_pk_results[0])
 	var a_str := "".join(_pk_results[1])
+	hud.update_pk_board(_pk_results, true)
 	hud.show_banner("%s!  PK: %d [%s] - %d [%s]" % ["GOAL" if scored else "SAVED / MISS", MatchState.home_score, h_str, MatchState.away_score, a_str], 1.7)
 
 	# Check shootout completion (5 rounds + sudden death)
