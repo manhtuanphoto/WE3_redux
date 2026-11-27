@@ -95,3 +95,22 @@ static func _find_anim_player(n: Node) -> AnimationPlayer:
 		if found != null:
 			return found
 	return null
+
+static var _cached_shadow_tex: Texture2D = null
+
+static func get_shadow_texture() -> Texture2D:
+	if _cached_shadow_tex != null:
+		return _cached_shadow_tex
+	const SZ := 32
+	var img := Image.create(SZ, SZ, false, Image.FORMAT_RGBA8)
+	var c := (SZ - 1) * 0.5
+	for y in range(SZ):
+		for x in range(SZ):
+			var dx := (x - c) / c
+			var dy := (y - c) / c
+			var r2 := dx * dx + dy * dy
+			var alpha := clampf(1.0 - r2, 0.0, 1.0)
+			alpha = alpha * alpha * 0.52
+			img.set_pixel(x, y, Color(0.02, 0.04, 0.03, alpha))
+	_cached_shadow_tex = ImageTexture.create_from_image(img)
+	return _cached_shadow_tex

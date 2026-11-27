@@ -31,6 +31,21 @@ func _ready() -> void:
 			if not _anim_player.has_animation_library("we3"):
 				_anim_player.add_animation_library("we3", lib)
 			_play_anim("idle")
+	var sh := MeshInstance3D.new()
+	var qm := QuadMesh.new()
+	qm.size = Vector2(0.95, 1.25)
+	sh.mesh = qm
+	var sh_mat := StandardMaterial3D.new()
+	sh_mat.albedo_texture = PlayerAnimCache.get_shadow_texture()
+	sh_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.72 if GameData.stadium_is_rain else 1.0)
+	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sh_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	sh.material_override = sh_mat
+	sh.rotation.x = -PI * 0.5
+	sh.position = Vector3(0.08, 0.02, 0.10)
+	sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(sh)
 
 func _apply_referee_kit(root: Node) -> void:
 	# Authentic WE3 128x256 atlas for referee_00..03.gltf (top 128x128 = black ref kit, bottom 128x128 = skin/face)

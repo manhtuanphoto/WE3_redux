@@ -62,19 +62,21 @@ func _build_visuals() -> void:
 	_mesh_node.material_override = mat
 	add_child(_mesh_node)
 
-	# Ground shadow disc so ball height is always readable
+	# Soft radial ground shadow disc so ball height is always readable
 	_shadow_node = MeshInstance3D.new()
 	_shadow_node.name = "BallShadow"
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = BALL_RADIUS * 1.15
-	cyl.bottom_radius = BALL_RADIUS * 1.15
-	cyl.height = 0.01
-	_shadow_node.mesh = cyl
+	var qm := QuadMesh.new()
+	qm.size = Vector2(BALL_RADIUS * 2.8, BALL_RADIUS * 2.8)
+	_shadow_node.mesh = qm
 	var sh_mat := StandardMaterial3D.new()
-	sh_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.42)
+	sh_mat.albedo_texture = PlayerAnimCache.get_shadow_texture()
+	sh_mat.albedo_color = Color.WHITE
 	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sh_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_shadow_node.material_override = sh_mat
+	_shadow_node.rotation.x = -PI * 0.5
+	_shadow_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_shadow_node)
 
 func reset_to_center() -> void:
@@ -324,9 +326,10 @@ func _roll_visual(v: Vector3, delta: float) -> void:
 func _update_shadow() -> void:
 	if _shadow_node == null:
 		return
-	_shadow_node.global_position = Vector3(global_position.x, 0.02, global_position.z)
-	var height_factor := clampf(1.0 - (global_position.y - BALL_RADIUS) * 0.12, 0.35, 1.0)
-	_shadow_node.scale = Vector3(height_factor, 1.0, height_factor)
+	var h := maxf(0.0, global_position.y - BALL_RADIUS)
+	_shadow_node.global_position = Vector3(global_position.x + h * 0.06, 0.02, global_position.z + h * 0.08)
+	var height_factor := clampf(1.0 - h * 0.10, 0.40, 1.0)
+	_shadow_node.scale = Vector3(height_factor, height_factor, 1.0)
 
 func _collide_goalposts(pos: Vector3) -> Vector3:
 	var post_r := 0.06 + BALL_RADIUS

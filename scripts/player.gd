@@ -331,19 +331,22 @@ func _apply_part_mats_recursive(n: Node, mat_jersey: Material, mat_shorts: Mater
 		_apply_part_mats_recursive(c, mat_jersey, mat_shorts, mat_socks, mat_skin, mat_head, mat_boots)
 
 func _build_indicators() -> void:
-	# Ground shadow
+	# Soft WE3 radial ground shadow (stretches on dives/slides, dims in rain)
 	_shadow_mesh = MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.36
-	cyl.bottom_radius = 0.36
-	cyl.height = 0.01
-	_shadow_mesh.mesh = cyl
+	var qm := QuadMesh.new()
+	qm.size = Vector2(0.95, 1.25)
+	_shadow_mesh.mesh = qm
 	var sh_mat := StandardMaterial3D.new()
-	sh_mat.albedo_color = Color(0.0, 0.0, 0.0, 0.35)
+	sh_mat.albedo_texture = PlayerAnimCache.get_shadow_texture()
+	var sh_alpha := 0.72 if GameData.stadium_is_rain else (0.88 if GameData.stadium_is_night else 1.0)
+	sh_mat.albedo_color = Color(1.0, 1.0, 1.0, sh_alpha)
 	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	sh_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_shadow_mesh.material_override = sh_mat
-	_shadow_mesh.position = Vector3(0.0, 0.02, 0.0)
+	_shadow_mesh.rotation.x = -PI * 0.5
+	_shadow_mesh.position = Vector3(0.08, 0.02, 0.10)
+	_shadow_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_shadow_mesh)
 
 	# Controlled player ring
@@ -1368,6 +1371,10 @@ func _move_and_clamp(delta: float) -> void:
 	global_position.x = clampf(global_position.x, -PitchBuilder.HALF_LEN - 2.0, PitchBuilder.HALF_LEN + 2.0)
 	global_position.z = clampf(global_position.z, -PitchBuilder.HALF_WID - 2.0, PitchBuilder.HALF_WID + 2.0)
 	global_position.y = 0.0
+	if _shadow_mesh != null:
+		_shadow_mesh.visible = not is_sent_off
+		var stretch := 1.65 if (tackle_timer > 0.0 or _gk_dive_t >= 0.0) else 1.0
+		_shadow_mesh.scale = Vector3(1.0, stretch, 1.0)
 
 func _face_direction(dir: Vector3, delta: float) -> void:
 	_face_direction_rate(dir, delta, TURN_SPEED)
