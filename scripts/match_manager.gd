@@ -289,6 +289,10 @@ func _setup_kickoff(kicking_team: int) -> void:
 	var a_abbr := GameData.get_team_abbr(GameData.away_team_id)
 	var prefix := (GameData.get_cup_round_name() + " — ") if GameData.cup_active else ""
 	hud.show_banner("%sKICK OFF!  %s vs %s" % [prefix, h_abbr, a_abbr], 1.4)
+	if MatchState.current_half == 1 and MatchState.home_score == 0 and MatchState.away_score == 0:
+		var h_name := str(GameData.get_team(GameData.home_team_id).get("team_name", h_abbr))
+		var a_name := str(GameData.get_team(GameData.away_team_id).get("team_name", a_abbr))
+		hud.show_prematch_card(h_name, a_name, GameData.resolve_formation(0), GameData.resolve_formation(1), GameData.selected_stadium)
 	SoundFX.play_sfx("whistle")
 	SoundFX.play_commentary("kickoff")
 
@@ -327,6 +331,7 @@ func _process(delta: float) -> void:
 	if MatchState.phase == MatchState.Phase.KICKOFF:
 		_phase_timer -= delta
 		if _phase_timer <= 0.0:
+			hud.hide_prematch_card()
 			MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
 		return
 

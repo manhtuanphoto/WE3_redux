@@ -43,6 +43,8 @@ var _loss_time_rect: TextureRect
 var _pk_panel: PanelContainer
 var _pk_home_lbl: Label
 var _pk_away_lbl: Label
+var _prematch_panel: PanelContainer
+var _prematch_label: Label
 var _card_toast: PanelContainer
 var _card_toast_rect: ColorRect
 var _card_toast_label: Label
@@ -93,6 +95,19 @@ func bind_entities(players: Array[Player], ball: Ball) -> void:
 
 func set_controlled_player(p: Player) -> void:
 	_controlled_ref = p
+
+func show_prematch_card(home_name: String, away_name: String, home_form: String, away_form: String, stadium_name: String) -> void:
+	if _prematch_panel == null or _prematch_label == null:
+		return
+	var arrows: Array[String] = ["↓", "↘", "→", "↗", "↑"]
+	var hc: String = arrows[clampi(GameData.team_condition[0], 0, 4)]
+	var ac: String = arrows[clampi(GameData.team_condition[1], 0, 4)]
+	_prematch_label.text = "%s [%s %s]  VS  %s [%s %s]\nSTADIUM: %s" % [home_name, home_form, hc, away_name, away_form, ac, stadium_name]
+	_prematch_panel.visible = true
+
+func hide_prematch_card() -> void:
+	if _prematch_panel != null:
+		_prematch_panel.visible = false
 
 func set_replay_badge(active: bool) -> void:
 	if _replay_badge != null:
@@ -437,6 +452,29 @@ func _build_ui() -> void:
 	_pk_away_lbl.add_theme_font_size_override("font_size", 15)
 	_pk_away_lbl.add_theme_color_override("font_color", Color(0.95, 0.96, 1.0))
 	pk_vbox.add_child(_pk_away_lbl)
+
+	# Pre-match PS1 Matchup & Lineup Card
+	_prematch_panel = PanelContainer.new()
+	_prematch_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_prematch_panel.offset_left = -280
+	_prematch_panel.offset_right = 280
+	_prematch_panel.offset_top = -175
+	_prematch_panel.offset_bottom = -105
+	_prematch_panel.visible = false
+	var pm_style := StyleBoxFlat.new()
+	pm_style.bg_color = Color(0.04, 0.08, 0.22, 0.92)
+	pm_style.border_color = Color(0.98, 0.84, 0.22)
+	pm_style.set_border_width_all(2)
+	pm_style.set_corner_radius_all(2)
+	pm_style.set_content_margin_all(10)
+	_prematch_panel.add_theme_stylebox_override("panel", pm_style)
+	add_child(_prematch_panel)
+
+	_prematch_label = Label.new()
+	_prematch_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prematch_label.add_theme_font_size_override("font_size", 16)
+	_prematch_label.add_theme_color_override("font_color", Color(0.98, 0.96, 0.88))
+	_prematch_panel.add_child(_prematch_label)
 
 	# Top-right live event log (hidden by default, F12 to toggle)
 	_log_panel = PanelContainer.new()

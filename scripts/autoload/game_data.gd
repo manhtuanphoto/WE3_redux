@@ -46,6 +46,7 @@ var away_formation_manual: bool = false
 var cup_active: bool = false
 var cup_round: int = 0
 var cup_opponents: Array[int] = []
+var team_condition: Array[int] = [2, 2]  # 0=Bad(↓), 1=Poor(↘), 2=Normal(→), 3=Good(↗), 4=Top(↑)
 
 func start_cup_tournament(player_tid: int) -> void:
 	cup_active = true

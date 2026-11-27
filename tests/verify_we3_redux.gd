@@ -277,6 +277,13 @@ func _run_tests() -> void:
 	var adv2 := GameData.advance_cup_round()
 	var adv3 := GameData.advance_cup_round()
 	_assert(adv1 and adv2 and not adv3 and not GameData.cup_active, "Cup tournament advances QF -> SF -> Final -> Champion")
+
+	# 9h. Verify Pre-match PS1 Matchup Card & Condition Arrows
+	GameData.team_condition = [4, 0]
+	nr_match.hud.show_prematch_card("Brazil", "Argentina", "4-4-2", "4-4-2", "GRDM_C")
+	_assert(nr_match.hud._prematch_panel.visible and "↑" in nr_match.hud._prematch_label.text and "↓" in nr_match.hud._prematch_label.text, "Pre-match PS1 card displays teams, formation, and condition arrows")
+	nr_match.hud.hide_prematch_card()
+	_assert(not nr_match.hud._prematch_panel.visible, "Pre-match PS1 card hides on OPEN_PLAY")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

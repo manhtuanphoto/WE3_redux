@@ -14,6 +14,8 @@ var _home_roster_label: Label
 var _away_roster_label: Label
 var _formation_preview: FormationMiniPitch
 var _form_opt: OptionButton
+var _home_cond_opt: OptionButton
+var _away_cond_opt: OptionButton
 
 func _ready() -> void:
 	_build_ui()
@@ -22,21 +24,24 @@ func _ready() -> void:
 func _build_ui() -> void:
 	var bg := ColorRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0.05, 0.09, 0.18)
+	bg.color = Color(0.03, 0.06, 0.16)
 	add_child(bg)
-	_add_we3_background("res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_night.png", 0.5)
+	var bg_path := "res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_flags.png"
+	if not ResourceLoader.exists(bg_path):
+		bg_path = "res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_night.png"
+	_add_we3_background(bg_path, 0.45)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 0)
+	panel.custom_minimum_size = Vector2(760, 0)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.09, 0.14, 0.26, 0.95)
-	style.border_color = Color(0.95, 0.80, 0.18)
+	style.bg_color = Color(0.04, 0.08, 0.22, 0.94)
+	style.border_color = Color(0.96, 0.82, 0.20)
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(10)
+	style.set_corner_radius_all(2)
 	style.set_content_margin_all(14)
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
@@ -46,10 +51,16 @@ func _build_ui() -> void:
 	panel.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "EXHIBITION MATCH SETUP"
+	var mode_titles := {
+		"world_cup": "WORLD CUP '98 — TEAM SELECT",
+		"cup": "INTERNATIONAL CUP — TEAM SELECT",
+		"league": "INTERNATIONAL LEAGUE — TEAM SELECT",
+		"option": "OPTION & MATCH SETTINGS",
+	}
+	title.text = mode_titles.get(GameData.game_mode, "EXHIBITION MATCH SETUP")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(0.96, 0.84, 0.22))
+	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_color_override("font_color", Color(0.98, 0.86, 0.22))
 	vbox.add_child(title)
 
 	var hbox := HBoxContainer.new()
@@ -85,6 +96,8 @@ func _build_ui() -> void:
 	_home_rating_label.add_theme_font_size_override("font_size", 12)
 	_home_rating_label.add_theme_color_override("font_color", Color(0.96, 0.84, 0.22))
 	home_col.add_child(_home_rating_label)
+	_home_cond_opt = _build_condition_selector(0)
+	home_col.add_child(_home_cond_opt)
 	_home_roster_label = Label.new()
 	_home_roster_label.add_theme_font_size_override("font_size", 11)
 	_home_roster_label.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
@@ -118,6 +131,8 @@ func _build_ui() -> void:
 	_away_rating_label.add_theme_font_size_override("font_size", 12)
 	_away_rating_label.add_theme_color_override("font_color", Color(0.96, 0.84, 0.22))
 	away_col.add_child(_away_rating_label)
+	_away_cond_opt = _build_condition_selector(1)
+	away_col.add_child(_away_cond_opt)
 	_away_roster_label = Label.new()
 	_away_roster_label.add_theme_font_size_override("font_size", 11)
 	_away_roster_label.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
@@ -292,6 +307,17 @@ func _add_we3_background(path: String, dim_alpha: float) -> void:
 		dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 		dim.color = Color(0.02, 0.05, 0.14, dim_alpha)
 		add_child(dim)
+
+func _build_condition_selector(side: int) -> OptionButton:
+	var opt := OptionButton.new()
+	opt.add_item("Form: ↓ BAD", 0)
+	opt.add_item("Form: ↘ POOR", 1)
+	opt.add_item("Form: → NORMAL", 2)
+	opt.add_item("Form: ↗ GOOD", 3)
+	opt.add_item("Form: ↑ TOP", 4)
+	opt.select(clampi(GameData.team_condition[side], 0, 4))
+	opt.item_selected.connect(func(idx): GameData.team_condition[side] = idx)
+	return opt
 
 func _find_item_idx(opt: OptionButton, id: int) -> int:
 	for i in range(opt.item_count):
