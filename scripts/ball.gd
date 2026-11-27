@@ -74,6 +74,7 @@ func _build_visuals() -> void:
 	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	sh_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	sh_mat.render_priority = 1
 	_shadow_node.material_override = sh_mat
 	_shadow_node.rotation.x = -PI * 0.5
 	_shadow_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -223,7 +224,7 @@ func _physics_process(delta: float) -> void:
 		_update_shadow()
 		return
 
-	# Free-flight / rolling physics: authentic WE3 ball step (func_8004BAA4), run at the 30 Hz logic rate
+	# Free-flight / rolling physics: 30 Hz WE3 velocity/spin/drag (func_8004BAA4) + smooth 60 Hz position step
 	var pos := global_position
 	_tick_acc += delta
 	var guard := 0
@@ -240,44 +241,9 @@ func _physics_process(delta: float) -> void:
 				var hv := Vector2(vel.x, vel.z).rotated(_spin_dir * deg_to_rad(1.40625))
 				vel.x = hv.x
 				vel.z = hv.y
-			pos += vel * TICK
-			if pos.y > BALL_RADIUS:
-				var g: float = GRAVITY_BY_TYPE[clampi(flight_type, 0, 3)]
-				vel.y -= g * TICK
-			else:
-				# Ground contact: func_8004BAA4 lines 104-163 bounce damping by flight_type
-				pos.y = BALL_RADIUS
-				var k := minf(8.0, h / (absf(vel.y) + 1.0))
-				var damp := 4.0 * k
-				var h_keep := 1.0
-				var v_keep := 0.625
-				match flight_type:
-					0:
-						h_keep = 1.0 - (64.0 - damp) / 256.0
-						v_keep = 1.0 - (96.0 - damp) / 256.0
-					1:
-						h_keep = 1.0 - (64.0 - damp) / 128.0
-						v_keep = 1.0 - (64.0 - damp) / 240.0
-					2:
-						h_keep = 1.0 - (64.0 - damp) / 272.0
-						v_keep = 1.0 - (96.0 - damp) / 288.0
-						flight_type = 0
-					3:
-						h_keep = 1.0 - (64.0 - damp) / 288.0
-						v_keep = 1.0 - (96.0 - damp) / 304.0
-						flight_type = 0
-				vel.x *= h_keep
-				vel.z *= h_keep
-				vel.y = absf(vel.y) * v_keep
-				if _spin_period > 0:
-					_spin_period += 2
-				if vel.y <= 8.28:
-					flight_type = 0
-				if vel.y < 0.69:
-					vel.y = 0.0
-					state = BallState.ROLLING
+			var g: float = GRAVITY_BY_TYPE[clampi(flight_type, 0, 3)]
+			vel.y -= g * TICK
 			# Quadratic air drag proportional to speed magnitude
-			h = Vector2(vel.x, vel.z).length()
 			var s3 := sqrt(h * h + vel.y * vel.y)
 			if h > 0.0:
 				var nh := maxf(0.0, h - s3 * h / DRAG_K)
@@ -289,7 +255,6 @@ func _physics_process(delta: float) -> void:
 			vel.y = 0.0
 			angular_spin_y = 0.0
 			_spin_period = 0
-			pos += Vector3(vel.x, 0.0, vel.z) * TICK
 			# rolling: h -= h>>6 ; h -= ((h*h)>>21)/7
 			var nh2 := maxf(0.0, h * (1.0 - 1.0 / 64.0) - h * h / DRAG_K)
 			if h > 0.0:
@@ -301,6 +266,44 @@ func _physics_process(delta: float) -> void:
 				state = BallState.STOPPED
 			else:
 				state = BallState.ROLLING
+
+	pos += vel * delta
+	if pos.y <= BALL_RADIUS and state == BallState.AIRBORNE and vel.y < 0.0:
+		# Ground contact: func_8004BAA4 lines 104-163 bounce damping by flight_type
+		pos.y = BALL_RADIUS
+		var h_b := Vector2(vel.x, vel.z).length()
+		var k := minf(8.0, h_b / (absf(vel.y) + 1.0))
+		var damp := 4.0 * k
+		var h_keep := 1.0
+		var v_keep := 0.625
+		match flight_type:
+			0:
+				h_keep = 1.0 - (64.0 - damp) / 256.0
+				v_keep = 1.0 - (96.0 - damp) / 256.0
+			1:
+				h_keep = 1.0 - (64.0 - damp) / 128.0
+				v_keep = 1.0 - (64.0 - damp) / 240.0
+			2:
+				h_keep = 1.0 - (64.0 - damp) / 272.0
+				v_keep = 1.0 - (96.0 - damp) / 288.0
+				flight_type = 0
+			3:
+				h_keep = 1.0 - (64.0 - damp) / 288.0
+				v_keep = 1.0 - (96.0 - damp) / 304.0
+				flight_type = 0
+		vel.x *= h_keep
+		vel.z *= h_keep
+		vel.y = absf(vel.y) * v_keep
+		if _spin_period > 0:
+			_spin_period += 2
+		if vel.y <= 8.28:
+			flight_type = 0
+		if vel.y < 0.69:
+			vel.y = 0.0
+			state = BallState.ROLLING
+	elif pos.y < BALL_RADIUS:
+		pos.y = BALL_RADIUS
+		vel.y = 0.0
 
 	# Goalpost, crossbar, goal-net & perimeter adboard collisions (func_800A8F3C)
 	pos = _collide_goalposts(pos)
@@ -327,7 +330,7 @@ func _update_shadow() -> void:
 	if _shadow_node == null:
 		return
 	var h := maxf(0.0, global_position.y - BALL_RADIUS)
-	_shadow_node.global_position = Vector3(global_position.x + h * 0.06, 0.02, global_position.z + h * 0.08)
+	_shadow_node.global_position = Vector3(global_position.x + h * 0.06, 0.025, global_position.z + h * 0.08)
 	var height_factor := clampf(1.0 - h * 0.10, 0.40, 1.0)
 	_shadow_node.scale = Vector3(height_factor, height_factor, 1.0)
 
