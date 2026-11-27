@@ -26,6 +26,7 @@ var offside_target: Node3D = null
 var offside_defending_team: int = 0
 
 var _tick_acc: float = 0.0
+var flight_frames: int = 0   # WE3 scratch+0x31C: logic frames since the ball was last touched
 var _mesh_node: MeshInstance3D
 var _shadow_node: MeshInstance3D
 
@@ -95,6 +96,7 @@ func set_owner_player(p: Node3D, team_idx: int) -> void:
 	last_touch_player = p
 	last_touch_team = team_idx
 	vel = Vector3.ZERO
+	flight_frames = 0
 	state = BallState.ATTACHED
 	offside_target = null
 
@@ -103,6 +105,7 @@ func kick(kick_vel: Vector3, kicker: Node3D, team_idx: int, spin_y: float = 0.0)
 	last_touch_player = kicker
 	last_touch_team = team_idx
 	vel = kick_vel
+	flight_frames = 0
 	angular_spin_y = spin_y
 	state = BallState.AIRBORNE if kick_vel.y > 0.2 else BallState.ROLLING
 	pickup_cooldown = 0.16
@@ -140,6 +143,38 @@ func predict_landing_point(max_steps: int = 45) -> Vector3:
 			sim_vel.x *= 0.8
 			sim_vel.z *= 0.8
 	return sim_pos
+
+## Ball position after `frames` 30 Hz logic frames (func_8004B2E0 style forward simulation, no early exit).
+func position_after(frames: int) -> Vector3:
+	if owner_player != null:
+		return global_position
+	var p := global_position
+	var v := vel
+	for _i in range(frames):
+		var h := Vector2(v.x, v.z).length()
+		if p.y > BALL_RADIUS + 0.005 or v.y > 0.0:
+			var s3 := sqrt(h * h + v.y * v.y)
+			if h > 0.0:
+				var nh := maxf(0.0, h - s3 * h / DRAG_K)
+				v.x *= nh / h
+				v.z *= nh / h
+			v.y -= s3 * v.y / (DRAG_K * 4.0)
+			v.y -= GRAVITY * TICK
+		else:
+			var nh2 := maxf(0.0, h * (1.0 - 1.0 / 64.0) - h * h / DRAG_K)
+			if h > 0.0:
+				v.x *= nh2 / h
+				v.z *= nh2 / h
+		p += v * TICK
+		if p.y <= BALL_RADIUS:
+			p.y = BALL_RADIUS
+			if v.y < -1.4:
+				v.y = -v.y * 0.65
+				v.x *= 0.85
+				v.z *= 0.85
+			else:
+				v.y = 0.0
+	return p
 
 ## Distance (m) a ground ball rolls from speed v0 until it slows to v_min (authentic WE3 rolling friction).
 static func roll_distance(v0: float, v_min: float) -> float:
@@ -181,6 +216,7 @@ func _physics_process(delta: float) -> void:
 	while _tick_acc >= TICK and guard < 4:
 		_tick_acc -= TICK
 		guard += 1
+		flight_frames += 1
 		var in_air := pos.y > BALL_RADIUS + 0.005 or vel.y > 0.0
 		var h := Vector2(vel.x, vel.z).length()
 		if in_air:
@@ -194,7 +230,9 @@ func _physics_process(delta: float) -> void:
 			vel.y -= GRAVITY * TICK
 			# curve: heading drifts with spin while airborne (func_8004BAA4 spin_interval)
 			if h > 0.1 and absf(angular_spin_y) > 0.01:
-				var turn := signf(angular_spin_y) * deg_to_rad(1.40625) * clampf(absf(angular_spin_y) / 2.5, 0.0, 1.0)
+				# func_8004BAA4: heading moves 1 angle unit (1.40625 deg) every `spin_interval` frames; interval 4..12 here
+				var interval := lerpf(12.0, 4.0, clampf(absf(angular_spin_y) / 2.5, 0.0, 1.0))
+				var turn := signf(angular_spin_y) * deg_to_rad(1.40625) / interval
 				var hv := Vector2(vel.x, vel.z).rotated(turn)
 				vel.x = hv.x
 				vel.z = hv.y

@@ -10,6 +10,10 @@ const DRIBBLE_SPEED := 5.28   # 44 units
 const ACCEL := 26.0
 const TURN_SPEED := 14.0
 const PICKUP_RADIUS := 0.85
+const GK_REACT_FRAMES := 8       # func_80094EEC: keeper only reacts when ball timer (0x31C) >= 8
+const GK_DIVE_FRAMES := 7        # func_8008F2DC: contact on dive animation frame 7
+const GK_TOUCH_RADIUS := 0.512   # func_80094EEC radius 128 units * 0.004 m
+const GK_DIVE_BASE := 1.0        # port estimate: dive-decision code not located, reach = base + 0.10 m per defense level
 const SPEED_TABLE := [5, 5, 5, 5, 6, 7, 8, 9, 10, 16]   # D_800C6AE4
 const ACCEL_TABLE := [-3, -3, -2, -2, -1, -1, 0, 0, 3, 6]  # D_800C6BF0 (s16)
 
@@ -40,6 +44,8 @@ var _one_touch_timer: float = 0.0
 var _ai_hold_timer: float = 0.0
 var _tackle_cd: float = 0.0
 var _gk_diving: bool = false
+var _gk_dive_t: float = -1.0
+var _gk_dive_aim: Vector3 = Vector3.ZERO
 var _gk_dive_origin_z: float = 0.0
 
 # --- Authentic WE3 player profile (SLPM_861.62 stat words; levels 1..9) ---
@@ -533,6 +539,11 @@ func _process_human(delta: float) -> void:
 func _process_ai(delta: float) -> void:
 	if _ball == null:
 		return
+	if role == Role.GK and _gk_dive_t >= 0.0:
+		_gk_dive_t += delta
+		if _gk_dive_t >= GK_DIVE_FRAMES * LOGIC_DT:
+			_gk_dive_finish()
+		return
 	if action_lock_timer > 0.0 or _pending_kick_timer > 0.0:
 		vel = vel.lerp(Vector3.ZERO, clampf((_accel * _fat_acc()) * delta, 0.0, 1.0))
 		return
@@ -553,7 +564,7 @@ func _process_ai(delta: float) -> void:
 			var corner_mag := randf_range(1.8, 3.3)
 			var corner_z := -corner_mag if global_position.z >= 0.0 else corner_mag
 			var aim_pt := Vector3(attack_dir * PitchBuilder.HALF_LEN, 0.0, corner_z)
-			_perform_shoot((aim_pt - global_position).normalized(), randf_range(0.62, 0.92))
+			_perform_shoot((aim_pt - global_position).normalized(), randf_range(0.62, 0.92), true)
 			_ai_hold_timer = 0.0
 			return
 
@@ -728,18 +739,15 @@ func _process_gk_ai(delta: float) -> void:
 
 	if not ((_ball.owner_player == null) and ((_ball.vel.x * inward) < -9.0)):
 		_gk_diving = false
-	# Predictive dive (anim 109) if a fast shot is heading toward own goal
-	var shot_coming := (_ball.owner_player == null) and ((_ball.vel.x * inward) < -9.0) and absf(ball_pos.x - own_goal_x) < 18.0
-	if shot_coming:
-		var pred := _ball.predict_landing_point(7)
-		if absf(pred.z) < 4.5:
-			if not _gk_diving:
-				_gk_diving = true
-				_gk_dive_origin_z = global_position.z
-			# Dive reach is limited (WE3 anim 109 touches the ball on frame 7): ~1.9 m lateral + catch radius
-			target = Vector3(own_goal_x + inward * 1.2, 0.0, clampf(pred.z, _gk_dive_origin_z - 1.9, _gk_dive_origin_z + 1.9))
-			_update_mirror_foot()
-			_play_anim("gk_dive", 0.05)
+	# WE3 func_8008F2DC keeper dive: reacts >= 8 frames after the kick, aims at the ball position 7 frames ahead
+	var shot_coming := (_ball.owner_player == null) and ((_ball.vel.x * inward) < -5.76) and absf(ball_pos.x - own_goal_x) < 24.0 and _ball.last_touch_team != team_side
+	if shot_coming and _gk_dive_t < 0.0 and _ball.flight_frames >= GK_REACT_FRAMES:
+		var aim := _ball.position_after(GK_DIVE_FRAMES)
+		var gap := Vector2(aim.x - global_position.x, aim.z - global_position.z).length()
+		var in_mouth := absf(aim.z) < PitchBuilder.GOAL_HALF_W + 1.2 and (aim.x - own_goal_x) * inward < 2.5 and aim.y < 2.6
+		if in_mouth and gap <= GK_DIVE_BASE + 0.10 * float(stats["defense"]):
+			_gk_start_dive(aim)
+			return
 
 	# Rush out if ball is loose inside the 18-yard box and close
 	elif _ball.owner_player == null and absf(ball_pos.x - own_goal_x) < 14.0 and absf(ball_pos.z) < 12.0:
@@ -821,6 +829,65 @@ func _motion_tick(dir: Vector3, cap_u: float, sprint: bool) -> void:
 			rotation.y = rotate_toward(rotation.y, target_yaw, 12.0 * ANG_U)
 			_move_yaw = rotate_toward(_move_yaw, target_yaw, 24.0 * ANG_U)
 			_speed_u = minf(34.0, _speed_u + 8.0)
+
+func _gk_start_dive(aim: Vector3) -> void:
+	_gk_dive_aim = aim
+	_gk_dive_t = 0.0
+	var target := Vector3(aim.x, 0.0, aim.z)
+	var to_t := target - global_position
+	to_t.y = 0.0
+	vel = to_t / (GK_DIVE_FRAMES * LOGIC_DT)
+	_speed_u = 0.0
+	_face_direction(Vector3(1.0 if team_side == 0 else -1.0, 0.0, 0.0), 1.0)
+	_update_mirror_foot()
+	_play_anim("gk_dive", 0.04)
+
+## Frame 7 of the dive: contact test (func_80094EEC) then catch / spill (func_80094DC4).
+func _gk_dive_finish() -> void:
+	vel = Vector3.ZERO
+	_gk_dive_t = -1.0
+	if _ball.owner_player != null:
+		return
+	var d2 := Vector2(_ball.global_position.x - global_position.x, _ball.global_position.z - global_position.z).length()
+	if d2 < GK_TOUCH_RADIUS and _ball.global_position.y < 2.6:
+		_gk_touch_ball()
+	else:
+		action_lock_timer = 0.55   # beaten: lies on the ground
+
+## func_80094DC4: true = spill (ball pops up), false = hold. Level = keeper rating 0..9 (defense stat).
+func _gk_should_spill(speed_raw: float, timer: int) -> bool:
+	var level := int(stats["defense"])
+	if timer < 29 - level and speed_raw >= 0x3000:
+		return true
+	if timer >= 48:
+		return false
+	var d := (level - 7) * 3072
+	var r := (randi() % absi(d)) if d != 0 else 0
+	var threshold := (timer - 22) * 768 + 0xA000
+	return float(r + threshold) < speed_raw
+
+func _gk_touch_ball() -> void:
+	var b := _ball
+	var hspeed := Vector2(b.vel.x, b.vel.z).length()
+	var speed_raw := hspeed / U2MS * 256.0
+	if _gk_should_spill(speed_raw, b.flight_frames):
+		MatchState.gk_spills[team_side] += 1
+		var heading := Vector3(b.vel.x, 0.0, b.vel.z)
+		heading = heading.normalized() if heading.length_squared() > 0.001 else Vector3(1.0 if team_side == 0 else -1.0, 0.0, 0.0)
+		# func_800951C4(heading + triangular jitter +-16 units, power 16..23 units/frame, lift 16)
+		var jitter := float(randi() % 17 - randi() % 17)
+		heading = heading.rotated(Vector3.UP, jitter * ANG_U)
+		var push := float(16 + randi() % 8) * U2MS
+		b.kick(heading * push + Vector3(0.0, 16.0 * 736.0 / 256.0 * U2MS, 0.0), self, team_side)
+		action_lock_timer = 0.5
+		_play_anim("gk_dive", 0.04)
+	else:
+		MatchState.gk_saves[team_side] += 1
+		b.set_owner_player(self, team_side)
+		MatchState.last_touch_team = team_side
+		MatchState.last_touch_player_name = player_name
+		action_lock_timer = 0.3
+		_play_anim("gk_catch", 0.04)
 
 func _is_closest_presser() -> bool:
 	var target_pos: Vector3 = _ball.global_position
@@ -1034,13 +1101,16 @@ func _is_player_offside(target: Player) -> bool:
 	var line_x := opp_xs[1] if opp_xs.size() >= 2 else PitchBuilder.HALF_LEN
 	return tx > line_x + 0.5
 
-func _perform_shoot(aim_dir: Vector3, power: float) -> void:
+func _perform_shoot(aim_dir: Vector3, power: float, exact_aim: bool = false) -> void:
 	MatchState.shot_attempts[team_side] += 1
 	var attack_x := PitchBuilder.HALF_LEN if team_side == 0 else -PitchBuilder.HALF_LEN
 	var goal_center := Vector3(attack_x, 0.0, 0.0)
 	var base_dir := (goal_center - global_position).normalized()
 	if aim_dir.length_squared() > 0.05:
-		base_dir = (base_dir * 0.65 + aim_dir.normalized() * 0.35).normalized()
+		if exact_aim:
+			base_dir = aim_dir.normalized()   # AI placing the shot in a chosen corner
+		else:
+			base_dir = (base_dir * 0.65 + aim_dir.normalized() * 0.35).normalized()
 	base_dir.y = 0.0
 	base_dir = _apply_tech_error(base_dir, 1.5)
 
@@ -1083,6 +1153,8 @@ func _perform_slide_tackle(aim_dir: Vector3) -> void:
 func _try_pickup_ball() -> void:
 	if _ball == null or _ball.pickup_cooldown > 0.0:
 		return
+	if role == Role.GK and _gk_dive_t >= 0.0:
+		return   # mid-dive: contact is decided only on dive frame 7 (func_80094EEC)
 	var max_h := 2.25 if role == Role.GK else 1.35
 	var radius := 1.25 if role == Role.GK else PICKUP_RADIUS
 	if _ball.global_position.y > max_h:
@@ -1092,15 +1164,10 @@ func _try_pickup_ball() -> void:
 		return
 
 	var incoming_speed := _ball.vel.length()
-	# Goalkeeper: hard shots are not always held - catch chance falls with ball speed (defense stat helps), else a parry
-	if role == Role.GK and _ball.owner_player == null and incoming_speed > 11.0 and _ball.last_touch_team != team_side:
-		var catch_p := clampf(1.05 - (incoming_speed - 11.0) * 0.13 + (float(stats["defense"]) - 5.0) * 0.04, 0.18, 0.95)
-		if randf() > catch_p:
-			_play_anim("gk_dive", 0.05)
-			action_lock_timer = 0.45
-			var out_dir := Vector3(-_ball.vel.x * 0.28, 2.2, randf_range(-1.0, 1.0) * maxf(3.0, absf(_ball.vel.x) * 0.35))
-			_ball.kick(out_dir, self, team_side)
-			return
+	# Goalkeeper touching a fast shot: authentic hold/spill decision (func_80094DC4)
+	if role == Role.GK and _ball.owner_player == null and incoming_speed > 5.76 and _ball.last_touch_team != team_side and _gk_dive_t < 0.0:
+		_gk_touch_ball()
+		return
 	if role == Role.GK and _ball.owner_player == null:
 		if incoming_speed > 10.0:
 			_play_anim("gk_dive", 0.05)

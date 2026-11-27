@@ -93,6 +93,7 @@ func _run() -> void:
 	print("avg outfield speed %.2f m/s | moving %.0f%% | sprint-ish %.1f%%" % [sum_speed / maxf(1, samples), 100.0 * moving_frames / maxf(1, samples), 100.0 * sprint_frames / maxf(1, samples)])
 	print("top speeds: ", top.slice(0, 5))
 	print("ball travelled %.0f m | max players within 6m of ball: %d | same-team stack samples: %d" % [ball_travel, near_ball_max, stack_pairs])
+	print("GK saves %s spills %s" % [MatchState.gk_saves, MatchState.gk_spills])
 	print("score %d-%d | shots %s (attempts %s) | passes %s | poss %d%%/%d%%" % [MatchState.home_score, MatchState.away_score, MatchState.shots, MatchState.shot_attempts, MatchState.passes_completed, MatchState.get_possession_percent(0), MatchState.get_possession_percent(1)])
 	print("ball in attacking third (frames) home %d away %d | closest ball-to-goal home-att %.1f m away-att %.1f m" % [final_third[0], final_third[1], min_goal_dist[0], min_goal_dist[1]])
 	print("phase frames: ", phase_counts)

@@ -33,6 +33,8 @@ var last_touch_player_name: String = ""
 var shots: Array[int] = [0, 0]
 var shots_on_target: Array[int] = [0, 0]
 var shot_attempts: Array[int] = [0, 0]
+var gk_saves: Array[int] = [0, 0]    # index = team whose keeper made the save
+var gk_spills: Array[int] = [0, 0]
 var passes_completed: Array[int] = [0, 0]
 var possession_time: Array[float] = [0.0, 0.0]
 var event_log: Array[String] = []
@@ -56,6 +58,8 @@ func reset_match() -> void:
 	last_touch_player_name = ""
 	shots = [0, 0]
 	shot_attempts = [0, 0]
+	gk_saves = [0, 0]
+	gk_spills = [0, 0]
 	shots_on_target = [0, 0]
 	passes_completed = [0, 0]
 	possession_time = [0.0, 0.0]

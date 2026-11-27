@@ -15,6 +15,19 @@ Verified findings from `SLPM_861.62` / overlays. File offset = VRAM address - 0x
 ## Corrections
 - An earlier note claimed the flag CLUT table was at `SELECT.BIN` 0x2A9BE. That address is **MIPS code**, not palette data. The earlier "Germany/Spain match" was a coincidence.
 
+## Goalkeeper (ported from `func_8008F2DC`, `func_80094EEC`, `func_80094DC4`, `func_8001E6B8`)
+| Rule | Source | Port |
+|---|---|---|
+| Keeper reacts only when ball timer (`scratch+0x31C`, frames since last touch) >= 8 | `func_80094EEC` | `Ball.flight_frames`, `GK_REACT_FRAMES` |
+| Dive aims at ball position 7 frames ahead; velocity = delta/7 per frame; contact on frame 7 | `func_8008F2DC` case 0/1 | `_gk_start_dive`, `GK_DIVE_FRAMES` |
+| Touch radius 128 units (0.512 m) horizontally and vertically | `func_80094EEC` | `GK_TOUCH_RADIUS` |
+| Catch vs spill: spill if `timer < 29-level` and ball speed >= 0x3000; never spill if `timer >= 48`; else spill if `rand(abs(level-7)*3072) + (timer-22)*768 + 0xA000 < speed` | `func_80094DC4` | `_gk_should_spill` |
+| Spill = ball pops up (lift 16 -> ~5.5 m/s), pushed 16..23 units/frame along its own heading +/- 16 units | `func_8008F2DC` case 7 | `_gk_touch_ball` |
+| Hold = `func_80094FF4`: ball becomes attached to the keeper | `func_80094FF4` | `set_owner_player` |
+
+Estimates, not recovered from code: dive reach (`GK_DIVE_BASE + 0.10*defense`), and `level = defense stat` (the C reads `record[0x3B9]/10`, whose writer was not located).
+Also fixed: ball curve was far too strong; the C turns the heading 1 angle unit every `spin_interval` frames.
+
 ## Open
 - Flag palettes (CLUT) for the 43 teams: not found in `SELECT.BIN`, `DATSEL.BIN` (only 23 flag-like palettes in its 192), `HATA_CSR.BIN` (no CLUT descriptors), `SLPM_861.62` (no contiguous 43x16 block).
 - `0x3BA` (dribble/sprint bonus) writer not located.
