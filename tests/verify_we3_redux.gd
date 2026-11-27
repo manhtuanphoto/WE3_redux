@@ -323,6 +323,19 @@ func _run_tests() -> void:
 	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
 	wall_p._physics_process(0.15)
 	_assert(wall_p.position.y > 0.2 and nr_match.ball.vel.x < 0.0, "Free-kick wall player jumps and deflects shot (func_8007B39C)")
+
+	# 9l. Verify func_8002D9F4 weak-foot 16/17 power penalty
+	var shooter: Player = nr_match.players[10]
+	shooter.global_position = Vector3(30.0, 0.0, 0.0)
+	shooter.rotation.y = -PI * 0.5 # facing +X
+	shooter.stats["technique"] = 9
+	nr_match.ball.global_position = Vector3(30.2, 0.1, 0.5) # right foot (+X local)
+	shooter._perform_shoot(Vector3(1.0, 0.0, 0.0), 1.0, true)
+	var spd_strong := shooter._pending_kick_vel.length()
+	nr_match.ball.global_position = Vector3(30.2, 0.1, -0.5) # left/weak foot (-X local)
+	shooter._perform_shoot(Vector3(1.0, 0.0, 0.0), 1.0, true)
+	var spd_weak := shooter._pending_kick_vel.length()
+	_assert(spd_weak < spd_strong, "Weak-foot shot applies 16/17 power penalty (func_8002D9F4)")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

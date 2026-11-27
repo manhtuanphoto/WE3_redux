@@ -1031,9 +1031,16 @@ func _find_best_open_teammate(attack_dir: float) -> Player:
 		var opp := _find_nearest_opponent(p.global_position)
 		var space := opp.global_position.distance_to(p.global_position) if opp != null else 15.0
 		var lane_bonus := 4.0 if _is_pass_lane_clear(global_position, p.global_position) else -8.0
+		# func_80066414: bonus if teammate is inside +/-0x28 (56.25 deg) facing cone and clear of defender cone ahead
+		var to_mate := (p.global_position - global_position)
+		to_mate.y = 0.0
+		var fwd_vec := -global_transform.basis.z
+		fwd_vec.y = 0.0
+		var in_cone := fwd_vec.length_squared() > 0.01 and to_mate.length_squared() > 0.01 and fwd_vec.normalized().dot(to_mate.normalized()) >= cos(deg_to_rad(56.25))
+		var cone_bonus := 1.6 if in_cone else -0.8
 		# In the attacking half, progression matters more than safety (AI pushes into the box)
 		var fwd_w := 0.55 if (global_position.x * attack_dir) > 8.0 else 0.25
-		var score := forward_gain * fwd_w + minf(space, 12.0) * 0.6 - dist * 0.12 + lane_bonus
+		var score := forward_gain * fwd_w + minf(space, 12.0) * 0.6 - dist * 0.12 + lane_bonus + cone_bonus
 		if score > best_score:
 			best_score = score
 			best = p
@@ -1232,10 +1239,30 @@ func _perform_shoot(aim_dir: Vector3, power: float, exact_aim: bool = false) -> 
 		else:
 			base_dir = (base_dir * 0.65 + aim_dir.normalized() * 0.35).normalized()
 	base_dir.y = 0.0
-	base_dir = _apply_tech_error(base_dir, 1.5)
+	# func_8002D9F4: GK avoidance (+/-4 angle units = 5.625 deg) when shot line passes close to defending GK
+	if not exact_aim:
+		var def_gk: Player = null
+		for p in _all_players:
+			if p.team_side != team_side and p.role == Role.GK and not p.is_sent_off:
+				def_gk = p
+				break
+		if def_gk != null:
+			var to_gk := def_gk.global_position - global_position
+			to_gk.y = 0.0
+			var proj := to_gk.dot(base_dir)
+			if proj > 1.0 and proj < global_position.distance_to(goal_center):
+				var perp := to_gk - base_dir * proj
+				if perp.length() < 2.0:
+					var cross_y := base_dir.x * to_gk.z - base_dir.z * to_gk.x
+					var away_sign := -1.0 if cross_y >= 0.0 else 1.0
+					base_dir = base_dir.rotated(Vector3.UP, away_sign * 4.0 * ANG_U)
 
-	# WE3 func_80040324: shot push 128..143 units/frame (15.4-17.2 m/s) at full power; low lift
-	var spd := lerpf(10.8, 17.2, clampf(power, 0.2, 1.0)) * _kick_mul
+	var is_weak_foot := global_transform.basis.x.dot(_ball.global_position - global_position) < 0.0
+	base_dir = _apply_tech_error(base_dir, 1.85 if is_weak_foot else 1.5)
+
+	# WE3 func_80040324 + func_8002D9F4: shot push 128..143 units/frame; weak-foot 16/17 penalty
+	var wf_mul := (16.0 / 17.0) if is_weak_foot else 1.0
+	var spd := lerpf(10.8, 17.2, clampf(power, 0.2, 1.0)) * _kick_mul * wf_mul
 	var loft := lerpf(1.2, 4.5, clampf(power, 0.2, 1.0))
 	var kick_vel := base_dir * spd + Vector3(0.0, loft, 0.0)
 	var spin := randf_range(-2.5, 2.5)
