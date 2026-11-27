@@ -1,0 +1,339 @@
+{
+ "source": "SLPM_861.62 file offset 0xB83D8 (VRAM 0x800C7C3C), 43 bytes, one per team_id",
+ "cell_size": [
+  64,
+  40
+ ],
+ "note": "shape index -> cell (x,y) in the 256x384 4-bit grid stitched from HATA_CSR.BIN tiles (704/736, y=0/128/256). Flag palettes (CLUT) are NOT yet located.",
+ "cells": [
+  [
+   0,
+   0
+  ],
+  [
+   64,
+   0
+  ],
+  [
+   128,
+   0
+  ],
+  [
+   192,
+   0
+  ],
+  [
+   0,
+   40
+  ],
+  [
+   64,
+   40
+  ],
+  [
+   128,
+   40
+  ],
+  [
+   192,
+   40
+  ],
+  [
+   0,
+   80
+  ],
+  [
+   64,
+   80
+  ],
+  [
+   128,
+   80
+  ],
+  [
+   192,
+   80
+  ],
+  [
+   0,
+   120
+  ],
+  [
+   64,
+   120
+  ],
+  [
+   128,
+   120
+  ],
+  [
+   192,
+   120
+  ],
+  [
+   0,
+   160
+  ],
+  [
+   64,
+   160
+  ],
+  [
+   128,
+   160
+  ],
+  [
+   192,
+   160
+  ],
+  [
+   0,
+   200
+  ],
+  [
+   64,
+   200
+  ],
+  [
+   128,
+   200
+  ],
+  [
+   192,
+   200
+  ],
+  [
+   0,
+   240
+  ],
+  [
+   64,
+   240
+  ],
+  [
+   128,
+   240
+  ],
+  [
+   192,
+   240
+  ]
+ ],
+ "teams": [
+  {
+   "team_id": 0,
+   "team_name": "Germany",
+   "flag_shape": 0
+  },
+  {
+   "team_id": 1,
+   "team_name": "Spain",
+   "flag_shape": 1
+  },
+  {
+   "team_id": 2,
+   "team_name": "Romania",
+   "flag_shape": 2
+  },
+  {
+   "team_id": 3,
+   "team_name": "England",
+   "flag_shape": 3
+  },
+  {
+   "team_id": 4,
+   "team_name": "France",
+   "flag_shape": 2
+  },
+  {
+   "team_id": 5,
+   "team_name": "Denmark",
+   "flag_shape": 4
+  },
+  {
+   "team_id": 6,
+   "team_name": "Italy",
+   "flag_shape": 2
+  },
+  {
+   "team_id": 7,
+   "team_name": "Netherlands",
+   "flag_shape": 0
+  },
+  {
+   "team_id": 8,
+   "team_name": "Norway",
+   "flag_shape": 4
+  },
+  {
+   "team_id": 9,
+   "team_name": "Sweden",
+   "flag_shape": 4
+  },
+  {
+   "team_id": 10,
+   "team_name": "Croatia",
+   "flag_shape": 5
+  },
+  {
+   "team_id": 11,
+   "team_name": "Yugoslavia",
+   "flag_shape": 0
+  },
+  {
+   "team_id": 12,
+   "team_name": "Bulgaria",
+   "flag_shape": 0
+  },
+  {
+   "team_id": 13,
+   "team_name": "Austria",
+   "flag_shape": 0
+  },
+  {
+   "team_id": 14,
+   "team_name": "Portugal",
+   "flag_shape": 6
+  },
+  {
+   "team_id": 15,
+   "team_name": "Scotland",
+   "flag_shape": 7
+  },
+  {
+   "team_id": 16,
+   "team_name": "Greece",
+   "flag_shape": 8
+  },
+  {
+   "team_id": 17,
+   "team_name": "Belgium",
+   "flag_shape": 2
+  },
+  {
+   "team_id": 18,
+   "team_name": "Turkey",
+   "flag_shape": 9
+  },
+  {
+   "team_id": 19,
+   "team_name": "Ireland",
+   "flag_shape": 2
+  },
+  {
+   "team_id": 20,
+   "team_name": "Northern Ireland",
+   "flag_shape": 10
+  },
+  {
+   "team_id": 21,
+   "team_name": "Wales",
+   "flag_shape": 11
+  },
+  {
+   "team_id": 22,
+   "team_name": "Morocco",
+   "flag_shape": 12
+  },
+  {
+   "team_id": 23,
+   "team_name": "Tunisia",
+   "flag_shape": 13
+  },
+  {
+   "team_id": 24,
+   "team_name": "South Africa",
+   "flag_shape": 14
+  },
+  {
+   "team_id": 25,
+   "team_name": "Cameroon",
+   "flag_shape": 15
+  },
+  {
+   "team_id": 26,
+   "team_name": "Nigeria",
+   "flag_shape": 2
+  },
+  {
+   "team_id": 27,
+   "team_name": "Mexico",
+   "flag_shape": 16
+  },
+  {
+   "team_id": 28,
+   "team_name": "United States",
+   "flag_shape": 17
+  },
+  {
+   "team_id": 29,
+   "team_name": "Jamaica",
+   "flag_shape": 7
+  },
+  {
+   "team_id": 30,
+   "team_name": "Brazil",
+   "flag_shape": 18
+  },
+  {
+   "team_id": 31,
+   "team_name": "Colombia",
+   "flag_shape": 0
+  },
+  {
+   "team_id": 32,
+   "team_name": "Chile",
+   "flag_shape": 19
+  },
+  {
+   "team_id": 33,
+   "team_name": "Argentina",
+   "flag_shape": 20
+  },
+  {
+   "team_id": 34,
+   "team_name": "Paraguay",
+   "flag_shape": 21
+  },
+  {
+   "team_id": 35,
+   "team_name": "Japan",
+   "flag_shape": 22
+  },
+  {
+   "team_id": 36,
+   "team_name": "Korea",
+   "flag_shape": 22
+  },
+  {
+   "team_id": 37,
+   "team_name": "Saudi Arabia",
+   "flag_shape": 23
+  },
+  {
+   "team_id": 38,
+   "team_name": "Iran",
+   "flag_shape": 24
+  },
+  {
+   "team_id": 39,
+   "team_name": "Australia",
+   "flag_shape": 25
+  },
+  {
+   "team_id": 40,
+   "team_name": "World All Stars",
+   "flag_shape": 26
+  },
+  {
+   "team_id": 41,
+   "team_name": "European All Stars",
+   "flag_shape": 26
+  },
+  {
+   "team_id": 42,
+   "team_name": "All Stars / Secret (Team 42)",
+   "flag_shape": 27
+  }
+ ]
+}
