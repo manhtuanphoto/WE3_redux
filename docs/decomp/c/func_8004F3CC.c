@@ -44,9 +44,6 @@ int func_8004F3CC(void) {
     period = B(Scratchpad, 0x2DF);
     timer = SW(Scratchpad, 0x2C4);
 
-    /* UNCLEAR: jtbl_80011CE4 target ordering is assumed to match the 6
-     * consecutive jlabel blocks (cases 0..5).
-     */
     switch (mode) {
     case 0:
         base = (period < 2) ? 0x2328 : 0x0BB8; /* 9000 / 3000 */

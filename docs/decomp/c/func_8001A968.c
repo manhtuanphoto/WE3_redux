@@ -81,13 +81,33 @@ void func_8001A968(unsigned char *actor) {
 
                 anim_off = (unsigned int)(H(actor, 0x38E) - 0x1E);
                 if (anim_off < 0x5A) {
-                    /* UNCLEAR: jtbl_80010350 maps actor+0x38E in 0x1E..0x77 to one of:
-                     *   case .L8001AA7C: base_ang = 0x40 - B(actor, 0x3AA);
-                     *   case .L8001AA88: base_ang = 0x1C0 - B(actor, 0x3AA) + (B(actor, 0x3AC) ? -0x40 : 0x40);
-                     *   case .L8001AAA8: base_ang = 0x1C0 - B(actor, 0x3AA) + (B(actor, 0x3AC) ? 0x40 : -0x40);
-                     *   default (.L8001AAC8): base_ang = 0xC0 - B(actor, 0x3AA);
-                     */
-                    base_ang = 0xC0U - B(actor, 0x3AA);
+                    switch (anim_off) {
+                    case 0:
+                    case 14:
+                    case 46:
+                    case 47:
+                        base_ang = 0x40U - B(actor, 0x3AA);
+                        break;
+                    case 62:
+                    case 63:
+                    case 68:
+                    case 69:
+                    case 71:
+                    case 73:
+                    case 77:
+                    case 83:
+                    case 87:
+                    case 89:
+                        base_ang = (0x1C0U - B(actor, 0x3AA)) + (B(actor, 0x3AC) ? -0x40 : 0x40);
+                        break;
+                    case 9:
+                    case 16:
+                        base_ang = (0x1C0U - B(actor, 0x3AA)) + (B(actor, 0x3AC) ? 0x40 : -0x40);
+                        break;
+                    default:
+                        base_ang = 0xC0U - B(actor, 0x3AA);
+                        break;
+                    }
                 } else {
                     base_ang = 0xC0U - B(actor, 0x3AA);
                 }

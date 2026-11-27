@@ -51,9 +51,6 @@ extern unsigned int D_8011D6DC;
 extern unsigned char D_801D92BF;
 extern unsigned char D_801D92DB;
 
-/* Jump table in .rodata (raw entries not present in compact .s) */
-extern void *jtbl_80189DAC[];
-
 extern void func_8019C43C(void);
 extern int func_8018E720(int arg0, int arg1);
 extern int func_8019C61C(void);
@@ -99,24 +96,8 @@ void func_8019AED8(void)
         return;
     }
 
-    /*
-     * UNCLEAR: Exact mapping of `substate` (0..0x32) via jtbl_80189DAC[substate] is in
-     * .rodata and not present in the .s file. Several state values are observable from
-     * explicit transitions below:
-     *   - 0x00: .L8019AF2C (initializes defaults and increments D_8010A322)
-     *   - 0x03: .L8019B050 (sets up UI for row D_800AD638 and jumps to 0x14 + row)
-     *   - 0x04: .L8019B294 (sets D_8010A322 = D_801DAE50 + 5)
-     *   - 0x0A: .L8019B3BC (starts row scroll animation)
-     *   - 0x14: .L8019B4C8 (row 0 input handler)
-     *   - 0x15 / 0x17: .L8019B648 (row 1 / row 3 input handler)
-     *   - 0x18: .L8019B78C (row 4 input handler)
-     *   - 0x28: .L8019B7FC (exit forward to parent state 3)
-     *   - 0x32: .L8019B830 (exit back to parent state 1)
-     */
-    (void)jtbl_80189DAC[substate];
-
-    /* .L8019AF2C (substate 0): Initialize match-option defaults */
-    if (0) {
+    switch (substate) {
+    case 0: /* .L8019AF2C: Initialize match-option defaults */
         D_800AD638 = 0;
         D_801DAE50 = 0;
         D_801D8C60 = 0;
@@ -146,28 +127,23 @@ void func_8019AED8(void)
         D_801DA058 = 0;
 
         *g_8010A322 = (unsigned char)(*g_8010A322 + 1);
-        return;
-    }
+        break;
 
-    /* .L8019B018: Setup graphics and advance substate */
-    if (0) {
+    case 1: /* .L8019B018: Setup graphics and advance substate */
         func_8019C43C();
         *g_8010A322 = (unsigned char)(*g_8010A322 + 1);
-        return;
-    }
+        break;
 
-    /* .L8019B028: Wait for intro/fade-in completion */
-    if (0) {
+    case 2: /* .L8019B028: Wait for intro/fade-in completion */
         ready &= func_8018E720(1, 0);
         ready &= func_8019C61C();
         if (ready != 0) {
             *g_8010A322 = (unsigned char)(*g_8010A322 + 1);
         }
-        return;
-    }
+        break;
 
-    /* .L8019B050 (substate 3): Enter active option row D_800AD638 */
-    if (0) {
+    case 3: /* .L8019B050: Enter active option row D_800AD638 */
+    {
         unsigned short row = D_800AD638;
         if (row != 4) {
             func_8018E4AC(0x26, 0x31, 0);
@@ -199,34 +175,19 @@ void func_8019AED8(void)
         }
 
         *g_8010A322 = (unsigned char)((D_800AD638 & 0xFF) + 0x14);
-        return;
+        break;
     }
 
-    /* .L8019B294 (substate 4): Branch to confirm/cancel transition */
-    if (0) {
+    case 4: /* .L8019B294: Branch to confirm/cancel transition */
         *g_8010A322 = (unsigned char)(D_801DAE50 + 5);
-        return;
-    }
+        break;
 
-    /* .L8019B2B8: Handle confirm transition out of current row */
-    if (0) {
-        unsigned short row = D_800AD638;
-        if (row == 4) {
-            D_801D8FB8 = 0;
-            func_8018E4AC(0x26, 0x31, 0);
-            *g_8010A322 = 0x28;
-        } else if (row == 3) {
-            D_800AD638 = (unsigned short)(row + 1);
-            *g_8010A322 = 3;
-        } else {
-            D_801D8C60 = -1;
-            *g_8010A322 = 0x0A;
-        }
-        return;
-    }
+    case 5: /* .L8019B4B0: Return to substate 3 */
+        *g_8010A322 = 3;
+        break;
 
-    /* .L8019B31C: Handle cancel transition out of current row */
-    if (0) {
+    case 6: /* .L8019B31C: Handle cancel transition out of current row */
+    {
         unsigned short row = D_800AD638;
         if (row == 0) {
             D_801D8FB8 = 0;
@@ -241,19 +202,33 @@ void func_8019AED8(void)
             D_801D8C60 = 1;
             *g_8010A322 = 0x0A;
         }
-        return;
+        break;
     }
 
-    /* .L8019B3BC (substate 0xA): Clear row sprites and start scroll */
-    if (0) {
+    case 7: /* .L8019B2B8: Handle confirm transition out of current row */
+    {
+        unsigned short row = D_800AD638;
+        if (row == 4) {
+            D_801D8FB8 = 0;
+            func_8018E4AC(0x26, 0x31, 0);
+            *g_8010A322 = 0x28;
+        } else if (row == 3) {
+            D_800AD638 = (unsigned short)(row + 1);
+            *g_8010A322 = 3;
+        } else {
+            D_801D8C60 = -1;
+            *g_8010A322 = 0x0A;
+        }
+        break;
+    }
+
+    case 0xA: /* .L8019B3BC: Clear row sprites and start scroll */
         func_8018E4AC(0x1E, 0x25, 0);
         func_8019CD0C();
         *g_8010A322 = (unsigned char)(*g_8010A322 + 1);
-        return;
-    }
+        break;
 
-    /* .L8019B3FC: Step row scroll animation and settle on next row */
-    if (0) {
+    case 0xB: /* .L8019B3FC: Step row scroll animation and settle on next row */
         if (func_8019CB54() == 0) {
             func_8019CD0C();
         } else {
@@ -284,11 +259,10 @@ void func_8019AED8(void)
             func_8019C85C();
             *g_8010A322 = 3;
         }
-        return;
-    }
+        break;
 
-    /* .L8019B4C8 (substate 0x14): Row 0 input handler */
-    if (0) {
+    case 0x14: /* .L8019B4C8: Row 0 input handler */
+    {
         unsigned short btn;
         D_801DAE50 = 0;
         btn = func_8006EC80(0);
@@ -329,11 +303,12 @@ void func_8019AED8(void)
             D_801DAE50 = 1;
             *g_8010A322 = 4;
         }
-        return;
+        break;
     }
 
-    /* .L8019B648 (substate 0x15 / 0x17): Row 1 & Row 3 input handler */
-    if (0) {
+    case 0x15: /* .L8019B648: Row 1 & Row 3 input handler */
+    case 0x17:
+    {
         unsigned short btn;
         D_801DAE50 = 0;
         btn = func_8006EC80(0);
@@ -367,11 +342,11 @@ void func_8019AED8(void)
             D_801DAE50 = 1;
             *g_8010A322 = 4;
         }
-        return;
+        break;
     }
 
-    /* .L8019B78C (substate 0x18): Row 4 input handler */
-    if (0) {
+    case 0x18: /* .L8019B78C: Row 4 input handler */
+    {
         unsigned short btn;
         func_8006FCFC(0x36);
         btn = func_8006EC80(0);
@@ -388,11 +363,10 @@ void func_8019AED8(void)
             D_801DAE50 = 1;
             *g_8010A322 = 4;
         }
-        return;
+        break;
     }
 
-    /* .L8019B7FC (substate 0x28): Confirm exit to parent state 3 */
-    if (0) {
+    case 0x28: /* .L8019B7FC: Confirm exit to parent state 3 */
         ready &= func_8018E720(2, 0x3A);
         ready &= func_8019C73C();
         if (ready != 0) {
@@ -402,11 +376,9 @@ void func_8019AED8(void)
             func_800171FC(3);
             *g_8010A322 = 0;
         }
-        return;
-    }
+        break;
 
-    /* .L8019B830 (substate 0x32): Cancel exit to parent state 1 */
-    if (0) {
+    case 0x32: /* .L8019B830: Cancel exit to parent state 1 */
         ready &= func_8019C73C();
         if (ready != 0) {
             func_8018E4AC(0x1E, 0x31, 0);
@@ -415,5 +387,9 @@ void func_8019AED8(void)
             func_800171FC(1);
             *g_8010A322 = 0;
         }
+        break;
+
+    default: /* .L8019B878 */
+        break;
     }
 }

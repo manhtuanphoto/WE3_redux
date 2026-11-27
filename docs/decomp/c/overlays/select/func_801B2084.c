@@ -51,7 +51,6 @@
 
 extern unsigned char  D_8010A322;
 extern unsigned char  D_800FF748[];
-extern void          *jtbl_8018A9A4[];
 
 extern unsigned short D_800AD638;
 extern unsigned char *D_801D873C;
@@ -107,294 +106,299 @@ void func_801B2084(void)
         return;
     }
 
-    /*
-     * UNCLEAR: jtbl_8018A9A4 (0xD4 entries) is external rodata not included in
-     * the assembly file, so the exact state-number-to-label mapping cannot be
-     * verified from this file alone. Each jlabel block is preserved verbatim.
-     */
-    goto *jtbl_8018A9A4[state];
-
-L801B20DC:
-    D_801D8A8A = 0x5F;
-    D_801D8A8B = 0xFF;
-    D_801D8A82 = 0;
-    D_801D8A84 = 0;
-    D_801D8A86 = 0;
-    D_801D8A88 = 0;
-    D_801D8A8F = 0;
-    D_801D8A8C = 0;
-    D_801D8A8D = 0x60;
-    D_801DA5D0 = 0;
-    D_800AD638 = 0;
-    D_801DA06B = 0;
-    D_801DA069 = 0;
-    D_801DA06A = 0;
-    D_801DA068 = 0;
-    D_801DA5D2 = 0;
-    D_801DA5D4 = 1;
-    D_801DA5D6 = 9;
-    D_801D8A8E = (unsigned char)((D_801D8A8E & 0x61u) | 0x21u);
-    func_801B30FC();
-
-    {
-        unsigned int team = B(base, 0xABA0);
-        unsigned char val = B(base, 0x8F27 + team * 36);
-
-        B(base, 0x8F22) = 0;
-        B(base, 0x8F23) = 0;
-        B(base, 0xABA8) = 0;
-        D_801DA2F0 = 0;
-        D_801DAD85 = 1;
-        D_801D8B18 = 0;
-        B(base, 0xABA1) = 0;
-        B(base, 0xABA0) = 0;
-        B(base, 0xABA3) = 0;
-        B(base, 0xABA2) = 0;
-        B(base, 0xABA6) = 0;
-        B(base, 0xABA4) = 0;
-        B(base, 0xABA7) = 0;
-        B(base, 0xABA5) = 0;
+    switch (state) {
+    case 0:
+        D_801D8A8A = 0x5F;
+        D_801D8A8B = 0xFF;
+        D_801D8A82 = 0;
+        D_801D8A84 = 0;
+        D_801D8A86 = 0;
+        D_801D8A88 = 0;
+        D_801D8A8F = 0;
+        D_801D8A8C = 0;
+        D_801D8A8D = 0x60;
+        D_801DA5D0 = 0;
         D_800AD638 = 0;
-        D_801DAD84 = 4;
-        D_801D8A51 = 0;
+        D_801DA06B = 0;
+        D_801DA069 = 0;
+        D_801DA06A = 0;
+        D_801DA068 = 0;
         D_801DA5D2 = 0;
         D_801DA5D4 = 1;
         D_801DA5D6 = 9;
+        D_801D8A8E = (unsigned char)((D_801D8A8E & 0x61u) | 0x21u);
+        func_801B30FC();
 
-        D_801DA5D0 = val;
-        D_801DA5D0 = 0;
-        func_8018E538(0);
-    }
+        {
+            unsigned int team = B(base, 0xABA0);
+            unsigned char val = B(base, 0x8F27 + team * 36);
 
-    B(Scratchpad, 0x2A2) = 4;
-    func_801B30FC();
-    func_801B38E0(0, 0);
-    func_801AB6E8(0x5B);
-    goto L801B28D4;
+            B(base, 0x8F22) = 0;
+            B(base, 0x8F23) = 0;
+            B(base, 0xABA8) = 0;
+            D_801DA2F0 = 0;
+            D_801DAD85 = 1;
+            D_801D8B18 = 0;
+            B(base, 0xABA1) = 0;
+            B(base, 0xABA0) = 0;
+            B(base, 0xABA3) = 0;
+            B(base, 0xABA2) = 0;
+            B(base, 0xABA6) = 0;
+            B(base, 0xABA4) = 0;
+            B(base, 0xABA7) = 0;
+            B(base, 0xABA5) = 0;
+            D_800AD638 = 0;
+            D_801DAD84 = 4;
+            D_801D8A51 = 0;
+            D_801DA5D2 = 0;
+            D_801DA5D4 = 1;
+            D_801DA5D6 = 9;
 
-L801B22D4:
-    if (func_8006F07C(0x10) != 0) {
+            D_801DA5D0 = val;
+            D_801DA5D0 = 0;
+            func_8018E538(0);
+        }
+
+        B(Scratchpad, 0x2A2) = 4;
+        func_801B30FC();
+        func_801B38E0(0, 0);
+        func_801AB6E8(0x5B);
         goto L801B28D4;
-    }
-    return;
 
-L801B22E4:
-    if (func_801AB6E8(0x5B) != 0) {
-        D_801D8A8F = 1;
-        D_801DA2F0 = 1;
-        B(base, 0xABD8) = 0x14;
-        B(base, 0xABDA) = 0x0B; /* D_8010A322 = 11 */
-    }
-    return;
-
-L801B232C:
-    {
-        unsigned int cur = B(base, 0xABDA);
-        B(base, 0xABD8) = 0;
-        B(base, 0xABDA) = (unsigned char)(cur + 1);
-    }
-    return;
-
-L801B234C:
-    if (func_801B190C() == 2) {
-        B(base, 0xABDA) = 0x14; /* D_8010A322 = 20 */
-    }
-    return;
-
-L801B2368:
-    {
-        unsigned int cur = B(base, 0xABDA);
-        B(base, 0xABD8) = 0;
-        B(base, 0xABDA) = (unsigned char)(cur + 1);
-    }
-    return;
-
-L801B2388:
-    {
-        int r = func_801B1B0C(0);
-        if (r == 1) {
-            B(base, 0xABDA) = 0x0A; /* D_8010A322 = 10 */
-        } else if (r == 2) {
-            B(base, 0xABDA) = 0x1E; /* D_8010A322 = 30 */
-        }
-    }
-    return;
-
-L801B23C8:
-    {
-        unsigned int cur = B(base, 0xABDA);
-        B(base, 0xABD8) = 0;
-        B(base, 0xABDA) = (unsigned char)(cur + 1);
-    }
-    return;
-
-L801B23E8:
-    {
-        int r = func_801AE294(0);
-        if (r == 1) {
-            B(base, 0xABDA) = 0x14; /* D_8010A322 = 20 */
-        } else if (r == 2) {
-            B(base, 0xABDA) = 0x28; /* D_8010A322 = 40 */
-        }
-    }
-    return;
-
-L801B2428:
-    {
-        unsigned int cur = B(base, 0xABDA);
-        B(base, 0xABD8) = 0;
-        B(base, 0xABDA) = (unsigned char)(cur + 1);
-    }
-    return;
-
-L801B2448:
-    {
-        int r = func_801AE294(1);
-        if (r == 1) {
-            B(base, 0xABDA) = 0x1E; /* D_8010A322 = 30 */
-        } else if (r == 2) {
-            B(base, 0xABDA) = 0x32; /* D_8010A322 = 50 */
-        }
-    }
-    return;
-
-L801B2494:
-    if (D_801D8B18 != 1) {
-        int s3 = 0;
-        int s0 = 0;
-        int i;
-
-        while (s3 < 0x20) {
-            D_801D873C = func_801B4C84((unsigned int)(s0 & 0xFF));
-            for (i = 0; i < 4; i++) {
-                int slot = s3 + i;
-                unsigned char team_id = D_801D873C[i * 2];
-                D_801D8748[slot] = team_id;
-                B(base, 0x8F37 + slot * 36) = 4;
-                /*
-                 * NOTE: In the MIPS binary, `addiu $s3, $s3, 4` sits in the
-                 * delay slot of the inner `bnez .L801B24CC`, so it executes on
-                 * every inner iteration (advancing s3 by 16 per outer pass)
-                 * rather than once per outer pass.
-                 */
-                s3 += 4;
-            }
-            s0++;
-        }
-
-        /* Seed the 16-team knockout bracket (A1 vs B2, C2 vs D1, etc.) */
-        D_801D8768[0]  = D_801D8748[0];
-        D_801D8768[1]  = D_801D8748[5];
-        D_801D8768[3]  = D_801D8748[12];
-        D_801D8768[2]  = D_801D8748[9];
-        D_801D8768[4]  = D_801D8748[16];
-        D_801D8768[5]  = D_801D8748[21];
-        D_801D8768[6]  = D_801D8748[25];
-        D_801D8768[7]  = D_801D8748[28];
-        D_801D8768[8]  = D_801D8748[4];
-        D_801D8768[9]  = D_801D8748[1];
-        D_801D8768[10] = D_801D8748[13];
-        D_801D8768[11] = D_801D8748[8];
-        D_801D8768[12] = D_801D8748[20];
-        D_801D8768[13] = D_801D8748[17];
-        D_801D8768[14] = D_801D8748[29];
-        D_801D8768[15] = D_801D8748[24];
-
-        /* Copy 3rd and 4th place teams from each of the 8 groups to [16..31] */
-        for (i = 0; i < 8; i++) {
-            D_801D8768[16 + i * 2]     = D_801D8748[i * 4 + 2];
-            D_801D8768[16 + i * 2 + 1] = D_801D8748[i * 4 + 3];
-        }
-
-        B(base, 0x8F21) = 0x10;
-        for (i = 0; i < 0x10; i++) {
-            unsigned int team = D_801D8768[i];
-            if ((B(base, 0x8F24 + team * 36) & 0xC0u) == 0x40u) {
-                B(base, 0x8F21) = (unsigned char)(B(base, 0x8F21) - 1);
-            }
-        }
-
-        if (B(base, 0x8F21) != 0) {
+    case 1:
+        if (func_8006F07C(0x10) != 0) {
             goto L801B28D4;
         }
-        D_801D8B18 = 1;
-    }
-    B(base, 0xABDA) = 0xC8; /* D_8010A322 = 200 */
-    return;
+        return;
 
-L801B2728:
-    if (func_801AB6E8(0x5C) == 2) {
-        goto L801B28D4;
-    }
-    return;
-
-L801B2744:
-    if (func_8006F0DC(0x10, 0) != 0) {
-        B(base, 0xABDA) = 0x3C; /* D_8010A322 = 60 */
-    }
-    return;
-
-L801B276C:
-    {
-        int i;
-        B(base, 0x8F1F) = 0x60;
-        B(base, 0x8F20) = 0x10;
-        func_800171C4(0x22);
-        func_800171FC(0);
-        B(base, 0xABDA) = 1; /* D_8010A322 = 1 */
-        for (i = 0; i < 0x20; i++) {
-            B(base, 0xAB80 + i) = (unsigned char)i;
-            B(base, 0x8F37 + i * 36) = (i < 0x10) ? 0 : 4;
+    case 2:
+        if (func_801AB6E8(0x5B) != 0) {
+            D_801D8A8F = 1;
+            D_801DA2F0 = 1;
+            B(base, 0xABD8) = 0x14;
+            B(base, 0xABDA) = 0x0B; /* D_8010A322 = 11 */
         }
-        goto L801B2990;
-    }
+        return;
 
-L801B280C:
-    func_801B5A7C();
-    return;
+    case 10:
+        {
+            unsigned int cur = B(base, 0xABDA);
+            B(base, 0xABD8) = 0;
+            B(base, 0xABDA) = (unsigned char)(cur + 1);
+        }
+        return;
 
-L801B281C:
-    {
-        int r = func_801ACE2C(1);
-        if (r == 2) {
-            B(base, 0xABDA) = 0xD2; /* D_8010A322 = 210 */
-        } else if (r == 1) {
-            D_801DA058 = 0;
+    case 11:
+    L801B28D4:
+        B(base, 0xABDA) = (unsigned char)(B(base, 0xABDA) + 1);
+        return;
+
+    case 12:
+        if (func_801B190C() == 2) {
+            B(base, 0xABDA) = 0x14; /* D_8010A322 = 20 */
+        }
+        return;
+
+    case 20:
+        {
+            unsigned int cur = B(base, 0xABDA);
+            B(base, 0xABD8) = 0;
+            B(base, 0xABDA) = (unsigned char)(cur + 1);
+        }
+        return;
+
+    case 21:
+        {
+            int r = func_801B1B0C(0);
+            if (r == 1) {
+                B(base, 0xABDA) = 0x0A; /* D_8010A322 = 10 */
+            } else if (r == 2) {
+                B(base, 0xABDA) = 0x1E; /* D_8010A322 = 30 */
+            }
+        }
+        return;
+
+    case 30:
+        {
+            unsigned int cur = B(base, 0xABDA);
+            B(base, 0xABD8) = 0;
+            B(base, 0xABDA) = (unsigned char)(cur + 1);
+        }
+        return;
+
+    case 31:
+        {
+            int r = func_801AE294(0);
+            if (r == 1) {
+                B(base, 0xABDA) = 0x14; /* D_8010A322 = 20 */
+            } else if (r == 2) {
+                B(base, 0xABDA) = 0x28; /* D_8010A322 = 40 */
+            }
+        }
+        return;
+
+    case 40:
+        {
+            unsigned int cur = B(base, 0xABDA);
+            B(base, 0xABD8) = 0;
+            B(base, 0xABDA) = (unsigned char)(cur + 1);
+        }
+        return;
+
+    case 41:
+        {
+            int r = func_801AE294(1);
+            if (r == 1) {
+                B(base, 0xABDA) = 0x1E; /* D_8010A322 = 30 */
+            } else if (r == 2) {
+                B(base, 0xABDA) = 0x32; /* D_8010A322 = 50 */
+            }
+        }
+        return;
+
+    case 50:
+        if (D_801D8B18 != 1) {
+            int s3 = 0;
+            int s0 = 0;
+            int i;
+
+            while (s3 < 0x20) {
+                D_801D873C = func_801B4C84((unsigned int)(s0 & 0xFF));
+                for (i = 0; i < 4; i++) {
+                    int slot = s3 + i;
+                    unsigned char team_id = D_801D873C[i * 2];
+                    D_801D8748[slot] = team_id;
+                    B(base, 0x8F37 + slot * 36) = 4;
+                    /*
+                     * NOTE: In the MIPS binary, `addiu $s3, $s3, 4` sits in the
+                     * delay slot of the inner `bnez .L801B24CC`, so it executes on
+                     * every inner iteration (advancing s3 by 16 per outer pass)
+                     * rather than once per outer pass.
+                     */
+                    s3 += 4;
+                }
+                s0++;
+            }
+
+            /* Seed the 16-team knockout bracket (A1 vs B2, C2 vs D1, etc.) */
+            D_801D8768[0]  = D_801D8748[0];
+            D_801D8768[1]  = D_801D8748[5];
+            D_801D8768[3]  = D_801D8748[12];
+            D_801D8768[2]  = D_801D8748[9];
+            D_801D8768[4]  = D_801D8748[16];
+            D_801D8768[5]  = D_801D8748[21];
+            D_801D8768[6]  = D_801D8748[25];
+            D_801D8768[7]  = D_801D8748[28];
+            D_801D8768[8]  = D_801D8748[4];
+            D_801D8768[9]  = D_801D8748[1];
+            D_801D8768[10] = D_801D8748[13];
+            D_801D8768[11] = D_801D8748[8];
+            D_801D8768[12] = D_801D8748[20];
+            D_801D8768[13] = D_801D8748[17];
+            D_801D8768[14] = D_801D8748[29];
+            D_801D8768[15] = D_801D8748[24];
+
+            /* Copy 3rd and 4th place teams from each of the 8 groups to [16..31] */
+            for (i = 0; i < 8; i++) {
+                D_801D8768[16 + i * 2]     = D_801D8748[i * 4 + 2];
+                D_801D8768[16 + i * 2 + 1] = D_801D8748[i * 4 + 3];
+            }
+
+            B(base, 0x8F21) = 0x10;
+            for (i = 0; i < 0x10; i++) {
+                unsigned int team = D_801D8768[i];
+                if ((B(base, 0x8F24 + team * 36) & 0xC0u) == 0x40u) {
+                    B(base, 0x8F21) = (unsigned char)(B(base, 0x8F21) - 1);
+                }
+            }
+
+            if (B(base, 0x8F21) != 0) {
+                goto L801B28D4;
+            }
+            D_801D8B18 = 1;
+        }
+        B(base, 0xABDA) = 0xC8; /* D_8010A322 = 200 */
+        return;
+
+    case 51:
+        if (func_801AB6E8(0x5C) == 2) {
+            goto L801B28D4;
+        }
+        return;
+
+    case 52:
+        if (func_8006F0DC(0x10, 0) != 0) {
+            B(base, 0xABDA) = 0x3C; /* D_8010A322 = 60 */
+        }
+        return;
+
+    case 60:
+        {
+            int i;
+            B(base, 0x8F1F) = 0x60;
+            B(base, 0x8F20) = 0x10;
+            func_800171C4(0x22);
+            func_800171FC(0);
+            B(base, 0xABDA) = 1; /* D_8010A322 = 1 */
+            for (i = 0; i < 0x20; i++) {
+                B(base, 0xAB80 + i) = (unsigned char)i;
+                B(base, 0x8F37 + i * 36) = (i < 0x10) ? 0 : 4;
+            }
+            goto L801B2990;
+        }
+
+    case 200:
+    case 201:
+    case 202:
+    case 204:
+        func_801B5A7C();
+        return;
+
+    case 203:
+        {
+            int r = func_801ACE2C(1);
+            if (r == 2) {
+                B(base, 0xABDA) = 0xD2; /* D_8010A322 = 210 */
+            } else if (r == 1) {
+                D_801DA058 = 0;
+                B(base, 0xABDA) = (unsigned char)(B(base, 0xABDA) + 1);
+            } else if (r == 3) {
+                B(Scratchpad, 0x29F) = 0;
+                func_800171C4(0xFF);
+            }
+        }
+        return;
+
+    case 205:
+        B(base, 0xABDA) = 0x28; /* D_8010A322 = 40 */
+        return;
+
+    case 210:
+        if (func_8006F0DC(0x10, 0) != 0) {
             B(base, 0xABDA) = (unsigned char)(B(base, 0xABDA) + 1);
-        } else if (r == 3) {
-            B(Scratchpad, 0x29F) = 0;
-            func_800171C4(0xFF);
         }
-    }
-    return;
+        return;
 
-L801B28A8:
-    B(base, 0xABDA) = 0x28; /* D_8010A322 = 40 */
-    return;
+    case 211:
+        {
+            int i;
+            B(base, 0x8F1F) = 0x60;
+            B(base, 0x8F20) = 0x10;
+            func_800171C4(0x22);
+            func_800171FC(2);
+            B(base, 0xABDA) = 0; /* D_8010A322 = 0 */
+            for (i = 0; i < 0x20; i++) {
+                B(base, 0xAB80 + i) = (unsigned char)i;
+                B(base, 0x8F37 + i * 36) = (i < 0x10) ? 0 : 4;
+            }
+        }
+    L801B2990:
+        B(Scratchpad, 0x2A2) = 0;
+        func_801AB510(D_801D8768);
+        return;
 
-L801B28C0:
-    if (func_8006F0DC(0x10, 0) == 0) {
+    default:
+        /* 3..9, 13..19, 22..29, 32..39, 42..49, 53..59, 61..199, 206..209 (.L801B29A4) */
         return;
     }
-L801B28D4:
-    B(base, 0xABDA) = (unsigned char)(B(base, 0xABDA) + 1);
-    return;
-
-L801B28FC:
-    {
-        int i;
-        B(base, 0x8F1F) = 0x60;
-        B(base, 0x8F20) = 0x10;
-        func_800171C4(0x22);
-        func_800171FC(2);
-        B(base, 0xABDA) = 0; /* D_8010A322 = 0 */
-        for (i = 0; i < 0x20; i++) {
-            B(base, 0xAB80 + i) = (unsigned char)i;
-            B(base, 0x8F37 + i * 36) = (i < 0x10) ? 0 : 4;
-        }
-    }
-
-L801B2990:
-    B(Scratchpad, 0x2A2) = 0;
-    func_801AB510(D_801D8768);
 }

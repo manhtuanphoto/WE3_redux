@@ -11,7 +11,7 @@
  *   actor (u8*) - pointer to 1000-byte player actor struct
  *
  * Return value:
- *   unsigned int - 0 or 1 (see UNCLEAR note on jump table jtbl_80011DCC).
+ *   unsigned int - 0 or 1.
  *
  * Scratchpad / Actor fields read & written:
  *   Scratch 0x04A (s16) - predicted/ball-path x coordinate
@@ -41,8 +41,6 @@
 #define Scratchpad ((unsigned char *)0x1F800000)
 
 extern unsigned char D_800FF748[];
-/* UNCLEAR: Jump table jtbl_80011DCC (28 entries for opp_state 0..0x1B) resides in rodata outside this .s file. */
-extern void *jtbl_80011DCC[];
 
 extern unsigned int func_80052C6C(void);
 
@@ -129,24 +127,55 @@ unsigned int func_8005346C(unsigned char *actor)
     opp_state = B(opp, 0x396);
 
     if (opp_state >= 0x1C) {
+        B(actor, 0x396) = 0x1B;
+        B(actor, 0x397) = 0;
+        H(actor, 0x3C2) = 0xFF;
         return 1;
     }
 
-    /*
-     * UNCLEAR: Exact mapping of opp_state (0..0x1B) in jtbl_80011DCC is not
-     * present in func_8005346C.s. The four target branches inside this function are:
-     *   - .L800536D4: if (B(actor, 0x397) < 0x30) return 1;
-     *                 else { B(actor, 0x396) = 0x1B; B(actor, 0x397) = 0; H(actor, 0x3C2) = 0xFF; return 0; }
-     *   - .L800536E8: return 0;
-     *   - .L800536F0: return 1;
-     *   - .L800536F4: B(actor, 0x396) = 0x1B; B(actor, 0x397) = 0; H(actor, 0x3C2) = 0xFF; return <v0>;
-     */
-    (void)jtbl_80011DCC[opp_state];
-    if (B(actor, 0x397) < 0x30) {
+    switch (opp_state) {
+    case 0:
+    case 1:
+    case 3:
+    case 15: /* .L800536E8 */
+        return 0;
+
+    case 27: /* .L800536D4 */
+        if (B(actor, 0x397) < 0x30) {
+            return 0;
+        }
+        B(actor, 0x396) = 0x1B;
+        B(actor, 0x397) = 0;
+        H(actor, 0x3C2) = 0xFF;
+        return 1;
+
+    case 2:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 16:
+    case 17:
+    case 18:
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+    case 23:
+    case 24:
+    case 25:
+    case 26: /* .L800536F0 */
+    default:
+        B(actor, 0x396) = 0x1B;
+        B(actor, 0x397) = 0;
+        H(actor, 0x3C2) = 0xFF;
         return 1;
     }
-    B(actor, 0x396) = 0x1B;
-    B(actor, 0x397) = 0;
-    H(actor, 0x3C2) = 0xFF;
-    return 0;
 }

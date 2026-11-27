@@ -54,9 +54,6 @@ void func_80016F88(void) {
         return;
     }
 
-    /* UNCLEAR: jtbl_80010088 target ordering is assumed to match the 6
-     * consecutive jlabel blocks (cases 0..5).
-     */
     switch (state) {
     case 0:
         if (func_8006F07C(0x10) != 0) {

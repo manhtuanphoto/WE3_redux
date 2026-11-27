@@ -18,11 +18,6 @@
  *   +0x290 (signed int, R): match/game frame counter
  *   +0x31C (signed short / unsigned short, R/W): frames since last ball touch
  *          (incremented each tick while != 0xFF; capped at 255)
- *
- * Notes:
- *   UNCLEAR: Exact index mapping of jtbl_80012500[0..4] across the four jlabels
- *   (.L80066B14, .L80066B58, .L80066B68, .L80066B80) and exit (.L80066B90).
- *   Case 0 must be .L80066B14 because `frame % 20 == 0` implies `frame % 5 == 0`.
  */
 
 #define H(p, o)  (*(unsigned short *)((p) + (o)))
@@ -53,29 +48,23 @@ void func_80066A94(void)
     slot = frame % 5;
 
     if ((unsigned int)slot < 5u) {
-        /*
-         * UNCLEAR: exact jtbl_80012500[0..4] mapping for cases 1..4
-         * (one of the 5 entries jumps straight to exit .L80066B90 or duplicates a label).
-         * Case 0 is .L80066B14 because frame % 20 == 0 requires frame % 5 == 0.
-         */
         switch (slot) {
         case 0: /* .L80066B14 */
             if ((SW(Scratchpad, 0x290) % 20) == 0) {
                 func_800A27C0();
             }
             break;
-        case 1: /* .L80066B58 (order in .s; exact jtbl_80012500 slot UNCLEAR) */
+        case 1: /* .L80066B58 */
             func_800A03FC();
             break;
-        case 2: /* .L80066B68 (order in .s; exact jtbl_80012500 slot UNCLEAR) */
+        case 3: /* .L80066B68 */
             func_8009FFB0();
             func_800A18D4();
             break;
-        case 3: /* .L80066B80 (order in .s; exact jtbl_80012500 slot UNCLEAR) */
+        case 2:
+        case 4: /* .L80066B80 */
             func_80067D10();
             func_80067B20();
-            break;
-        case 4:
             break;
         }
     }

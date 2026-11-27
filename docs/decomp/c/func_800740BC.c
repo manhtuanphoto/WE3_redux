@@ -135,17 +135,16 @@ int func_800740BC(void)
             }
         }
 
-        /* UNCLEAR: jtbl_80012DDC exact case-to-label mapping for 0..4 not in asm; 3 case blocks exist */
         switch (B(scratch, 0x2E2)) {
         case 0:
+        case 2:
+        case 3:
             obj = func_8001D004(0x6B);
             B(obj, 0x16) = 0x5B;
             break;
         case 1:
             func_8006FA84(0x13, 1);
             break;
-        case 2:
-        case 3:
         case 4:
             obj = func_8001D004(0x6B);
             B(obj, 0x16) = 0x5B;
@@ -173,24 +172,16 @@ int func_800740BC(void)
             return 0;
         }
 
-        /* UNCLEAR: jtbl_80012DF4 exact case-to-label mapping for 0..4 not in asm; 3 case blocks exist */
         switch (B(scratch, 0x2E2)) {
         case 0:
-            if (H(scratch, 0x294) < 0x61U) {
-                H(scratch, 0x294) = (unsigned short)(H(scratch, 0x294) + 1);
-            } else {
-                status = 1;
-            }
-            break;
-        case 1:
+        case 2:
+        case 3:
             ret = func_800749A4(0) & 0xFF;
             if (ret == 1 || ret == 2) {
                 status = 2;
             }
             break;
-        case 2:
-        case 3:
-        case 4:
+        case 1:
             for (team = 0; team < 2; team++) {
                 unsigned char *rec = D_800EF840 + team * 18;
                 D_800F1068 = rec;
@@ -218,6 +209,13 @@ int func_800740BC(void)
                         break;
                     }
                 }
+            }
+            break;
+        case 4:
+            if (H(scratch, 0x294) < 0x61U) {
+                H(scratch, 0x294) = (unsigned short)(H(scratch, 0x294) + 1);
+            } else {
+                status = 1;
             }
             break;
         }

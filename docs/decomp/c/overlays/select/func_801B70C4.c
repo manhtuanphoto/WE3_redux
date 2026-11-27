@@ -65,8 +65,6 @@ extern u16  D_801DA5D6;
 extern u8   D_801DA618;
 extern u8   D_801DADB6;
 
-extern void *jtbl_8018B0FC[];
-
 extern void func_800171C4(s32 a0);
 extern s32  func_8006F07C(s32 a0);
 extern s32  func_8006F0DC(s32 a0, s32 a1);
@@ -95,182 +93,187 @@ void func_801B70C4(void)
         return;
     }
 
-    /* UNCLEAR: jtbl_8018B0FC (72 entries, states 0x00..0x47) is not included
-     * in the compact asm. Below are all 17 jlabel targets plus 3 unlabeled
-     * jump-table target blocks following stripped-nop `j .L801B77EC` exits.
-     */
-    (void)jtbl_8018B0FC[state];
-    return;
-
-L_801B7118:
-    D_8010866A = 0;
-    D_8010866B = 0;
-    D_8010A2F0 = 0;
-    D_801D8B18 = 1;
-    D_801D8DFC = 0;
-    D_801D8DFB = 0;
-    D_801DA2F0 = 0;
-    D_801DADB6 = 0;
-    D_801DA5D0 = 0;
-    D_801DA5D2 = 0;
-    D_801DA5D4 = 1;
-    D_801DA5D6 = 4;
-    D_8010A2E9 = 0;
-    D_8010A2E8 = 0;
-    D_8010A322++;
-    return;
-
-L_801B71BC:
-    func_801B84D8(1);
-    D_8010A322++;
-    return;
-
-L_801B71D8:
-    {
-        s32 i;
-        for (i = 0; i < (s32)D_80108668; i++) {
-            u8 *entry = ((u8 **)((u8 *)D_8018B1F0 + (D_80108668 << 6)))[i];
-            entry[6] = 3;
-            entry[7] = (u8)i;
-            entry[8] = 0xFF;
-        }
-    }
-    func_801B84D8(0);
-    D_8010A322 = 0x0A;
-    return;
-
-L_801B7260:
-    func_801B8708(0);
-    D_8010866B = 0;
-    D_801DADB6 = 0;
-    D_8010A322++;
-    return;
-
-L_801B7290:
-    func_801B8CD4();
-    if (D_801DA618 != 0) {
+    switch (state) {
+    case 0x00:
+        D_8010866A = 0;
+        D_8010866B = 0;
+        D_8010A2F0 = 0;
+        D_801D8B18 = 1;
+        D_801D8DFC = 0;
+        D_801D8DFB = 0;
+        D_801DA2F0 = 0;
+        D_801DADB6 = 0;
+        D_801DA5D0 = 0;
+        D_801DA5D2 = 0;
+        D_801DA5D4 = 1;
+        D_801DA5D6 = 4;
+        D_8010A2E9 = 0;
+        D_8010A2E8 = 0;
         D_8010A322++;
-        return;
-    }
-    func_801B8A20(1);
-    /* UNCLEAR: $a0 is not reloaded before this call after func_801B8A20(1) */
-    func_801B8BB0(1, 2);
-    func_801B8BB0(5, 3);
-    func_801B84D8(0);
-    return;
+        break;
 
-L_801B72F0:
-    D_8010865D = 0;
-    func_801A9A08();
-    D_8010A322++;
-    return;
-
-L_801B7318:
-    func_801B84D8(0);
-    func_801AA7C4(1);
-    D_8010A322++;
-    return;
-
-L_801B733C:
-    func_801B8708(0);
-    func_801B8CD4();
-    func_801A9C54();
-    D_8010866E_BASE[D_8010A2E8 * 0x24] += 1;
-    D_8010866E_BASE[D_8010A2E9 * 0x24] += 1;
-    D_8010867F_BASE[D_8010A2E8 * 0x24] = D_801D8A4C[5];
-    D_8010867F_BASE[D_8010A2E9 * 0x24] = D_801D8A4C[5];
-    D_8010A322++;
-    return;
-
-L_801B7458:
-    {
-        u8 g0 = SCRATCHPAD_U8(0x2D1);
-        u8 g1 = SCRATCHPAD_U8(0x2D2);
-        u8 winner, loser;
-
-        D_801DA333 = g0;
-        D_801DA334 = g1;
-        if (g0 < g1) {
-            winner = D_8010A2E9;
-            loser  = D_8010A2E8;
-        } else {
-            winner = D_8010A2E8;
-            loser  = D_8010A2E9;
-        }
-        D_801D8803 = winner;
-        D_801D8804 = loser;
-        D_801D8A4C[6] = 3;
-        D_801D8A4C[7] = D_801D8803;
-        D_801D8A4C[8] = D_801D8804;
-        D_8010A322 = 0x14;
-    }
-    return;
-
-L_801B751C:
-    func_801B84D8(0);
-    {
-        u8 next_state = D_801D8A4C[4];
-        if (next_state == 0xFF) {
-            /* UNCLEAR: $a0 is not explicitly loaded before func_801B8A20 (0 remains from func_801B84D8(0)) */
-            func_801B8A20(0);
-            D_8010A2F0 = D_801D8803;
-            func_801B8F38();
-            D_801DA2F0 = 0;
-            D_8010A322 = 0x1E;
-        } else {
-            D_8010A322 = next_state;
-            D_8010866A++;
-        }
-    }
-    return;
-
-L_801B75B4:
-    func_801B9100();
-    D_801DADB6 = 1;
-    D_8010A322++;
-    return;
-
-L_801B75DC:
-    if (func_8006F07C(0x10) != 0) {
+    case 0x01:
+        func_801B84D8(1);
         D_8010A322++;
-    }
-    return;
+        break;
 
-L_801B7600:
-    D_8010A322 += (u8)func_8018EA8C(1, 0);
-    return;
-
-L_801B7634:
-    if (func_8006F0DC(0x40, 0) != 0) {
-        D_8010A322 = 0x28;
-    }
-    return;
-
-L_801B7650:
-    {
-        s32 res = func_801B7804();
-        if (res == 1) {
-            D_8010A322 = 0x1E;
-        } else if (res == 2) {
-            D_8010A322 = 0x32;
+    case 0x02:
+        {
+            s32 i;
+            for (i = 0; i < (s32)D_80108668; i++) {
+                u8 *entry = ((u8 **)((u8 *)D_8018B1F0 + (D_80108668 << 6)))[i];
+                entry[6] = 3;
+                entry[7] = (u8)i;
+                entry[8] = 0xFF;
+            }
         }
-    }
-    return;
+        func_801B84D8(0);
+        D_8010A322 = 0x0A;
+        break;
 
-L_801B7690:
-    {
-        s32 res = func_801AE294(0);
-        if (res == 1) {
+    case 0x0A:
+        func_801B8708(0);
+        D_8010866B = 0;
+        D_801DADB6 = 0;
+        D_8010A322++;
+        break;
+
+    case 0x0B:
+        func_801B8CD4();
+        if (D_801DA618 != 0) {
+            D_8010A322++;
+            return;
+        }
+        func_801B8A20(1);
+        /* UNCLEAR: $a0 is not reloaded before this call after func_801B8A20(1) */
+        func_801B8BB0(1, 2);
+        func_801B8BB0(5, 3);
+        func_801B84D8(0);
+        break;
+
+    case 0x0C:
+        D_8010865D = 0;
+        func_801A9A08();
+        D_8010A322++;
+        break;
+
+    case 0x0D:
+        func_801B84D8(0);
+        func_801AA7C4(1);
+        D_8010A322++;
+        break;
+
+    case 0x0E:
+        func_801B8708(0);
+        func_801B8CD4();
+        func_801A9C54();
+        D_8010866E_BASE[D_8010A2E8 * 0x24] += 1;
+        D_8010866E_BASE[D_8010A2E9 * 0x24] += 1;
+        D_8010867F_BASE[D_8010A2E8 * 0x24] = D_801D8A4C[5];
+        D_8010867F_BASE[D_8010A2E9 * 0x24] = D_801D8A4C[5];
+        D_8010A322++;
+        break;
+
+    case 0x0F:
+        {
+            u8 g0 = SCRATCHPAD_U8(0x2D1);
+            u8 g1 = SCRATCHPAD_U8(0x2D2);
+            u8 winner, loser;
+
+            D_801DA333 = g0;
+            D_801DA334 = g1;
+            if (g0 < g1) {
+                winner = D_8010A2E9;
+                loser  = D_8010A2E8;
+            } else {
+                winner = D_8010A2E8;
+                loser  = D_8010A2E9;
+            }
+            D_801D8803 = winner;
+            D_801D8804 = loser;
+            D_801D8A4C[6] = 3;
+            D_801D8A4C[7] = D_801D8803;
+            D_801D8A4C[8] = D_801D8804;
+            D_8010A322 = 0x14;
+        }
+        break;
+
+    case 0x14:
+        func_801B84D8(0);
+        {
+            u8 next_state = D_801D8A4C[4];
+            if (next_state == 0xFF) {
+                /* UNCLEAR: $a0 is not explicitly loaded before func_801B8A20 (0 remains from func_801B84D8(0)) */
+                func_801B8A20(0);
+                D_8010A2F0 = D_801D8803;
+                func_801B8F38();
+                D_801DA2F0 = 0;
+                D_8010A322 = 0x1E;
+            } else {
+                D_8010A322 = next_state;
+                D_8010866A++;
+            }
+        }
+        break;
+
+    case 0x1E:
+        func_801B9100();
+        D_801DADB6 = 1;
+        D_8010A322++;
+        break;
+
+    case 0x1F:
+        if (func_8006F07C(0x10) != 0) {
+            D_8010A322++;
+        }
+        break;
+
+    case 0x20:
+        D_8010A322 += (u8)func_8018EA8C(1, 0);
+        break;
+
+    case 0x21:
+        if (func_8006F0DC(0x40, 0) != 0) {
             D_8010A322 = 0x28;
-        } else if (res == 2) {
-            D_8010A322 = 0x3C;
         }
-    }
-    return;
+        break;
 
-L_801B76D0:
-    D_8010A320 = 0;
-    D_8010A322++;
+    case 0x29:
+        {
+            s32 res = func_801B7804();
+            if (res == 1) {
+                D_8010A322 = 0x1E;
+            } else if (res == 2) {
+                D_8010A322 = 0x32;
+            }
+        }
+        break;
+
+    case 0x33:
+        {
+            s32 res = func_801AE294(0);
+            if (res == 1) {
+                D_8010A322 = 0x28;
+            } else if (res == 2) {
+                D_8010A322 = 0x3C;
+            }
+        }
+        break;
+
+    case 0x28:
+    case 0x32:
+    case 0x3C:
+        D_8010A320 = 0;
+        D_8010A322++;
+        break;
+
+    default:
+        break;
+    }
+
+    /* UNCLEAR: jtbl_8018B0FC only provided 61 entries (0x00..0x3C);
+     * states 0x3D..0x47 and the 3 unlabeled blocks below remain unmapped.
+     */
     return;
 
 /* UNCLEAR: unlabeled jump-table target block at 0x801B76FC (after j .L801B77EC) */

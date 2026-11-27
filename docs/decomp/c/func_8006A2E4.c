@@ -192,6 +192,7 @@ void func_8006A2E4(unsigned char *actor)
         break;
 
     case 4:
+    case 5:
         step = (B(scratch, 0x328) < 2) ? 2 : 3;
         ball = (unsigned char *)W(scratch, 0x2F4);
         S(scratch, 0xFC) = (signed short)func_8005A76C(S(scratch, 0xFC), S(ball, 6), step);
@@ -210,10 +211,6 @@ void func_8006A2E4(unsigned char *actor)
                 (3 - B(scratch, 0x2FF + B(actor, 0x398))) << 10
             );
         }
-        break;
-
-    default:
-        /* UNCLEAR: zone_mode == 5 is within bounds (< 6) in jtbl_800127E8, no separate case body in asm */
         break;
     }
 

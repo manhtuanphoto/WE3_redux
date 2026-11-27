@@ -78,10 +78,6 @@ extern unsigned char D_800F1018[]; /* 20-byte stride OT/rendering table indexed 
 extern unsigned short D_8010786E;
 extern unsigned short D_8010786C;
 
-/* Jump tables located in .rodata (raw entries not present in compact .s) */
-extern void *jtbl_80189724[];
-extern void *jtbl_801897AC[];
-
 extern void func_80197C78(SelectTextSlot *slot, int y, TextToken *tokens, int width, int count);
 extern void func_801975B0(int icon_id, int x, int y, int arg3);
 extern void func_800B3FB8(void *sprite_desc, void *ot_entry, unsigned int ot_prio);
@@ -239,43 +235,130 @@ void func_80194B64(void)
                     tok->len = 1;
                     tok->ptr = 0;
 
-                    /*
-                     * UNCLEAR: Exact mapping of control byte `c` (0x00..0x20) via
-                     * jtbl_80189724[c] is stored in .rodata and not included in the .s file.
-                     * The distinct handler targets present in the assembly are:
-                     *   - .L80194DD4/.L80194DD8 (space ' '): type=1, width=char_spacing+4, p++
-                     *   - .L80194DF4: type=5, width=0, p++
-                     *   - .L80194E04: p++, type=6, width=0, param=*p, p++
-                     *   - .L80194E18: p++, type=8, width=0, param=*p, p++
-                     *   - .L80194E2C (NUL '\0'): keep_going=0, type=0, width=0, p++
-                     *   - .L80194E3C: type=3, width=char_spacing+0x12, p++, param=*p, p++
-                     *   - .L80194E54: type=4, width=char_spacing+0x18, p++, param=*p, p++
-                     *   - .L80194E6C: p++, override_mode=*p, p++ (no token emitted)
-                     *   - .L80194E7C: p++, type=9, width=0x40, param=*p, p++
-                     *   - .L80194E88: p++, type=0xA, width=0x40, param=*p, p++
-                     *   - .L80194EB0: p++; sub=*p;
-                     *       if (sub == 0) { type=0xFF; p++; tok++; }
-                     *       else if (sub == 0x14 || sub == 0x15) { p++; type=sub; width=0x10; param=*p; tok++; p++; }
-                     *       else { tok++; p++; }
-                     */
-                    (void)jtbl_80189724[c];
-                    if (c == '\0') {
+                    switch (c) {
+                    case 0: /* .L80194E2C: NUL terminator */
                         keep_going = 0;
                         tok->type = 0;
                         tok->width = 0;
                         tok++;
                         p++;
-                    } else if (c == ' ') {
+                        break;
+
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                    case 12:
+                    case 13:
+                    case 14:
+                    case 15:
+                    case 16:
+                    case 17:
+                    case 18:
+                    case 19:
+                    case 20:
+                    case 21:
+                    case 22:
+                    case 23:
+                    case 24:
+                    case 25:
+                    case 32:
+                    default: /* .L80194DD4: space ' ' */
                         tok->type = 1;
                         tok->width = (unsigned char)(slot->char_spacing + 4);
                         tok++;
                         p++;
-                    } else {
-                        /* Fallback placeholder for remaining jtbl_80189724 control codes */
+                        break;
+
+                    case 9: /* .L80194E18 */
+                        p++;
+                        tok->type = 8;
+                        tok->width = 0;
+                        tok->param = *p;
+                        tok++;
+                        p++;
+                        break;
+
+                    case 10: /* .L80194DF4 */
                         tok->type = 5;
                         tok->width = 0;
                         tok++;
                         p++;
+                        break;
+
+                    case 11: /* .L80194E04 */
+                        p++;
+                        tok->type = 6;
+                        tok->width = 0;
+                        tok->param = *p;
+                        tok++;
+                        p++;
+                        break;
+
+                    case 26: /* .L80194E6C */
+                        p++;
+                        override_mode = *p;
+                        p++;
+                        break;
+
+                    case 27: /* .L80194EB0 */
+                        p++;
+                        switch (*p) {
+                        case 0:
+                            tok->type = 0xFF;
+                            p++;
+                            break;
+                        case 0x14:
+                        case 0x15:
+                            tok->type = *p;
+                            p++;
+                            tok->width = 0x10;
+                            tok->param = *p;
+                            break;
+                        }
+                        tok++;
+                        p++;
+                        break;
+
+                    case 28: /* .L80194E7C */
+                        p++;
+                        tok->type = 9;
+                        tok->width = 0x40;
+                        tok->param = *p;
+                        tok++;
+                        p++;
+                        break;
+
+                    case 29: /* .L80194E88 */
+                        p++;
+                        tok->type = 0xA;
+                        tok->width = 0x40;
+                        tok->param = *p;
+                        tok++;
+                        p++;
+                        break;
+
+                    case 30: /* .L80194E3C */
+                        tok->type = 3;
+                        p++;
+                        tok->width = (unsigned char)(slot->char_spacing + 0x12);
+                        tok->param = *p;
+                        tok++;
+                        p++;
+                        break;
+
+                    case 31: /* .L80194E54 */
+                        tok->type = 4;
+                        p++;
+                        tok->width = (unsigned char)(slot->char_spacing + 0x18);
+                        tok->param = *p;
+                        tok++;
+                        p++;
+                        break;
                     }
                 }
             }
@@ -291,38 +374,53 @@ void func_80194B64(void)
                     TextToken *cur_tok = &D_801D7DB8[tok_idx];
                     unsigned int t = cur_tok->type;
 
-                    /*
-                     * UNCLEAR: Exact mapping of token type `t` (0..0x15) via
-                     * jtbl_801897AC[t] is stored in .rodata and not included in the .s file.
-                     * The distinct handler targets present in the assembly are:
-                     *   - .L80194F7C (word wrap before current token if line_w > max_width):
-                     *       adds cur_tok->width to line_w; if overflow and line_cnt >= 2,
-                     *       justifies D_801D7DB8[line_start .. line_start + line_cnt - 2],
-                     *       calls func_80197C78(slot, cur_y, &D_801D7DB8[line_start], sum_w, line_cnt - 1),
-                     *       sets line_cnt = 1, line_start = tok_idx, cur_y += 14 + line_spacing,
-                     *       line_w = cur_tok->width; otherwise line_cnt++.
-                     *   - .L80195098 (wrap including current token if line_w > max_width):
-                     *       adds cur_tok->width to line_w; if overflow, justifies
-                     *       D_801D7DB8[line_start .. line_start + line_cnt - 1], calls
-                     *       func_80197C78(slot, cur_y, &D_801D7DB8[line_start], sum_w, line_cnt),
-                     *       resets line_w = 0, line_cnt = 0, line_start = tok_idx + 1,
-                     *       cur_y += 14 + line_spacing; otherwise line_cnt++.
-                     *   - .L8019518C (explicit newline):
-                     *       calls func_80197C78(slot, cur_y, &D_801D7DB8[line_start], line_w, line_cnt),
-                     *       resets line_w = 0, line_cnt = 0, line_start = tok_idx + 1,
-                     *       cur_y += 14 + line_spacing.
-                     *   - .L801951C4 (custom vertical advance):
-                     *       calls func_80197C78(slot, cur_y, &D_801D7DB8[line_start], line_w, line_cnt),
-                     *       resets line_w = 0, line_cnt = 0, line_start = tok_idx + 1,
-                     *       cur_y += (signed char)cur_tok->param.
-                     *   - .L801951F8 (end of string, type == 0):
-                     *       calls func_80197C78(slot, cur_y, &D_801D7DB8[line_start], line_w, line_cnt).
-                     */
-                    (void)jtbl_801897AC;
-
-                    if (t == 0) {
+                    switch (t) {
+                    case 0: /* .L801951F8: end of string */
                         func_80197C78(slot, cur_y, &D_801D7DB8[line_start], line_w, line_cnt);
-                    } else if (t == 2) {
+                        break;
+
+                    case 1: /* .L80195098: wrap including current token if line_w > max_width */
+                        line_w += cur_tok->width;
+                        if (line_w > (int)slot->max_width) {
+                            int k;
+                            int sum_w = 0;
+                            for (k = 0; k < line_cnt; k++) {
+                                sum_w += D_801D7DB8[line_start + k].width;
+                            }
+                            if (align_mode == 0) {
+                                int rem = (int)slot->max_width - sum_w;
+                                int sp_idx = 0;
+                                rem = (rem >= 0) ? (rem - 1) : -1;
+                                while (rem != -1) {
+                                    TextToken *st = &D_801D7DB8[line_start + sp_idx];
+                                    if (st->type == 1 && st->width < 10) {
+                                        st->width++;
+                                    }
+                                    sp_idx++;
+                                    if (sp_idx > line_cnt - 1) {
+                                        sp_idx = 0;
+                                    }
+                                    rem--;
+                                }
+                            }
+                            func_80197C78(slot, cur_y, &D_801D7DB8[line_start], sum_w, line_cnt);
+                            line_w = 0;
+                            line_cnt = 0;
+                            line_start = tok_idx + 1;
+                            cur_y += 14 + slot->line_spacing;
+                        } else {
+                            line_cnt++;
+                        }
+                        break;
+
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 8:
+                    case 9:
+                    case 10:
+                    case 20:
+                    case 21: /* .L80194F7C: word wrap before current token if line_w > max_width */
                         line_w += cur_tok->width;
                         if (line_w > (int)slot->max_width) {
                             if (line_cnt >= 2) {
@@ -356,44 +454,36 @@ void func_80194B64(void)
                         } else {
                             line_cnt++;
                         }
-                    } else if (t == 1) {
-                        line_w += cur_tok->width;
-                        if (line_w > (int)slot->max_width) {
-                            int k;
-                            int sum_w = 0;
-                            for (k = 0; k < line_cnt; k++) {
-                                sum_w += D_801D7DB8[line_start + k].width;
-                            }
-                            if (align_mode == 0) {
-                                int rem = (int)slot->max_width - sum_w;
-                                int sp_idx = 0;
-                                rem = (rem >= 0) ? (rem - 1) : -1;
-                                while (rem != -1) {
-                                    TextToken *st = &D_801D7DB8[line_start + sp_idx];
-                                    if (st->type == 1 && st->width < 10) {
-                                        st->width++;
-                                    }
-                                    sp_idx++;
-                                    if (sp_idx > line_cnt - 1) {
-                                        sp_idx = 0;
-                                    }
-                                    rem--;
-                                }
-                            }
-                            func_80197C78(slot, cur_y, &D_801D7DB8[line_start], sum_w, line_cnt);
-                            line_w = 0;
-                            line_cnt = 0;
-                            line_start = tok_idx + 1;
-                            cur_y += 14 + slot->line_spacing;
-                        } else {
-                            line_cnt++;
-                        }
-                    } else if (t == 5) {
+                        break;
+
+                    case 5: /* .L8019518C: explicit newline */
                         func_80197C78(slot, cur_y, &D_801D7DB8[line_start], line_w, line_cnt);
                         line_w = 0;
                         line_cnt = 0;
                         line_start = tok_idx + 1;
                         cur_y += 14 + slot->line_spacing;
+                        break;
+
+                    case 6: /* .L801951C4: custom vertical advance */
+                        func_80197C78(slot, cur_y, &D_801D7DB8[line_start], line_w, line_cnt);
+                        line_w = 0;
+                        line_cnt = 0;
+                        line_start = tok_idx + 1;
+                        cur_y += (signed char)cur_tok->param;
+                        break;
+
+                    case 7:
+                    case 11:
+                    case 12:
+                    case 13:
+                    case 14:
+                    case 15:
+                    case 16:
+                    case 17:
+                    case 18:
+                    case 19:
+                    default: /* .L80195214 */
+                        break;
                     }
 
                     if (cur_tok->type == 0) {

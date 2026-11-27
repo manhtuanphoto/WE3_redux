@@ -51,7 +51,6 @@ int func_80068554(unsigned char *actor, unsigned int dist_sq) {
     unsigned char facing;
     unsigned char diff;
     signed short ax;
-    unsigned int thresh_sq;
 
     target_ang = (unsigned char)func_8005B36C(S(actor, 0x02), S(actor, 0x06),
                                               S(actor, 0x3BC), S(actor, 0x3BE));
@@ -81,15 +80,71 @@ int func_80068554(unsigned char *actor, unsigned int dist_sq) {
             return (0x510000U < dist_sq);
         }
 
-        /* UNCLEAR: jtbl_80012680 maps actor+0x391 in 1..0x18 to one of four branches:
-         *   .L80068638: check 0x190000 < dist_sq & forward progress, or |z-tz| < 0x501 -> 0x310000 < dist_sq
-         *   .L800686B0: if dist_sq <= 0x190000 return 0x310000 < dist_sq; else check ball->x +/- 0x200
-         *   .L80068720: return 0x400000 < dist_sq
-         *   .L80068728: return 0x510000 < dist_sq
-         * Exact jtbl_80012680 case values are not included in asm_compact.
-         */
-        thresh_sq = 0x510000U;
-        return (thresh_sq < dist_sq);
+        switch (state_off) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+            /* .L80068728 */
+            return (0x510000U < dist_sq);
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+            /* .L80068720 */
+            return (0x400000U < dist_sq);
+        case 13:
+        case 14:
+        case 15:
+            /* .L800686B0 */
+            if (0x190000U < dist_sq) {
+                unsigned char *ball = P(Scratchpad, 0x2F4);
+                if (B(actor, 0x399) != 0) {
+                    if (S(actor, 0x02) < S(ball, 0x02) + 0x200) {
+                        return 1;
+                    }
+                } else {
+                    if (S(ball, 0x02) - 0x200 < S(actor, 0x02)) {
+                        return 1;
+                    }
+                }
+            }
+            return (0x310000U < dist_sq);
+        case 16:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
+        case 22:
+        case 23: {
+            /* .L80068638 */
+            signed short dz;
+            if (0x190000U < dist_sq) {
+                int forward = (B(actor, 0x399) != 0)
+                            ? (S(actor, 0x02) < S(actor, 0x3BC))
+                            : (S(actor, 0x3BC) < S(actor, 0x02));
+                if (forward) {
+                    return 1;
+                }
+            }
+            dz = (signed short)(S(actor, 0x06) - S(actor, 0x3BE));
+            if (dz < 0) {
+                dz = (signed short)-dz;
+            }
+            if (dz < 0x501) {
+                return (0x310000U < dist_sq);
+            }
+            return 1;
+        }
+        default:
+            return (0x510000U < dist_sq);
+        }
     } else {
         unsigned char atk_ang = (unsigned char)(B(actor, 0x399) << 7);
         unsigned int state_off;
@@ -111,16 +166,74 @@ int func_80068554(unsigned char *actor, unsigned int dist_sq) {
             return (0x1000000U < dist_sq);
         }
 
-        /* UNCLEAR: jtbl_800126E0 maps actor+0x391 in 1..0x18 to one of six branches:
-         *   .L800687AC: return 0
-         *   .L800687B4: return 0x1000000 < dist_sq
-         *   .L800687BC: return 0xC40000 < dist_sq
-         *   .L800687C4: return 0x900000 < dist_sq
-         *   .L800687CC: if |actor->x - ball->x| < 0x600 or actor behind ball -> 0x100000 < dist_sq, else 0x790000 < dist_sq
-         *   .L80068834: if Scratchpad[0x30B]==4 -> 0x100000 < dist_sq; else if 0x310000 < dist_sq & moving forward -> 1, else 0x640000 < dist_sq
-         * Exact jtbl_800126E0 case values are not included in asm_compact.
-         */
-        thresh_sq = 0x1000000U;
-        return (thresh_sq < dist_sq);
+        switch (state_off) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4: {
+            /* .L800687CC */
+            unsigned char *ball = P(Scratchpad, 0x2F4);
+            signed short actor_x = S(actor, 0x02);
+            signed short ball_x = S(ball, 0x02);
+            int dx = actor_x - ball_x;
+            if (dx < 0) {
+                dx = -dx;
+            }
+            if (dx < 0x600) {
+                return (0x100000U < dist_sq);
+            }
+            if (B(actor, 0x399) != 0) {
+                if (-actor_x < -ball_x) {
+                    return (0x100000U < dist_sq);
+                }
+            } else {
+                if (actor_x < ball_x) {
+                    return (0x100000U < dist_sq);
+                }
+            }
+            return (0x790000U < dist_sq);
+        }
+        case 5:
+        case 6:
+        case 7:
+            /* .L80068834 */
+            if (B(Scratchpad, 0x30B) == 4) {
+                return (0x100000U < dist_sq);
+            }
+            if (0x310000U < dist_sq) {
+                int moving = (B(actor, 0x399) != 0)
+                           ? (S(actor, 0x3BC) < S(actor, 0x02))
+                           : (S(actor, 0x02) < S(actor, 0x3BC));
+                if (moving) {
+                    return 1;
+                }
+            }
+            return (0x640000U < dist_sq);
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+            /* .L800687C4 */
+            return (0x900000U < dist_sq);
+        case 13:
+        case 14:
+        case 15:
+        case 18:
+        case 19:
+            /* .L800687BC */
+            return (0xC40000U < dist_sq);
+        case 16:
+        case 17:
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+            /* .L800687AC */
+            return 0;
+        default:
+            return (0x1000000U < dist_sq);
+        }
     }
 }

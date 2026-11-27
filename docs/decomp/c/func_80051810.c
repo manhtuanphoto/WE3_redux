@@ -55,9 +55,9 @@ void func_80051810(void)
         return;
     }
 
-    /* UNCLEAR: exact jtbl_80011D40 case mapping for idx 0..12 (11 sequential blocks in .s) */
     switch (idx) {
-    case 0: /* .L80051850 */
+    case 0:
+    case 11: /* .L80051850 */
         B(Scratchpad, 0x1E8) = 0;
         func_80051A84(Scratchpad + 0x1F0);
         break;
@@ -82,19 +82,22 @@ void func_80051810(void)
         }
         break;
 
-    case 4: /* .L800518E8 */
+    case 4: /* .L80051A70 */
+        break;
+
+    case 5: /* .L800518E8 */
         if (B(Scratchpad, 0x29B) != 0) {
             func_800972AC();
         }
         break;
 
-    case 5: /* .L80051908 */
+    case 6: /* .L80051908 */
         if (B(Scratchpad, 0x29B) != 0) {
             func_80096964();
         }
         break;
 
-    case 6: /* .L80051928 */
+    case 7: /* .L80051928 */
         if (B(Scratchpad, 0x29B) < 2) {
             SW(Scratchpad, 0x1F0) = 0x40;
             SW(Scratchpad, 0x1F4) = -0xA00;
@@ -107,13 +110,13 @@ void func_80051810(void)
         }
         break;
 
-    case 7: /* .L80051974 */
+    case 8: /* .L80051974 */
         if (B(Scratchpad, 0x29B) != 0) {
             func_80096094(2);
         }
         break;
 
-    case 8: /* .L80051994 */
+    case 9: /* .L80051994 */
         if (B(Scratchpad, 0x29B) < 2) {
             B(Scratchpad, 0x1EC) = 0;
             func_80051A84(Scratchpad + 0x1F0);
@@ -122,13 +125,13 @@ void func_80051810(void)
         }
         break;
 
-    case 9: /* .L800519C8 */
+    case 10: /* .L800519C8 */
         if (B(Scratchpad, 0x29B) < 3) {
             func_80097DB0();
         }
         break;
 
-    case 10: /* .L800519EC */
+    case 12: /* .L800519EC */
         if (B(Scratchpad, 0x29B) != 0) {
             unsigned char *ball = (unsigned char *)W(Scratchpad, 0x2F4);
             signed int bx = S(ball, 2);

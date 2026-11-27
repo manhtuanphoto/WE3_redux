@@ -51,14 +51,6 @@ void func_800B5E48(unsigned char *mat, signed short sin_val, signed short cos_va
         return;
     }
 
-    /*
-     * UNCLEAR: exact jtbl_800150CC mapping for indices 0..0x22 ('X'..'z') is
-     * external data not in this .s file; the four visible jump targets are:
-     *   - .L800B5EC4: X-axis rotation
-     *   - .L800B5EDC: Y-axis rotation
-     *   - .L800B5EF4: Z-axis rotation
-     *   - .L800B5F08: default (no-op / identity)
-     */
     neg_sin = (signed short)(-sin_val);
     switch (axis) {
     case 'X':

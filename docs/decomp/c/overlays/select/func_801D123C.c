@@ -111,11 +111,6 @@ s32 func_801D123C(u32 mode)
         return 0;
     }
 
-    /*
-     * Note: `jtbl_8018DB30` table bytes are external to this .s file, but the
-     * 10 `jlabel` blocks in func_801D123C.s correspond 1-to-1 in sequential
-     * order to states 0..9 as verified by each state's D_801D5D6A[0] transitions.
-     */
     switch (state) {
     case 0:
         if (D_800CA5DC != 0x31) {

@@ -49,7 +49,6 @@
 extern unsigned char D_800FF748[];
 extern unsigned char D_800FB580[];
 extern unsigned char D_800F1018[];
-extern void *jtbl_8001055C[];
 
 extern void func_800B6A78(unsigned char *src, unsigned char *dst_mat);
 extern void func_800B4A14(unsigned char *mat);
@@ -88,100 +87,107 @@ void func_8001CA00(void)
             continue;
         }
 
-        /*
-         * UNCLEAR: exact mapping of jtbl_8001055C[0..30] to the 8 target arms
-         * below (rodata jump table jtbl_8001055C is not present in asm_compact).
-         * The 8 distinct jlabel target arms in address order are:
-         *   arm 0 (.L8001CAC0): func_800B2728 with shift=0xE, ot=D_800FB580
-         *   arm 1 (.L8001CAE8): if (sp[0x1E8] && sp[0x1F4] >= -0x83F && sp[0x1F0] >= -0xCFF)
-         *                         func_800B2C28(..., 0xE, D_800FB580, D_800FF748+0x70F0)
-         *                       else func_800B2728(..., 0xE, D_800FB580)
-         *   arm 2 (.L8001CB94): if (sp[0x1E8] && sp[0x1F4] >= -0x83F && sp[0x1F0] < 0xD00)
-         *                         func_800B2C28(..., 0xE, D_800FB580, D_800FF748+0x70F0)
-         *                       else func_800B2728(..., 0xE, D_800FB580)
-         *   arm 3 (.L8001CC40): func_800B2728(..., 0xE - sp[0], D_800F1018); func_80098E1C(obj)
-         *   arm 4 (.L8001CC98): func_800B2728(..., 0xF - sp[0], D_800F1018)
-         *   arm 5 (.L8001CCC4): func_800B2728(..., 0xE - sp[0], D_800F1018); func_8009A8FC(obj)
-         *   arm 6 (.L8001CD1C): func_800B2728(..., 0xE - sp[0], D_800F1018)
-         *   arm 7 (.L8001CD64): no-op (break)
-         */
-        goto *jtbl_8001055C[type_idx];
-
-    arm_L8001CAC0:
-        W(Scratchpad, 0x2A4) = func_800B2728(
-            W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-            W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
-            D_800FB580 + B(Scratchpad, 0x29D) * 20
-        );
-        continue;
-
-    arm_L8001CAE8:
-        if (B(Scratchpad, 0x1E8) != 0 && SW(Scratchpad, 0x1F4) >= -0x83F && SW(Scratchpad, 0x1F0) >= -0xCFF) {
-            W(Scratchpad, 0x2A4) = func_800B2C28(
-                W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-                W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
-                D_800FB580 + B(Scratchpad, 0x29D) * 20, D_800FF748 + 0x70F0
-            );
-        } else {
+        switch (type_idx) {
+        case 0:
+        case 16:
+        case 29:
+        case 30: /* .L8001CAC0 */
             W(Scratchpad, 0x2A4) = func_800B2728(
                 W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
                 W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
                 D_800FB580 + B(Scratchpad, 0x29D) * 20
             );
-        }
-        continue;
+            break;
 
-    arm_L8001CB94:
-        if (B(Scratchpad, 0x1E8) != 0 && SW(Scratchpad, 0x1F4) >= -0x83F && SW(Scratchpad, 0x1F0) < 0xD00) {
-            W(Scratchpad, 0x2A4) = func_800B2C28(
-                W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-                W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
-                D_800FB580 + B(Scratchpad, 0x29D) * 20, D_800FF748 + 0x70F0
-            );
-        } else {
+        case 2:
+        case 4: /* .L8001CAE8 */
+            if (B(Scratchpad, 0x1E8) != 0 && SW(Scratchpad, 0x1F4) >= -0x83F && SW(Scratchpad, 0x1F0) >= -0xCFF) {
+                W(Scratchpad, 0x2A4) = func_800B2C28(
+                    W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
+                    W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
+                    D_800FB580 + B(Scratchpad, 0x29D) * 20, D_800FF748 + 0x70F0
+                );
+            } else {
+                W(Scratchpad, 0x2A4) = func_800B2728(
+                    W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
+                    W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
+                    D_800FB580 + B(Scratchpad, 0x29D) * 20
+                );
+            }
+            break;
+
+        case 1:
+        case 3: /* .L8001CB94 */
+            if (B(Scratchpad, 0x1E8) != 0 && SW(Scratchpad, 0x1F4) >= -0x83F && SW(Scratchpad, 0x1F0) < 0xD00) {
+                W(Scratchpad, 0x2A4) = func_800B2C28(
+                    W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
+                    W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
+                    D_800FB580 + B(Scratchpad, 0x29D) * 20, D_800FF748 + 0x70F0
+                );
+            } else {
+                W(Scratchpad, 0x2A4) = func_800B2728(
+                    W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
+                    W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
+                    D_800FB580 + B(Scratchpad, 0x29D) * 20
+                );
+            }
+            break;
+
+        case 10:
+        case 11: /* .L8001CC40 */
             W(Scratchpad, 0x2A4) = func_800B2728(
                 W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-                W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE,
-                D_800FB580 + B(Scratchpad, 0x29D) * 20
+                W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE - SW(Scratchpad, 0x000),
+                D_800F1018 + B(Scratchpad, 0x29D) * 20
             );
+            func_80098E1C(obj);
+            break;
+
+        case 9:
+        case 14: /* .L8001CC98 */
+            W(Scratchpad, 0x2A4) = func_800B2728(
+                W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
+                W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xF - SW(Scratchpad, 0x000),
+                D_800F1018 + B(Scratchpad, 0x29D) * 20
+            );
+            break;
+
+        case 12:
+        case 13: /* .L8001CCC4 */
+            W(Scratchpad, 0x2A4) = func_800B2728(
+                W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
+                W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE - SW(Scratchpad, 0x000),
+                D_800F1018 + B(Scratchpad, 0x29D) * 20
+            );
+            func_8009A8FC(obj);
+            break;
+
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 27:
+        case 28: /* .L8001CD1C */
+            W(Scratchpad, 0x2A4) = func_800B2728(
+                W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
+                W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE - SW(Scratchpad, 0x000),
+                D_800F1018 + B(Scratchpad, 0x29D) * 20
+            );
+            break;
+
+        case 15:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+        case 26: /* .L8001CD64 */
+        default:
+            break;
         }
-        continue;
-
-    arm_L8001CC40:
-        W(Scratchpad, 0x2A4) = func_800B2728(
-            W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-            W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE - SW(Scratchpad, 0x000),
-            D_800F1018 + B(Scratchpad, 0x29D) * 20
-        );
-        func_80098E1C(obj);
-        continue;
-
-    arm_L8001CC98:
-        W(Scratchpad, 0x2A4) = func_800B2728(
-            W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-            W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xF - SW(Scratchpad, 0x000),
-            D_800F1018 + B(Scratchpad, 0x29D) * 20
-        );
-        continue;
-
-    arm_L8001CCC4:
-        W(Scratchpad, 0x2A4) = func_800B2728(
-            W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-            W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE - SW(Scratchpad, 0x000),
-            D_800F1018 + B(Scratchpad, 0x29D) * 20
-        );
-        func_8009A8FC(obj);
-        continue;
-
-    arm_L8001CD1C:
-        W(Scratchpad, 0x2A4) = func_800B2728(
-            W(obj_hi, 0x04), W(obj_hi, -0x04), W(obj_hi, 0x00),
-            W(Scratchpad, 0x2A4), W(obj_hi, 0x08), 0xE - SW(Scratchpad, 0x000),
-            D_800F1018 + B(Scratchpad, 0x29D) * 20
-        );
-        continue;
-
-    arm_L8001CD64:
-        continue;
     }
 }

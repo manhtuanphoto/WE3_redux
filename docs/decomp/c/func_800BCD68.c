@@ -46,39 +46,8 @@ void func_800BCD68(int tickMode) {
         return;
     }
 
-    /* UNCLEAR: jtbl_800154FC target ordering is assumed to match the 6
-     * consecutive jlabel blocks (cases 0..5).
-     */
     switch (mode) {
     case 0:
-        D_8010C1BC = 0x32; /* 50 */
-        if (vidMode == 1) {
-            D_800D4F4C = 5;
-        } else {
-            D_800D4F4C = 0x32;
-        }
-        break;
-    case 1:
-        D_8010C1BC = 0x3C; /* 60 */
-        if (vidMode == 0) {
-            D_800D4F4C = 5;
-        }
-        break;
-    case 2:
-        D_8010C1BC = 0x78; /* 120 */
-        break;
-    case 3:
-        D_8010C1BC = 0xF0; /* 240 */
-        break;
-    case 4:
-        if (vidMode == 0) {
-            D_8010C1BC = 0x3C;
-        } else if (vidMode == 1) {
-            D_8010C1BC = 0x32;
-        } else {
-            D_8010C1BC = 0x3C;
-        }
-        break;
     case 5:
         if (vidMode == 0) {
             D_8010C1BC = 0x3C;
@@ -86,6 +55,28 @@ void func_800BCD68(int tickMode) {
             D_8010C1BC = 0x32;
         } else {
             D_8010C1BC = 0x3C;
+        }
+        break;
+    case 1:
+        D_8010C1BC = 0x3C; /* 60 */
+        if (vidMode == 0) {
+            D_800D4F4C = 5;
+        } else {
+            D_800D4F4C = 0x3C;
+        }
+        break;
+    case 2:
+        D_8010C1BC = 0xF0; /* 240 */
+        break;
+    case 3:
+        D_8010C1BC = 0x78; /* 120 */
+        break;
+    case 4:
+        D_8010C1BC = 0x32; /* 50 */
+        if (vidMode == 1) {
+            D_800D4F4C = 5;
+        } else {
+            D_800D4F4C = 0x32;
         }
         break;
     }

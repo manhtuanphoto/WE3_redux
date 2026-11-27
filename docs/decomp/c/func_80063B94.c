@@ -53,7 +53,6 @@ extern unsigned char D_8010C1D8[];
 extern unsigned char D_8010C1EC; /* D_8010C1D8 + 0x14 */
 extern unsigned char D_8010C1ED; /* D_8010C1D8 + 0x15 */
 extern unsigned char D_8010C1DB; /* D_8010C1D8 + 0x03 */
-extern void *jtbl_80012498[];
 
 extern unsigned int func_800652EC(unsigned char *actor, int arg1);
 extern unsigned int func_800655BC(unsigned char *actor, unsigned int angle, int arg2, int range);
@@ -94,36 +93,28 @@ void func_80063B94(unsigned char *actor)
     for (probe_idx = 0; (probe_idx & 0xFFu) < 5u; probe_idx++) {
         unsigned int test_dir = 0;
 
-        /*
-         * UNCLEAR: exact mapping of jtbl_80012498[0..4] not present in asm_compact.
-         * Listed in jlabel order (.L80063CB0, .L80063CBC, .L80063CE8, .L80063D14, .L80063D40):
-         */
-        goto *jtbl_80012498[probe_idx & 0xFFu];
+        switch (probe_idx & 0xFFu) {
+        case 0: /* .L80063CB0 */
+            test_dir = B(actor, 0x399) << 7;
+            break;
+        case 1: /* .L80063CBC */
+            base_dir = B(actor, 0x399) << 7;
+            test_dir = (S(actor, 0x6) < 0) ? (base_dir | 0x20u) : (base_dir - 0x20u);
+            break;
+        case 2: /* .L80063CE8 */
+            base_dir = B(actor, 0x399) << 7;
+            test_dir = (S(actor, 0x6) < 0) ? (base_dir - 0x20u) : (base_dir | 0x20u);
+            break;
+        case 3: /* .L80063D14 */
+            base_dir = B(actor, 0x399) << 7;
+            test_dir = (S(actor, 0x6) < 0) ? (base_dir | 0x40u) : (base_dir - 0x40u);
+            break;
+        case 4: /* .L80063D40 */
+            base_dir = B(actor, 0x399) << 7;
+            test_dir = (S(actor, 0x6) < 0) ? (base_dir - 0x40u) : (base_dir | 0x40u);
+            break;
+        }
 
-    arm_L80063CB0:
-        test_dir = B(actor, 0x399) << 7;
-        goto check_dir;
-
-    arm_L80063CBC:
-        base_dir = B(actor, 0x399) << 7;
-        test_dir = (S(actor, 0x6) < 0) ? (base_dir | 0x20u) : (base_dir - 0x20u);
-        goto check_dir;
-
-    arm_L80063CE8:
-        base_dir = B(actor, 0x399) << 7;
-        test_dir = (S(actor, 0x6) < 0) ? (base_dir - 0x20u) : (base_dir | 0x20u);
-        goto check_dir;
-
-    arm_L80063D14:
-        base_dir = B(actor, 0x399) << 7;
-        test_dir = (S(actor, 0x6) < 0) ? (base_dir | 0x40u) : (base_dir - 0x40u);
-        goto check_dir;
-
-    arm_L80063D40:
-        base_dir = B(actor, 0x399) << 7;
-        test_dir = (S(actor, 0x6) < 0) ? (base_dir - 0x40u) : (base_dir | 0x40u);
-
-    check_dir:
         if (func_80065440(actor, test_dir & 0xFFu, 0x40, 0x240000) != 0u) {
             best_dir = test_dir;
         }

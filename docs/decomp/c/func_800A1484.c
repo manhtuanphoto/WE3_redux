@@ -10,9 +10,6 @@ extern uint8_t D_800FF748[];
 /* Player attribute table: team stride 0x108 (264 bytes), player stride 0x0C (12 bytes) */
 extern uint32_t D_8010C328[];
 
-/* Jump table for player->unk_391 in [9..25] */
-extern void *jtbl_80014584[17];
-
 extern uint8_t func_80052D90(void *player);
 extern int32_t func_8009FD40(void *target);
 extern int32_t func_8009FD84(void *target);
@@ -79,46 +76,90 @@ void func_800A1484(uint8_t *player, int32_t arg1, int32_t arg2, uint32_t base_ra
 
         role = player[0x391];
         idx = (uint8_t)(role - 9);
-        if (idx >= 17) {
+        switch (idx) {
+        case 0:
+        case 3:
+        case 6:
+            if (func_8009FD40(opp) != 0) {
+                continue;
+            }
             check_dist_only = 1;
-        } else {
-            /*
-             * UNCLEAR: jtbl_80014584[idx] dispatch for player->unk_391 in [9..25].
-             * The jump table data is external to this assembly unit; the 6 possible
-             * target behaviors from the switch are documented below:
-             *
-             * Target A (.L800A15C0):
-             *   if (opp[0x3E0] == 2 || opp[0x391] == 5) continue;
-             *   if (func_8009FD40(opp) != 0) continue;
-             *   check_dist_only = 1;
-             *
-             * Target B (.L800A15F8):
-             *   if (opp[0x3E0] == 2 || opp[0x391] == 5) continue;
-             *   if (func_8009FD84(opp) != 0) continue;
-             *   check_dist_only = 1;
-             *
-             * Target C (.L800A1630):
-             *   if (opp[0x3E0] == 2) continue;
-             *   if (opp[0x38D] == SPAD_ACTIVE_PLAYER_0 || opp[0x38D] == SPAD_ACTIVE_PLAYER_1) continue;
-             *   if (func_8009FD84(opp) != 0) continue;
-             *   check_z_and_dist = 1;
-             *
-             * Target D (.L800A167C):
-             *   if (opp[0x3E0] == 2) continue;
-             *   if (opp[0x38D] == SPAD_ACTIVE_PLAYER_0 || opp[0x38D] == SPAD_ACTIVE_PLAYER_1) continue;
-             *   if (func_8009FD40(opp) != 0) continue;
-             *   check_z_and_dist = 1;
-             *
-             * Target E (.L800A16D0):
-             *   if (opp[0x3E0] == 2) continue;
-             *   if (opp[0x38D] == SPAD_ACTIVE_PLAYER_0 || opp[0x38D] == SPAD_ACTIVE_PLAYER_1) continue;
-             *   check_z_and_dist = 1;
-             *
-             * Target F (.L800A1724):
-             *   check_dist_only = 1;
-             */
-            (void)jtbl_80014584[idx];
+            break;
+
+        case 9:
+        case 11:
+            if (opp_status == 2 || opp[0x391] == 5) {
+                continue;
+            }
+            if (func_8009FD40(opp) != 0) {
+                continue;
+            }
             check_dist_only = 1;
+            break;
+
+        case 1:
+        case 2:
+        case 5:
+            if (func_8009FD84(opp) != 0) {
+                continue;
+            }
+            check_dist_only = 1;
+            break;
+
+        case 8:
+        case 10:
+            if (opp_status == 2 || opp[0x391] == 5) {
+                continue;
+            }
+            if (func_8009FD84(opp) != 0) {
+                continue;
+            }
+            check_dist_only = 1;
+            break;
+
+        case 12:
+            if (opp_status == 2) {
+                continue;
+            }
+            if (opp[0x38D] == SPAD_ACTIVE_PLAYER_0 || opp[0x38D] == SPAD_ACTIVE_PLAYER_1) {
+                continue;
+            }
+            if (func_8009FD84(opp) != 0) {
+                continue;
+            }
+            check_z_and_dist = 1;
+            break;
+
+        case 13:
+            if (opp_status == 2) {
+                continue;
+            }
+            if (opp[0x38D] == SPAD_ACTIVE_PLAYER_0 || opp[0x38D] == SPAD_ACTIVE_PLAYER_1) {
+                continue;
+            }
+            if (func_8009FD40(opp) != 0) {
+                continue;
+            }
+            check_z_and_dist = 1;
+            break;
+
+        case 14:
+        case 15:
+        case 16:
+            if (opp_status == 2) {
+                continue;
+            }
+            if (opp[0x38D] == SPAD_ACTIVE_PLAYER_0 || opp[0x38D] == SPAD_ACTIVE_PLAYER_1) {
+                continue;
+            }
+            check_z_and_dist = 1;
+            break;
+
+        case 4:
+        case 7:
+        default:
+            check_dist_only = 1;
+            break;
         }
 
         if (check_z_and_dist) {

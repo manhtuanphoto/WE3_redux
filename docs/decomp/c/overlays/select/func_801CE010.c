@@ -243,16 +243,6 @@ s32 func_801CE010(u32 mode, u32 channel_mask)
     case 0x50:
         D_801D5A48 += 1;
         status = func_801CF918();
-        /*
-         * UNCLEAR: `jtbl_8018DAB0` table contents reside outside this .s file.
-         * In assembly, `status + 3 < 5` (status in -3..+1) dispatches via
-         * jtbl_8018DAB0 to the 5 local labels below (default: .L801CE770):
-         *   - .L801CE8CC (matches -3: card removed -> D_801D58DC, state 0x70)
-         *   - .L801CE81C (matches -2: unformatted -> D_80108666=0, D_801D58E4, state 0xB0)
-         *   - .L801CE770 (matches -1/default: write error -> SFX 0x512, D_801D58EC, state 0xB0)
-         *   - .L801CE974 (matches  0: busy -> no-op, stay in state 0x50)
-         *   - .L801CE758 (matches +1: write complete -> func_801929B4(0), state 0x51)
-         */
         switch (status) {
         case 1:
             func_801929B4(0);
@@ -284,16 +274,6 @@ s32 func_801CE010(u32 mode, u32 channel_mask)
     case 0x51:
         D_801D5A48 += 1;
         status = func_801CF760(1);
-        /*
-         * UNCLEAR: `jtbl_8018DAC8` table contents reside outside this .s file.
-         * In assembly, `status + 4 < 6` (status in -4..+1) dispatches via
-         * jtbl_8018DAC8 to the 4 local labels below (default: .L801CE9FC):
-         *   - .L801CE9EC (matches +1: verify OK -> D_801DA055=0, ret=1)
-         *   - .L801CEB78 (matches  0: busy -> no-op, stay in state 0x51)
-         *   - .L801CEAC0 (matches -2: unformatted -> D_80108666=0, D_801D58E4, state 0xB0)
-         *   - .L801CE9FC (matches -4/-3/-1/default: error -> SFX 0x512,
-         *                 msg_idx = (status == -4) ? 0x25 : 0x0A, state 0xB0)
-         */
         switch (status) {
         case 1:
             D_801DA055 = 0;
@@ -306,6 +286,9 @@ s32 func_801CE010(u32 mode, u32 channel_mask)
             draw_dialog_pair(channel_mask, D_801D58E4, -8, 1);
             D_801DA055 = 0xB0;
             break;
+        case -4:
+        case -3:
+        case -1:
         default:
             func_800AB620(0x512);
             msg_idx = (status == -4) ? 0x25 : 0x0A;

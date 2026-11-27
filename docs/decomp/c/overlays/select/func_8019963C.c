@@ -25,9 +25,6 @@ extern unsigned int D_801DA05C;
 extern unsigned int D_801DA060;
 extern unsigned int D_801DA064;
 
-/* Jump table in .rodata (raw entries not present in compact .s) */
-extern void *jtbl_80189BAC[];
-
 extern void func_8019A168(void);
 extern void func_800171DC(void);
 extern void func_800171C4(int arg0);
@@ -102,15 +99,8 @@ void func_8019963C(void)
         return;
     }
 
-    /*
-     * UNCLEAR: Exact mapping of `state` (0..0x3F) via jtbl_80189BAC[state] is in .rodata
-     * and not present in the .s file. Each labeled handler block from the assembly is
-     * preserved below.
-     */
-    (void)jtbl_80189BAC[state];
-
-    /* .L80199698: Initial entry check */
-    if (0) {
+    switch (state) {
+    case 0: /* .L80199698: Initial entry check */
         if (*sp_2e1 == 5) {
             func_800171FC(0x14);
             *g_8010A322 = 0;
@@ -118,11 +108,9 @@ void func_8019963C(void)
             func_8019A168();
             func_800171DC();
         }
-        return;
-    }
+        break;
 
-    /* .L801996C4: Fade-in / asset readiness wait */
-    if (0) {
+    case 1: /* .L801996C4: Fade-in / asset readiness wait */
         ready &= func_8018E994((void *)g_80105550, 0x1000, 0x100);
         ready &= func_8018E994((void *)g_80105578, 0x1000, 0x100);
         ready &= func_8019A2A0();
@@ -130,11 +118,10 @@ void func_8019963C(void)
         if (ready != 0) {
             func_800171DC();
         }
-        return;
-    }
+        break;
 
-    /* .L80199720: Setup mode banner and option sprites */
-    if (0) {
+    case 2: /* .L80199720: Setup mode banner and option sprites */
+    {
         unsigned int m = *sp_2e2;
         func_801942E0(0, D_8011D668[m], -0xA2, 0x45, 0x147, 0, 1, 0, 0, 3, 2, 1);
         func_80193FB4(3, 0x301F, 0, 0, (int)(*sp_2e2 * 24), 0x18, 0,
@@ -147,11 +134,11 @@ void func_8019963C(void)
         D_801DA05C = 0;
         D_801DA058 = 0;
         func_800171DC();
-        return;
+        break;
     }
 
-    /* .L80199870: Interactive menu animation and pad 0 input */
-    if (0) {
+    case 3: /* .L80199870: Interactive menu animation and pad 0 input */
+    {
         unsigned short btn;
         D_801DA05C++;
         if (D_801DA05C == 3) {
@@ -189,11 +176,10 @@ void func_8019963C(void)
             }
             D_801DA058 = 0;
         }
-        return;
+        break;
     }
 
-    /* .L80199A88: Fade-out and transition to state 3 */
-    if (0) {
+    case 10: /* .L80199A88: Fade-out and transition to state 3 */
         ready &= func_8018E994((void *)g_80105550, 0, 0x100);
         ready &= func_8018E994((void *)g_80105578, 0, 0x100);
         ready &= func_8019A340();
@@ -204,11 +190,9 @@ void func_8019963C(void)
             func_800171C4(1);
             func_800171FC(3);
         }
-        return;
-    }
+        break;
 
-    /* .L80199AF8: Fade-out and transition to state 0x14 */
-    if (0) {
+    case 15: /* .L80199AF8: Fade-out and transition to state 0x14 */
         ready &= func_8019A340();
         ready &= func_8018E720(2, *sp_2e2 + 0x1D);
         if (ready != 0) {
@@ -217,11 +201,10 @@ void func_8019963C(void)
             func_800171FC(0x14);
             *g_8010A322 = 0;
         }
-        return;
-    }
+        break;
 
-    /* .L80199B44: Sub-screen func_8019E620() result handling */
-    if (0) {
+    case 20: /* .L80199B44: Sub-screen func_8019E620() result handling */
+    {
         int res = func_8019E620();
         if (res == 1) {
             if (*sp_2e1 == 5) {
@@ -252,29 +235,26 @@ void func_8019963C(void)
                 *g_8010A322 = 0;
             }
         }
-        return;
+        break;
     }
 
-    /* .L80199C3C: Sub-screen func_801A6400() result handling */
-    if (0) {
+    case 30: /* .L80199C3C: Sub-screen func_801A6400() result handling */
+    {
         int res = func_801A6400();
         if (res == 1) {
             func_800171FC(0x14);
         } else if (res == 2) {
             func_800171FC(0x28);
         }
-        return;
+        break;
     }
 
-    /* .L80199C84: Clear fade ramp and enter state 0x32 */
-    if (0) {
+    case 40: /* .L80199C84: Clear fade ramp and enter state 0x32 */
         *g_8010A31E = 0;
         func_800171FC(0x32);
-        return;
-    }
+        break;
 
-    /* .L80199CA0: Final fade-out and match/squad initialization before gameplay */
-    if (0) {
+    case 50: /* .L80199CA0: Final fade-out and match/squad initialization before gameplay */
         if (func_8006F0DC(0x10, 0) != 0) {
             func_8018E538(0);
             *sp_330 = 0;
@@ -307,41 +287,37 @@ void func_8019963C(void)
             }
             *sp_299 = 1;
         }
-        return;
-    }
+        break;
 
-    /* .L80199DC4: Clear animation counters and advance */
-    if (0) {
+    case 60: /* .L80199DC4: Clear animation counters and advance */
         D_801DA064 = 0;
         D_801DA060 = 0;
         D_801DA05C = 0;
         D_801DA058 = 0;
         func_8018E538(0);
         func_800171DC();
-        return;
-    }
+        break;
 
-    /* .L80199DFC: Load graphics/resources for current game mode */
-    if (0) {
+    case 61: /* .L80199DFC: Load graphics/resources for current game mode */
         func_801C4DE8();
         *g_8010553C = func_8001D004(*sp_2e1 + 0x3005);
         *g_80105578 = 0x1000;
         *g_80105550 = 0x1000;
         func_800171DC();
-        return;
-    }
+        break;
 
-    /* .L80199E2C: Fade-in step */
-    if (0) {
+    case 62: /* .L80199E2C: Fade-in step */
         if (func_8006F07C(0x40) != 0) {
             func_800171DC();
         }
-        return;
-    }
+        break;
 
-    /* .L80199E4C: Transition to state 0x14 */
-    if (0) {
+    case 63: /* .L80199E4C: Transition to state 0x14 */
         func_800171FC(0x14);
         *g_8010A322 = 0;
+        break;
+
+    default: /* .L80199E64 */
+        break;
     }
 }

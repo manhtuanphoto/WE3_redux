@@ -119,9 +119,43 @@ void func_80044E40(unsigned char *actor)
     next_state = func_80039A5C(actor) & 0xFFU;
 
     if ((unsigned int)(next_state - 0xDU) < 0x1DU) {
-        /* UNCLEAR: jtbl_80011218 (.rodata) maps states 0x0D..0x29; local body only shows setting state/substate below */
-        B(actor, 0x396) = (unsigned char)next_state;
-        B(actor, 0x397) = 0;
+        switch (next_state - 0xDU) {
+        case 0:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
+        case 22:
+        case 26:
+        case 28: /* .L8004503C */
+            B(actor, 0x396) = (unsigned char)next_state;
+            B(actor, 0x397) = 0;
+            break;
+
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 23:
+        case 24:
+        case 25:
+        case 27: /* .L80045044 */
+        default:
+            break;
+        }
     }
 
     func_8005B908(actor);

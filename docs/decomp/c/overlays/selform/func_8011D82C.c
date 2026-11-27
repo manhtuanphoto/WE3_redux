@@ -129,13 +129,6 @@ extern unsigned char D_80123048;
 extern unsigned char D_80123049;
 extern unsigned char D_8012304A[2];
 
-/* UNCLEAR: Jump table entries in .rodata are not included in the compact asm;
- * jtbl_8011D800 and jtbl_8011D818 each contain 5 target addresses for
- * Scratchpad+0x2E2 values 0..4.
- */
-extern void *jtbl_8011D800[5];
-extern void *jtbl_8011D818[5];
-
 extern unsigned int func_800174E0(int port, int a1, unsigned int mask);
 extern void func_8001CEE0(int slot, int id, int flags, int a3, int a4, int a5, int a6, int vis);
 extern unsigned char *func_8001D004(int id);
@@ -414,53 +407,38 @@ void func_8011D82C(void)
             }
         }
 
-        /* UNCLEAR: Exact case indices 0..4 in jtbl_8011D800[Scratchpad+0x2E2] are in .rodata.
-         * Observed jump targets in func_8011D82C are:
-         *   .L8011E5FC: func_8012153C(1);
-         *   .L8011E60C: func_8006FA84(0x11, 1); func_8006FA84(0x1B, 1);
-         *               if (Scratchpad+0x2A1 == 1) {
-         *                   unsigned int s = (D_800FF740 == 0) ? 1 : 0;
-         *                   D_80123020[s].unk_10 = 1;
-         *                   func_8012153C(s);
-         *               }
-         *   .L8011E66C: B(func_8001D004(0x6B), 0x16) = 0x5B;
-         *               B(func_8001D004(0x6A), 0x16) = 0x5B;
-         *               func_8006FA84(0x10, 0);
-         *               func_8006FA84(0x1C, 0);
-         *               func_8006FA84(0x1D, 0);
-         *               H(Scratchpad, 0x294) = 0;
-         *   default (.L8011E6B0): no-op
-         */
-        if (B(Scratchpad, 0x2E2) < 5) {
-            goto *jtbl_8011D800[B(Scratchpad, 0x2E2)];
+        switch (B(Scratchpad, 0x2E2)) {
+        case 0:
+        case 2:
+        case 3:
+            func_8012153C(1);
+            break;
+
+        case 1:
+            func_8006FA84(0x11, 1);
+            func_8006FA84(0x1B, 1);
+            if (B(Scratchpad, 0x2A1) == 1) {
+                unsigned int s = (D_800FF740 == 0) ? 1 : 0;
+                D_80123020[s].unk_10 = 1;
+                func_8012153C(s);
+            }
+            break;
+
+        case 4:
+            ptr = func_8001D004(0x6B);
+            B(ptr, 0x16) = 0x5B;
+            ptr = func_8001D004(0x6A);
+            B(ptr, 0x16) = 0x5B;
+            func_8006FA84(0x10, 0);
+            func_8006FA84(0x1C, 0);
+            func_8006FA84(0x1D, 0);
+            H(Scratchpad, 0x294) = 0;
+            break;
+
+        default:
+            break;
         }
-        goto L8011E6B0;
 
-    L8011E5FC:
-        func_8012153C(1);
-        goto L8011E6B0;
-
-    L8011E60C:
-        func_8006FA84(0x11, 1);
-        func_8006FA84(0x1B, 1);
-        if (B(Scratchpad, 0x2A1) == 1) {
-            unsigned int s = (D_800FF740 == 0) ? 1 : 0;
-            D_80123020[s].unk_10 = 1;
-            func_8012153C(s);
-        }
-        goto L8011E6B0;
-
-    L8011E66C:
-        ptr = func_8001D004(0x6B);
-        B(ptr, 0x16) = 0x5B;
-        ptr = func_8001D004(0x6A);
-        B(ptr, 0x16) = 0x5B;
-        func_8006FA84(0x10, 0);
-        func_8006FA84(0x1C, 0);
-        func_8006FA84(0x1D, 0);
-        H(Scratchpad, 0x294) = 0;
-
-    L8011E6B0:
         D_80123011 = 0;
         D_8010C1D0 = 0;
         D_8010A321 = D_8010A321 + 1;
@@ -471,75 +449,72 @@ void func_8011D82C(void)
             break;
         }
 
-        /* UNCLEAR: Exact case indices 0..4 in jtbl_8011D818[Scratchpad+0x2E2] are in .rodata.
-         * Observed jump targets in func_8011D82C are .L8011E714, .L8011E784, .L8011E7C0,
-         * and default .L8011E98C.
-         */
-        if (B(Scratchpad, 0x2E2) < 5) {
-            goto *jtbl_8011D818[B(Scratchpad, 0x2E2)];
-        }
-        goto L8011E990;
+        switch (B(Scratchpad, 0x2E2)) {
+        case 0:
+        case 2:
+        case 3:
+            if ((func_8011ECE4(0) & 0xFF) != 0) {
+                D_8010A321 = D_8010A321 + 1;
+            }
+            break;
 
-    L8011E714:
-        if (func_800174E0(0, 0, 0x800) != 0 || func_800174E0(0, 0, 0x20) != 0) {
-            func_800AB620(0x528);
-            D_8010A321 = D_8010A321 + 1;
-        }
-        if (H(Scratchpad, 0x294) < 0xC1) {
-            H(Scratchpad, 0x294) = H(Scratchpad, 0x294) + 1;
-            goto L8011E990;
-        }
-        goto L8011E798;
+        case 1:
+            for (i = 0; i < 2; i++) {
+                SelformSide *side = &D_80123020[i];
+                D_80123044 = side;
 
-    L8011E784:
-        if ((func_8011ECE4(0) & 0xFF) == 0) {
-            goto L8011E990;
-        }
-    L8011E798:
-        D_8010A321 = D_8010A321 + 1;
-        goto L8011E990;
-
-    L8011E7C0:
-        for (i = 0; i < 2; i++) {
-            SelformSide *side = &D_80123020[i];
-            D_80123044 = side;
-
-            if (side->unk_10 == 0) {
-                unsigned int res = func_8011ECE4(i & 0xFF) & 0xFF;
-                if (res == 1 || res == 2) {
-                    unsigned int other = (i < 1) ? 1 : 0;
-                    if (D_80123020[other].unk_10 != 0) {
-                        D_8010A321 = D_8010A321 + 1;
-                    } else {
-                        D_80123044->unk_10 = 1;
-                        func_8012153C(i & 0xFF);
+                if (side->unk_10 == 0) {
+                    unsigned int res = func_8011ECE4(i & 0xFF) & 0xFF;
+                    if (res == 1 || res == 2) {
+                        unsigned int other = (i < 1) ? 1 : 0;
+                        if (D_80123020[other].unk_10 != 0) {
+                            D_8010A321 = D_8010A321 + 1;
+                        } else {
+                            D_80123044->unk_10 = 1;
+                            func_8012153C(i & 0xFF);
+                        }
                     }
-                }
-            } else {
-                if (func_800174E0(i, 0, 0x40) != 0) {
-                    unsigned int slot_idx;
+                } else {
+                    if (func_800174E0(i, 0, 0x40) != 0) {
+                        unsigned int slot_idx;
 
-                    D_80123044->unk_10 = 0;
-                    ptr = func_8001D004(i + 0x6A);
-                    if (D_80123044->unk_0C != 0) {
-                        B(ptr, 0x0A) = 0xA;
+                        D_80123044->unk_10 = 0;
+                        ptr = func_8001D004(i + 0x6A);
+                        if (D_80123044->unk_0C != 0) {
+                            B(ptr, 0x0A) = 0xA;
+                        }
+                        if (D_80123044->unk_0E != 0x15) {
+                            B(ptr, 0x16) = 0xA;
+                        }
+                        func_8006FA84(i + 0x10, 1);
+                        func_8006FA84((B(Scratchpad, 0x2E0) ^ i) + 0x1C, 1);
+                        slot_idx = i + 3;
+                        func_8006FA84(slot_idx, 1);
+                        W(D_800FF748, slot_idx * 0x28 + 0x5DCC) = (unsigned int)func_8001D004(i + 0x1018);
+                        S(D_800FF748, slot_idx * 0x28 + 0x5DD0) = 0;
+                        func_800AB620(0x529);
+                        break;
                     }
-                    if (D_80123044->unk_0E != 0x15) {
-                        B(ptr, 0x16) = 0xA;
-                    }
-                    func_8006FA84(i + 0x10, 1);
-                    func_8006FA84((B(Scratchpad, 0x2E0) ^ i) + 0x1C, 1);
-                    slot_idx = i + 3;
-                    func_8006FA84(slot_idx, 1);
-                    W(D_800FF748, slot_idx * 0x28 + 0x5DCC) = (unsigned int)func_8001D004(i + 0x1018);
-                    S(D_800FF748, slot_idx * 0x28 + 0x5DD0) = 0;
-                    func_800AB620(0x529);
-                    break;
                 }
             }
+            break;
+
+        case 4:
+            if (func_800174E0(0, 0, 0x800) != 0 || func_800174E0(0, 0, 0x20) != 0) {
+                func_800AB620(0x528);
+                D_8010A321 = D_8010A321 + 1;
+            }
+            if (H(Scratchpad, 0x294) < 0xC1) {
+                H(Scratchpad, 0x294) = H(Scratchpad, 0x294) + 1;
+            } else {
+                D_8010A321 = D_8010A321 + 1;
+            }
+            break;
+
+        default:
+            break;
         }
 
-    L8011E990:
         if ((SW(Scratchpad, 0x290) % 5) != 0) {
             break;
         }

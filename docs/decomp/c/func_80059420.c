@@ -70,7 +70,6 @@ void func_80059420(unsigned char *actor, unsigned int flag)
             if (idx >= 5U) {
                 return;
             }
-            /* UNCLEAR: exact jtbl_80011F28 case permutation for idx 0..4; sequential branch targets shown */
             switch (idx) {
             case 0:
                 sfx = 0xED4;
@@ -96,7 +95,6 @@ void func_80059420(unsigned char *actor, unsigned int flag)
             if (idx >= 6U) {
                 return;
             }
-            /* UNCLEAR: exact jtbl_80011F40 case mapping for idx 0..5 (only 4 unique targets 0xEDC, 0xEDB, 0xEDA, 0xEDE in .s) */
             switch (idx) {
             case 0:
                 sfx = 0xEDC;
@@ -110,6 +108,8 @@ void func_80059420(unsigned char *actor, unsigned int flag)
             case 3:
                 sfx = 0xEDE;
                 break;
+            case 4:
+            case 5:
             default:
                 return;
             }

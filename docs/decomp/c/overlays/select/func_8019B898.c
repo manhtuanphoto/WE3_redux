@@ -116,12 +116,6 @@ void func_8019B898(void)
         return;
     }
 
-    /*
-     * UNCLEAR: Exact index-to-label mapping of jtbl_80189E7C (51 entries, 0..0x32)
-     * is stored in external .rodata and not included in the .s file. Case labels
-     * below are ordered by appearance in the binary and annotated with the state
-     * values inferred from D_8010A322 writes.
-     */
     switch (state) {
     case 0: /* .L8019B8E4: Initial setup (state 0 -> 1) */
         D_800AD638 = 0;
@@ -173,7 +167,6 @@ void func_8019B898(void)
         }
 
         if (stage < 5) {
-            /* UNCLEAR: Exact index mapping of jtbl_80189F4C (5 entries, 0..4) is in external .rodata. */
             switch (stage) {
             case 0: /* .L8019BA54 */
                 func_8019E09C();
@@ -306,7 +299,7 @@ void func_8019B898(void)
         }
         break;
 
-    case 12: /* .L8019BEE4: UNCLEAR exact jtbl_80189E7C index; returns to state 3 */
+    case 5: /* .L8019BEE4: Return to state 3 */
         D_8010A322 = 3;
         break;
 
@@ -390,7 +383,6 @@ void func_8019B898(void)
             if (D_800AD638 == 1) {
                 unsigned int sub = (unsigned int)D_801D8DF4 - 1U;
                 if (sub < 5U) {
-                    /* UNCLEAR: Exact index mapping of jtbl_80189F64 (5 entries for D_801D8DF4 = 1..5) is in external .rodata. */
                     switch (sub) {
                     case 0: /* .L8019C1E8 */
                         D_801D8DF7 = 0x10;
@@ -402,14 +394,14 @@ void func_8019B898(void)
                         D_801D8DF8 = 1;
                         D_801D8DF9 = 1;
                         break;
-                    case 2: /* .L8019C218 */
-                        D_801D8DF7 = 8;
+                    case 2: /* .L8019C220 */
+                    case 4:
+                        D_801D8DF7 = 5;
                         D_801D8DF8 = 1;
                         D_801D8DF9 = 1;
                         break;
-                    case 3: /* .L8019C220 */
-                    case 4:
-                        D_801D8DF7 = 5;
+                    case 3: /* .L8019C218 */
+                        D_801D8DF7 = 8;
                         D_801D8DF8 = 1;
                         D_801D8DF9 = 1;
                         break;
@@ -496,6 +488,9 @@ void func_8019B898(void)
             func_800171FC(1);
             D_8010A322 = 0;
         }
+        break;
+
+    default: /* .L8019C420 */
         break;
     }
 }

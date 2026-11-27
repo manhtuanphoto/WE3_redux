@@ -59,13 +59,6 @@ extern u8  D_801DAE50;      /* result/action code (0=none, 1=cancel, 2=confirm) 
 #define D_8010A31E (*(u16 *)(D_800FF748 + 0xABD6))
 #define D_8010A320 (*(u8  *)(D_800FF748 + 0xABD8))
 
-extern void *jtbl_8018A474[];
-extern void *jtbl_8018A524[];
-extern void *jtbl_8018A53C[];
-extern void *jtbl_8018A554[];
-extern void *jtbl_8018A56C[];
-extern void *jtbl_8018A584[];
-
 extern u8  *func_8001D004(s32 id);
 extern s32  func_8006F0DC(s32 a0, s32 a1);
 extern void func_8006FCFC(s32 a0);
@@ -107,232 +100,300 @@ s32 func_801AE294(u8 arg0)
         return 0;
     }
 
-    /* UNCLEAR: jtbl_8018A474 (43 entries) is not present in the compact asm.
-     * Below are all branch targets (jlabels) referenced by the outer jump table
-     * and the inner D_801DAD84 jump tables (jtbl_8018A524/53C/554/56C/584).
-     */
-    (void)jtbl_8018A474[state];
-    return 0;
+    switch (state) {
+    case 0:
+        {
+            u8 flags = D_801D8A8E;
+            D_801D8A8A = 0x5F;
+            D_801D8A8B = 0xFF;
+            D_801D8A8D = 0x60;
+            D_801DAD84 = 4;
+            D_801DA2F0 = 0;
+            D_801D8A82 = 0;
+            D_801D8A84 = 0;
+            D_801D8A86 = 0;
+            D_801D8A88 = 0;
+            D_801D8A8F = 0;
+            D_801D8A8C = 0;
+            D_801D8A51 = 1;
+            D_801D86F0 = 0;
+            D_801DA058 = 0;
+            D_801D86F3 = 0;
+            D_801D8A8E = (u8)((flags & 0x61) | 0x21);
+            func_8018E538(0);
+            SPAD_2A2 = 0x41;
+            func_801A8CD0();
+            D_8010A320++;
+            return 0;
+        }
 
-L_801AE340:
-    {
-        u8 flags = D_801D8A8E;
-        D_801D8A8A = 0x5F;
-        D_801D8A8B = 0xFF;
-        D_801D8A8D = 0x60;
-        D_801DAD84 = 4;
-        D_801DA2F0 = 0;
-        D_801D8A82 = 0;
-        D_801D8A84 = 0;
-        D_801D8A86 = 0;
-        D_801D8A88 = 0;
-        D_801D8A8F = 0;
-        D_801D8A8C = 0;
-        D_801D8A51 = 1;
-        D_801D86F0 = 0;
-        D_801DA058 = 0;
-        D_801D86F3 = 0;
-        D_801D8A8E = (u8)((flags & 0x61) | 0x21);
-        func_8018E538(0);
-        SPAD_2A2 = 0x41;
-        func_801A8CD0();
+    case 1:
+        D_801D86EC = 1;
+        D_801D86E8 = 0;
+        D_801D86EA = 0;
+        D_801D86EE = 9;
+        func_801AECB4();
+        func_801AF198();
+        func_801AF480((u8)D_801D86EA);
+        func_801AFECC();
+        if (D_801D86F3 == 0) {
+            D_801DAD84 = 4;
+            D_801D8A51 = 4;
+        }
         D_8010A320++;
         return 0;
-    }
 
-L_801AE40C:
-    D_801D86EC = 1;
-    D_801D86E8 = 0;
-    D_801D86EA = 0;
-    D_801D86EE = 9;
-    func_801AECB4();
-    func_801AF198();
-    func_801AF480((u8)D_801D86EA);
-    func_801AFECC();
-    if (D_801D86F3 == 0) {
-        D_801DAD84 = 4;
-        D_801D8A51 = 4;
-    }
-    D_8010A320++;
-    return 0;
-
-L_801AE494:
-    SPAD_330 = 0;
-    D_8010A31E = 0;
-    D_8010A320++;
-    return 0;
-
-L_801AE4C8:
-    if (func_801AFF1C() == 0) {
+    case 2:
+        SPAD_330 = 0;
+        D_8010A31E = 0;
+        D_8010A320++;
         return 0;
-    }
-    D_801D8A8F = 1;
-    D_8010A320 = 0xA;
-    D_801DA2F0 = 1;
-    return 0;
 
-L_801AE500:
-    D_801DAE50 = 0;
-    func_801AEBF8();
-    pad = func_801B04B4(0);
-    D_8010A5A4 = (s16)pad;
-    pad &= 0xFFFF;
-
-    if (pad == 0x1000) {
-        /* Up */
-        func_800AB620(0x50D);
-        if (D_801DAD84 >= 6) {
+    case 3:
+        if (func_801AFF1C() == 0) {
             return 0;
         }
-        /* UNCLEAR: dispatches via jtbl_8018A524[D_801DAD84] to one of:
-         *   .L801AE568: D_801D8A84 -= 0x10;
-         *   .L801AE58C: D_801DAD84 = 4;
-         *   .L801AE5A0: cursor/scroll up (below)
-         */
-        (void)jtbl_8018A524[D_801DAD84];
-        if (D_801D86F0 != 0) {
-            D_801D86F0--;
-            return 0;
-        }
-        if (D_801D86EA > 0) {
-            D_801D86EA--;
-            func_801AF480((u8)D_801D86EA);
-            func_801AF938(0);
-            return 0;
-        }
-        D_801D8A51 = D_801DAD84;
-        D_801DAD84 = 4;
+        D_801D8A8F = 1;
+        D_8010A320 = 0xA;
+        D_801DA2F0 = 1;
         return 0;
-    } else if (pad == 0x4000) {
-        /* Down */
-        func_800AB620(0x50D);
-        if (D_801D86F3 == 0) {
-            D_801D8A84 += 0x10;
-            return 0;
-        }
-        if (D_801DAD84 >= 6) {
-            return 0;
-        }
-        /* UNCLEAR: dispatches via jtbl_8018A53C[D_801DAD84] to one of:
-         *   .L801AE640: func_800AB620(0x50D); D_801D8A84 += 0x10;
-         *   .L801AE650: D_801DAD84 = D_801D8A51;
-         *   .L801AE668: cursor/scroll down (below)
-         *   .L801AE6EC: D_801D8A84 += 0x10;
-         */
-        (void)jtbl_8018A53C[D_801DAD84];
-        if (D_801D86F0 < 8) {
-            if ((s32)D_801D86F0 < (s32)D_801D86F3 - 1) {
-                D_801D86F0++;
-            } else {
-                D_801D8A84 += 0x10;
+
+    case 10:
+        D_801DAE50 = 0;
+        func_801AEBF8();
+        pad = func_801B04B4(0);
+        D_8010A5A4 = (s16)pad;
+        pad &= 0xFFFF;
+
+        if (pad == 0x1000) {
+            /* Up */
+            func_800AB620(0x50D);
+            switch (D_801DAD84) {
+            case 0:
+            case 1:
+                if (D_801D86F0 != 0) {
+                    D_801D86F0--;
+                    return 0;
+                }
+                if (D_801D86EA > 0) {
+                    D_801D86EA--;
+                    func_801AF480((u8)D_801D86EA);
+                    func_801AF938(0);
+                    return 0;
+                }
+                D_801D8A51 = D_801DAD84;
+                D_801DAD84 = 4;
+                return 0;
+            case 2:
+                D_801DAD84 = 4;
+                return 0;
+            case 3:
+                D_801DAD84 = 2;
+                return 0;
+            case 4:
+            case 5:
+                func_800AB620(0x50D);
+                D_801D8A84 -= 0x10;
+                return 0;
+            default:
+                return 0;
             }
-        } else if (D_801D86EA + D_801D86EE < D_801D86F3) {
-            D_801D86EA++;
-            func_801AF480((u8)D_801D86EA);
-            func_801AF938(0);
+        } else if (pad == 0x4000) {
+            /* Down */
+            func_800AB620(0x50D);
+            if (D_801D86F3 == 0) {
+                D_801D8A84 += 0x10;
+                return 0;
+            }
+            switch (D_801DAD84) {
+            case 0:
+            case 1:
+                if (D_801D86F0 < 8) {
+                    if ((s32)D_801D86F0 < (s32)D_801D86F3 - 1) {
+                        D_801D86F0++;
+                    } else {
+                        D_801D8A84 += 0x10;
+                    }
+                } else if (D_801D86EA + D_801D86EE < D_801D86F3) {
+                    D_801D86EA++;
+                    func_801AF480((u8)D_801D86EA);
+                    func_801AF938(0);
+                } else {
+                    D_801D8A84 += 0x10;
+                }
+                return 0;
+            case 2:
+                D_801DAD84 = 3;
+                return 0;
+            case 3:
+            case 5:
+                func_800AB620(0x50D);
+                D_801D8A84 += 0x10;
+                return 0;
+            case 4:
+                D_801DAD84 = D_801D8A51;
+                return 0;
+            default:
+                return 0;
+            }
+        } else if (pad == 0x8000) {
+            /* Left */
+            func_800AB620(0x50D);
+            if (D_801D86F3 == 0) {
+                return 0;
+            }
+            switch (D_801DAD84) {
+            case 0:
+            case 1:
+            case 5:
+                D_801D8A82 -= 0x10;
+                return 0;
+            case 2:
+            case 3:
+                D_801DAD84 = 1;
+                return 0;
+            case 4:
+                D_801DAD84 = (D_801D8A51 == 2) ? 1 : D_801D8A51;
+                return 0;
+            default:
+                return 0;
+            }
+        } else if (pad == 0x2000) {
+            /* Right */
+            func_800AB620(0x50D);
+            switch (D_801DAD84) {
+            case 0:
+                D_801DAD84 = 1;
+                return 0;
+            case 1:
+                D_801DAD84 = (D_801D86F0 < 5) ? 2 : 3;
+                return 0;
+            case 2:
+            case 3:
+            case 5:
+                D_801D8A82 += 0x10;
+                return 0;
+            case 4:
+                if (D_801D86F3 != 0) {
+                    D_801DAD84 = 2;
+                } else {
+                    D_801D8A82 += 0x10;
+                }
+                return 0;
+            default:
+                return 0;
+            }
+        } else if (pad == 0x20) {
+            /* Circle / Confirm */
+            switch (D_801DAD84) {
+            case 0:
+                func_800AB620(0x528);
+                {
+                    u32 row = (u32)(D_801D86EA + D_801D86F0);
+                    u8 val = func_801B4FA8(D_801D8B20[row * 10]);
+                    D_801D86E0 = val;
+                    D_801D86E1 = D_801D8B21[row * 10];
+                    func_801AC0B4(0, val, D_801D86E1);
+                    D_801D8A51 = D_801DAD84;
+                    D_801DAD84 = 5;
+                }
+                return 0;
+            case 1:
+                func_800AB620(0x528);
+                {
+                    u32 row = (u32)(D_801D86EA + D_801D86F0);
+                    u8 val = func_801B4FA8(D_801D8B20[row * 10]);
+                    D_801D86E0 = val;
+                    func_801AB910(0, val);
+                    D_801D8A51 = D_801DAD84;
+                    D_801DAD84 = 5;
+                }
+                return 0;
+            case 2:
+                if (D_801D86EA == 0) {
+                    return 0;
+                }
+                func_800AB620(0x50D);
+                D_801D86EA--;
+                func_801AF480((u8)D_801D86EA);
+                func_801AF938(0);
+                return 0;
+            case 3:
+                if (D_801D86EA + D_801D86EE < D_801D86F3) {
+                    func_800AB620(0x50D);
+                    D_801D86EA++;
+                    func_801AF480((u8)D_801D86EA);
+                    func_801AF938(0);
+                }
+                return 0;
+            case 4:
+                func_800AB620(0x528);
+                D_801DAE50 = 2;
+                D_801DA2F0 = 0;
+                D_8010A320 = 0x14;
+                return 0;
+            case 5:
+                func_800AB620(0x528);
+                D_801DAD84 = D_801D8A51;
+                func_801AB910(-1, 0);
+                return 0;
+            default:
+                return 0;
+            }
+        } else if (pad == 0x40) {
+            /* Cross / Cancel */
+            func_800AB620(0x529);
+            if (D_801DAD84 == 4) {
+                D_801DAE50 = 1;
+                D_801DA2F0 = 0;
+                D_8010A320 = 0x14;
+                D_801D8A51 = 4;
+                D_801DAD84 = 4;
+            } else if (D_801DAD84 == 5) {
+                D_801DAD84 = D_801D8A51;
+                func_801AB910(-1, 0);
+            } else {
+                D_801D8A51 = D_801DAD84;
+                D_801DAD84 = 4;
+            }
+            return 0;
+        }
+        return 0;
+
+    case 20:
+        D_801D8A8F = 0;
+        D_8010564C = 0;
+        if (D_801DAE50 == 2) {
+            D_8010A320 = 0x1E;
+        } else if (D_801D86F2 == 0) {
+            D_8010A320 = 0x28;
         } else {
-            D_801D8A84 += 0x10;
+            D_8010A320 = 0x29;
         }
         return 0;
-    } else if (pad == 0x8000) {
-        /* Left */
-        func_800AB620(0x50D);
-        if (D_801D86F3 == 0 || D_801DAD84 >= 6) {
+
+    case 30:
+    case 41:
+        if (func_801B015C(0) == 0) { /* UNCLEAR: $a0 not set before jal func_801B015C */
             return 0;
         }
-        /* UNCLEAR: dispatches via jtbl_8018A554[D_801DAD84] to one of:
-         *   .L801AE76C: D_801D8A82 -= 0x10;
-         *   .L801AE788: D_801DAD84 = (D_801D8A51 == 2) ? 1 : D_801D8A51;
+        return (s32)D_801DAE50;
+
+    case 40:
+        /* UNCLEAR: asm sets $a0 = 0x10 in delay slot of jal func_801B015C,
+         * then calls func_8006F0DC(?, 0) without reloading $a0.
          */
-        (void)jtbl_8018A554[D_801DAD84];
-        return 0;
-    } else if (pad == 0x2000) {
-        /* Right */
-        func_800AB620(0x50D);
-        if (D_801DAD84 >= 6) {
+        func_801B015C(0x10);
+        if (func_8006F0DC(0x10, 0) == 0) {
             return 0;
         }
-        /* UNCLEAR: dispatches via jtbl_8018A56C[D_801DAD84] to one of:
-         *   .L801AE7F0: if (D_801D86F3 != 0) D_801DAD84 = 2; else D_801D8A82 += 0x10;
-         *   .L801AE804: D_801D8A82 += 0x10;
-         *   .L801AE830: D_801DAD84 = 1;
-         *   .L801AE844: D_801DAD84 = (D_801D86F0 < 5) ? 2 : 3;
-         *   .L801AE870: D_801DAD84 = 3;
-         */
-        (void)jtbl_8018A56C[D_801DAD84];
-        return 0;
-    } else if (pad == 0x20) {
-        /* Circle / Confirm */
-        if (D_801DAD84 >= 6) {
-            return 0;
-        }
-        /* UNCLEAR: dispatches via jtbl_8018A584[D_801DAD84] to one of:
-         *   .L801AE8BC: func_800AB620(0x528); D_801DAD84 = D_801D8A51; func_801AB910(-1, 0);
-         *   .L801AE8CC: func_800AB620(0x528); preview/action via func_801AC0B4 (below)
-         *   .L801AE964: func_800AB620(0x528); select via func_801AB910 (below)
-         *   .L801AE9C8: page/scroll up 1 if D_801D86EA != 0
-         *   .L801AE9F4: page/scroll down 1 if D_801D86EA + D_801D86EE < D_801D86F3
-         *   .L801AEA54: func_800AB620(0x528); D_801DAE50 = 2; D_801DA2F0 = 0; D_8010A320 = 0x14;
-         */
-        (void)jtbl_8018A584[D_801DAD84];
-        {
-            u32 row = (u32)(D_801D86EA + D_801D86F0);
-            u8 val = func_801B4FA8(D_801D8B20[row * 10]);
-            D_801D86E0 = val;
-            D_801D86E1 = D_801D8B21[row * 10];
-            func_801AC0B4(0, val, D_801D86E1);
-            D_801D8A51 = D_801DAD84;
-            D_801DAD84 = 5;
-        }
-        return 0;
-    } else if (pad == 0x40) {
-        /* Cross / Cancel */
-        func_800AB620(0x529);
-        if (D_801DAD84 == 4) {
-            D_801DAE50 = 1;
-            D_801DA2F0 = 0;
-            D_8010A320 = 0x14;
-            D_801D8A51 = 4;
-            D_801DAD84 = 4;
-        } else if (D_801DAD84 == 5) {
-            D_801DAD84 = D_801D8A51;
-            func_801AB910(-1, 0);
-        } else {
-            D_801D8A51 = D_801DAD84;
-            D_801DAD84 = 4;
-        }
+        return 1;
+
+    case 42:
+        return 4;
+
+    default:
+        /* 4..9, 11..19, 21..29, 31..39 (.L801AEBDC) */
         return 0;
     }
-    return 0;
-
-L_801AEB1C:
-    D_801D8A8F = 0;
-    D_8010564C = 0;
-    if (D_801DAE50 == 2) {
-        D_8010A320 = 0x1E;
-    } else if (D_801D86F2 == 0) {
-        D_8010A320 = 0x28;
-    } else {
-        D_8010A320 = 0x29;
-    }
-    return 0;
-
-L_801AEB90:
-    if (func_801B015C(0) == 0) { /* UNCLEAR: $a0 not set before jal func_801B015C */
-        return 0;
-    }
-    return (s32)D_801DAE50;
-
-L_801AEBB0:
-    /* UNCLEAR: asm sets $a0 = 0x10 in delay slot of jal func_801B015C,
-     * then calls func_8006F0DC(?, 0) without reloading $a0.
-     */
-    func_801B015C(0x10);
-    if (func_8006F0DC(0x10, 0) == 0) {
-        return 0;
-    }
-    return 1;
-
-L_801AEBD4:
-    return 4;
 }

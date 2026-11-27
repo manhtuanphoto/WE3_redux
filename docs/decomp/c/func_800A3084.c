@@ -44,9 +44,6 @@
 #define Scratchpad ((unsigned char *)0x1F800000)
 
 extern unsigned char D_8010C1D8[];
-extern void *jtbl_8001466C[];
-extern void *jtbl_8001468C[];
-extern void *jtbl_800146EC[];
 
 extern signed short func_8005A76C(int current, int target, int step);
 
@@ -66,143 +63,175 @@ void func_800A3084(unsigned char *actor, signed short *outX, signed short *outZ)
         return;
     }
 
-    /*
-     * UNCLEAR: exact mapping of jtbl_8001466C[0..6] to the 5 jlabel arms below
-     * (rodata jump table jtbl_8001466C is not present in asm_compact).
-     */
-    goto *jtbl_8001466C[tac_mode];
+    switch (tac_mode) {
+    case 0:
+    case 4:
+    default:
+        /* .L800A342C */
+        return;
 
-arm_L800A3110:
-    {
-        unsigned int poss = B(Scratchpad, 0x2CF + B(actor, 0x398));
-        unsigned int slot;
+    case 1:
+        /* .L800A3110 */
+        {
+            unsigned int poss = B(Scratchpad, 0x2CF + B(actor, 0x398));
+            unsigned int slot;
 
-        step = 2;
-        if (poss != 1u) {
-            unsigned int atk_dir = B(actor, 0x399);
-            signed short bx = S((unsigned char *)W(Scratchpad, 0x2F4), 0x2);
+            step = 2;
+            if (poss != 1u) {
+                unsigned int atk_dir = B(actor, 0x399);
+                signed short bx = S((unsigned char *)W(Scratchpad, 0x2F4), 0x2);
 
-            if ((atk_dir == 0u && bx < 0) || (atk_dir == 1u && bx > 0)) {
-                step = 2;
-            } else {
-                int abs_bx = (bx >= 0) ? bx : -bx;
-                if (abs_bx < 0x110A) {
+                if ((atk_dir == 0u && bx < 0) || (atk_dir == 1u && bx > 0)) {
                     step = 2;
-                } else if (abs_bx < 0x1990) {
-                    step = 3;
                 } else {
-                    step = 4;
+                    int abs_bx = (bx >= 0) ? bx : -bx;
+                    if (abs_bx < 0x110A) {
+                        step = 2;
+                    } else if (abs_bx < 0x1990) {
+                        step = 3;
+                    } else {
+                        step = 4;
+                    }
                 }
             }
-        }
 
-        slot = B(actor, 0x391);
-        if (slot < 17u || slot == 19u || slot == 20u || slot >= 25u) {
-            *outZ = func_8005A76C(*outZ, 0, step);
-        }
-        return;
-    }
-
-arm_L800A31E8:
-    {
-        unsigned int slot = B(actor, 0x391);
-        if (slot != 0u && slot < 6u) {
-            return;
-        }
-        step = (B(Scratchpad, 0x2CF + B(actor, 0x398)) == 1u) ? 2 : 3;
-        if (B(actor, 0x399) != 0) {
-            if (*outZ < 0) {
-                *outZ = func_8005A76C(*outZ, -0x2100, step);
+            slot = B(actor, 0x391);
+            if (slot < 17u || slot == 19u || slot == 20u || slot >= 25u) {
+                *outZ = func_8005A76C(*outZ, 0, step);
             }
-        } else {
-            if (*outZ > 0) {
-                *outZ = func_8005A76C(*outZ, 0x2100, step);
-            }
-        }
-        return;
-    }
-
-arm_L800A3264:
-    {
-        unsigned int slot = B(actor, 0x391);
-        if (slot != 0u && slot < 6u) {
-            return;
-        }
-        step = (B(Scratchpad, 0x2CF + B(actor, 0x398)) == 1u) ? 2 : 3;
-        if (B(actor, 0x399) != 0) {
-            if (*outZ > 0) {
-                *outZ = func_8005A76C(*outZ, 0x2100, step);
-            }
-        } else {
-            if (*outZ < 0) {
-                *outZ = func_8005A76C(*outZ, -0x2100, step);
-            }
-        }
-        return;
-    }
-
-arm_L800A32E0:
-    {
-        unsigned int slot_m1;
-        unsigned char *ball;
-
-        step = (B(Scratchpad, 0x2CF + B(actor, 0x398)) == 1u) ? 3 : 1;
-        slot_m1 = B(actor, 0x391) - 1u;
-        if (slot_m1 >= 0x18u) {
-            goto arm_L800A3370;
-        }
-
-        /*
-         * UNCLEAR: exact mapping of jtbl_8001468C[0..23] to the 3 jlabel arms below
-         * (rodata jump table jtbl_8001468C is not present in asm_compact).
-         */
-        goto *jtbl_8001468C[slot_m1];
-
-    arm_L800A3330:
-        ball = (unsigned char *)W(Scratchpad, 0x2F4);
-        *outZ = func_8005A76C(*outZ, S(ball, 0x6), step - 1);
-        return;
-
-    arm_L800A3344:
-        ball = (unsigned char *)W(Scratchpad, 0x2F4);
-        *outX = func_8005A76C(*outX, S(ball, 0x2), 1);
-        ball = (unsigned char *)W(Scratchpad, 0x2F4);
-        *outZ = func_8005A76C(*outZ, S(ball, 0x6), step - 1);
-        return;
-
-    arm_L800A3370:
-        ball = (unsigned char *)W(Scratchpad, 0x2F4);
-        *outX = (signed short)(func_8005A76C(*outX, S(ball, 0x2), (step & 0xFF) - 1) - ((int)dir_sign * 0x300));
-        ball = (unsigned char *)W(Scratchpad, 0x2F4);
-        *outZ = func_8005A76C(*outZ, S(ball, 0x6), step & 0xFF);
-        return;
-    }
-
-arm_L800A33C4:
-    {
-        unsigned int slot_m1 = B(actor, 0x391) - 1u;
-        int line_x;
-
-        if (slot_m1 >= 8u) {
             return;
         }
 
-        /*
-         * UNCLEAR: exact mapping of jtbl_800146EC[0..7] to the 2 jlabel arms below
-         * (rodata jump table jtbl_800146EC is not present in asm_compact).
-         */
-        goto *jtbl_800146EC[slot_m1];
+    case 2:
+        /* .L800A3264 */
+        {
+            unsigned int slot = B(actor, 0x391);
+            if (slot != 0u && slot < 6u) {
+                return;
+            }
+            step = (B(Scratchpad, 0x2CF + B(actor, 0x398)) == 1u) ? 2 : 3;
+            if (B(actor, 0x399) != 0) {
+                if (*outZ > 0) {
+                    *outZ = func_8005A76C(*outZ, 0x2100, step);
+                }
+            } else {
+                if (*outZ < 0) {
+                    *outZ = func_8005A76C(*outZ, -0x2100, step);
+                }
+            }
+            return;
+        }
 
-    arm_L800A33F4:
-        step = 3;
-        goto pull_line;
+    case 3:
+        /* .L800A31E8 */
+        {
+            unsigned int slot = B(actor, 0x391);
+            if (slot != 0u && slot < 6u) {
+                return;
+            }
+            step = (B(Scratchpad, 0x2CF + B(actor, 0x398)) == 1u) ? 2 : 3;
+            if (B(actor, 0x399) != 0) {
+                if (*outZ < 0) {
+                    *outZ = func_8005A76C(*outZ, -0x2100, step);
+                }
+            } else {
+                if (*outZ > 0) {
+                    *outZ = func_8005A76C(*outZ, 0x2100, step);
+                }
+            }
+            return;
+        }
 
-    arm_L800A33FC:
-        step = 5;
+    case 5:
+        /* .L800A32E0 */
+        {
+            unsigned int slot_m1;
+            unsigned char *ball;
 
-    pull_line:
-        line_x = SW(Scratchpad, 0x314 + ((B(actor, 0x399) ^ 1u) << 2));
-        *outX = func_8005A76C(*outX, line_x - ((int)dir_sign << 9), step);
-        return;
+            step = (B(Scratchpad, 0x2CF + B(actor, 0x398)) == 1u) ? 3 : 1;
+            slot_m1 = B(actor, 0x391) - 1u;
+
+            switch (slot_m1) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                /* .L800A3330 */
+                ball = (unsigned char *)W(Scratchpad, 0x2F4);
+                *outZ = func_8005A76C(*outZ, S(ball, 0x6), step - 1);
+                return;
+
+            case 5:
+            case 6:
+            case 7:
+                /* .L800A3344 */
+                ball = (unsigned char *)W(Scratchpad, 0x2F4);
+                *outX = func_8005A76C(*outX, S(ball, 0x2), 1);
+                ball = (unsigned char *)W(Scratchpad, 0x2F4);
+                *outZ = func_8005A76C(*outZ, S(ball, 0x6), step - 1);
+                return;
+
+            case 16:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+                /* .L800A342C */
+                return;
+
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 14:
+            case 15:
+            default:
+                /* .L800A3370 */
+                ball = (unsigned char *)W(Scratchpad, 0x2F4);
+                *outX = (signed short)(func_8005A76C(*outX, S(ball, 0x2), (step & 0xFF) - 1) - ((int)dir_sign * 0x300));
+                ball = (unsigned char *)W(Scratchpad, 0x2F4);
+                *outZ = func_8005A76C(*outZ, S(ball, 0x6), step & 0xFF);
+                return;
+            }
+        }
+
+    case 6:
+        /* .L800A33C4 */
+        {
+            unsigned int slot_m1 = B(actor, 0x391) - 1u;
+            int line_x;
+
+            switch (slot_m1) {
+            case 0:
+            case 1:
+            case 4:
+                /* .L800A33FC */
+                step = 5;
+                break;
+
+            case 5:
+            case 6:
+            case 7:
+                /* .L800A33F4 */
+                step = 3;
+                break;
+
+            case 2:
+            case 3:
+            default:
+                /* .L800A342C */
+                return;
+            }
+
+            line_x = SW(Scratchpad, 0x314 + ((B(actor, 0x399) ^ 1u) << 2));
+            *outX = func_8005A76C(*outX, line_x - ((int)dir_sign << 9), step);
+            return;
+        }
     }
 }

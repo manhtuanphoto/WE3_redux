@@ -96,14 +96,26 @@ void func_8006B46C(unsigned char *actor) {
 
     {
         unsigned int state_off = (unsigned int)(B(actor, 0x391) - 0x11);
-        if (state_off < 9) {
-            /* UNCLEAR: jtbl_80012818 maps actor+0x391 in 0x11..0x19 to one of the
-             * following three outcomes; exact per-case table entries are not in asm_compact:
-             *   case A (.L8006B68C): if ((s16)Scratchpad[0xF8] * dir >= 0x301) Scratchpad[0xF8] = dir * 0x300;
-             *   case B (.L8006B6C4): if ((s16)Scratchpad[0xF8] * dir > 0)      Scratchpad[0xF8] = 0;
-             *   case C (.L8006B6EC): no-op
-             */
-            (void)state_off;
+        switch (state_off) {
+        case 0:
+        case 1:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+            if (S(Scratchpad, 0x0F8) * dir > 0) {
+                S(Scratchpad, 0x0F8) = 0;
+            }
+            break;
+        case 8:
+            if (S(Scratchpad, 0x0F8) * dir >= 0x301) {
+                S(Scratchpad, 0x0F8) = (signed short)(dir * 0x300);
+            }
+            break;
+        case 2:
+        case 3:
+        default:
+            break;
         }
     }
 

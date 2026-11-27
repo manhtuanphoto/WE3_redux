@@ -54,9 +54,6 @@ extern u8  D_801DAE50;
 #define D_8010A320 (*(u8  *)(D_800FF748 + 0xABD8)) /* sub-state machine index */
 #define D_8010A322 (*(u8  *)(D_800FF748 + 0xABDA)) /* this state machine index */
 
-/* Jump table located in .rodata (raw entries not present in compact .s) */
-extern void *jtbl_8018B9DC[];
-
 extern void func_800171C4(s32 a0);
 extern void func_800171FC(s32 a0);
 extern s32  func_80019B64(s32 a0);
@@ -87,285 +84,284 @@ void func_801C0958(void)
         return;
     }
 
-    /* UNCLEAR: jtbl_8018B9DC (51 entries) is not present in the compact asm.
-     * Below are all 28 branch targets (jlabels) referenced by the jump table.
-     */
-    (void)jtbl_8018B9DC[state];
-    return;
-
-L_801C09A0:
-    D_801DA2F0 = 1;
-    D_801D8B18 = 0;
-    if (func_8006F0DC(0x40, 0) == 0) {
-        return;
-    }
-    func_801A98F0(D_801234E0[D_80108668], (s32)D_8010866A - 1);
-    func_801A9C54();
-    D_8010866E[(s32)D_8010A2E8 * 36] += 1;
-    D_8010866E[(s32)D_8010A2E9 * 36] += 1;
-    D_801DA06B = 0;
-    D_801DA069 = 0;
-    D_801DA06A = 0;
-    D_801DA068 = 0;
-    D_801DA5D0 = 0;
-    D_801DA5D2 = 0;
-    D_801DA5D4 = 4;
-    D_801DA5D6 = 4;
-    func_801C1D94();
-    D_8010A322++;
-    return;
-
-L_801C0AE0:
-    func_801C2064();
-    func_801C19EC(func_801C2A3C);
-    D_8010A320 = 0;
-    D_8010A322++;
-    return;
-
-L_801C0B18:
-    if (func_8006F07C(0x10) != 0) {
+    switch (state) {
+    case 0x00:
+        D_801DA2F0 = 1;
+        D_801D8B18 = 0;
+        if (func_8006F0DC(0x40, 0) == 0) {
+            return;
+        }
+        func_801A98F0(D_801234E0[D_80108668], (s32)D_8010866A - 1);
+        func_801A9C54();
+        D_8010866E[(s32)D_8010A2E8 * 36] += 1;
+        D_8010866E[(s32)D_8010A2E9 * 36] += 1;
+        D_801DA06B = 0;
+        D_801DA069 = 0;
+        D_801DA06A = 0;
+        D_801DA068 = 0;
+        D_801DA5D0 = 0;
+        D_801DA5D2 = 0;
+        D_801DA5D4 = 4;
+        D_801DA5D6 = 4;
+        func_801C1D94();
         D_8010A322++;
-    }
-    return;
+        break;
 
-L_801C0B3C:
-    {
-        u32 teams = D_80108668;
-        u32 total_matches = (u32)((s32)(teams * (teams - 1)) / 2);
-        u32 half_teams;
-
-        D_801DAE50 = 2;
-        if (D_8010866A != total_matches) {
-            D_801DAE50 = func_801AB6E8(0x60);
-        }
-
-        half_teams = teams >> 1;
-        /* Note: asm triggers break 7 if half_teams == 0 */
-        if ((D_8010866A % half_teams) == 0) {
-            func_801C1CD4(D_8010866B >> 4);
-            D_801DAE50 = func_801AB6E8(0x61);
-        }
-
-        if (D_801DAE50 == 2) {
-            func_801AB6E8(-1);
-            D_8010A322++;
-        }
-        return;
-    }
-
-L_801C0C24:
-    {
-        s32 res = func_801C16DC(0);
-        if (res == 2) {
-            func_800AB620(0x528);
-            D_8010A322++;
-        } else {
-            D_801DA2F0 = (u8)res;
-        }
-        func_801C2A3C();
-        return;
-    }
-
-L_801C0C80:
-    if (func_8006F0DC(0x40, 0) == 0) {
-        return;
-    }
-    /* Note: asm triggers break 7 if (D_80108668 >> 1) == 0 */
-    if ((D_8010866A % (D_80108668 >> 1)) == 0) {
-        D_8010A322 = 0x0A;
-    } else {
-        func_8018E538(0);
-        D_8010A322 = 0x1F;
-    }
-    return;
-
-L_801C0CE0:
-    D_801DA2F0 = 1;
-    func_801C1D94();
-    func_801C20A8();
-    func_801C19EC(func_801C3150);
-    D_8010A322++;
-    return;
-
-L_801C0D20:
-    if (func_8006F07C(0x10) != 0) {
-        D_8010A322++;
-    }
-    return;
-
-L_801C0D44:
-    {
-        s32 res = func_801C16DC(1);
-        if (res == 1) {
-            func_800AB620(0x529);
-            D_8010A322++;
-        } else if (res == 2) {
-            func_800AB620(0x528);
-            D_8010A322++;
-        } else {
-            D_801DA2F0 = 1;
-        }
-        func_801C3150();
-        return;
-    }
-
-L_801C0DB8:
-    if (func_8006F0DC(0x40, 0) == 0) {
-        return;
-    }
-    if (D_801DAE50 == 1) {
-        D_8010A322++;
-    } else if (D_801DAE50 == 2) {
-        D_8010A322 = 0x14;
-    }
-    return;
-
-L_801C0E08:
-    func_801C2064();
-    func_801C19EC(func_801C2A3C);
-    D_8010A320 = 0;
-    D_8010A322++;
-    return;
-
-L_801C0E40:
-    if (func_8006F07C(0x10) != 0) {
-        D_8010A322 = 4;
-    }
-    return;
-
-L_801C0E58:
-    D_801DA2F0 = 0;
-    D_8010A320 = 0;
-    D_8010A322++;
-    return;
-
-L_801C0E80:
-    {
-        s32 res = func_801AE294(0);
-        if (res == 1) {
-            D_8010A322++;
-        } else if (res == 2) {
-            D_8010A322 = 0x17;
-        }
-        return;
-    }
-
-L_801C0EC0:
-    if (func_8006F0DC(0x40, 0) != 0) {
-        D_8010A322 = 0x0A;
-    }
-    return;
-
-L_801C0EDC:
-    D_8010A320 = 0;
-    D_8010A322++;
-    return;
-
-L_801C0EFC:
-    {
-        s32 res = func_801AE294(1);
-        if (res == 1) {
-            D_8010A322 = 0x14;
-        } else if (res == 2) {
-            D_8010A322 = 0x1E;
-        }
-        return;
-    }
-
-L_801C0F2C:
-    {
-        u32 teams = D_80108668;
-        u32 total_matches = (u32)((s32)(teams * (teams - 1)) / 2);
-
-        if (D_8010866A == total_matches) {
-            D_8010A322 = 0x32;
-        } else {
-            D_8010A322++;
-        }
+    case 0x01:
+        func_801C2064();
+        func_801C19EC(func_801C2A3C);
         D_8010A320 = 0;
-        return;
-    }
+        D_8010A322++;
+        break;
 
-L_801C0F9C:
-    SPAD_2A2 = 0x41;
-    func_801A8CD0();
-    D_801D8DFC = 1;
-    D_8010A320 = 0;
-    D_8010A322++;
-    return;
+    case 0x02:
+        if (func_8006F07C(0x10) != 0) {
+            D_8010A322++;
+        }
+        break;
 
-L_801C0FE4:
-    {
-        s32 res = func_801ACE2C((D_801D8DFB != 0) ? 2 : 0);
-        if (res == 1) {
-            /* Note: asm triggers break 7 if (D_80108668 >> 1) == 0 */
-            if ((D_8010866A % (D_80108668 >> 1)) == 0) {
+    case 0x03:
+        {
+            u32 teams = D_80108668;
+            u32 total_matches = (u32)((s32)(teams * (teams - 1)) / 2);
+            u32 half_teams;
+
+            D_801DAE50 = 2;
+            if (D_8010866A != total_matches) {
+                D_801DAE50 = func_801AB6E8(0x60);
+            }
+
+            half_teams = teams >> 1;
+            /* Note: asm triggers break 7 if half_teams == 0 */
+            if ((D_8010866A % half_teams) == 0) {
+                func_801C1CD4(D_8010866B >> 4);
+                D_801DAE50 = func_801AB6E8(0x61);
+            }
+
+            if (D_801DAE50 == 2) {
+                func_801AB6E8(-1);
+                D_8010A322++;
+            }
+            return;
+        }
+
+    case 0x04:
+        {
+            s32 res = func_801C16DC(0);
+            if (res == 2) {
+                func_800AB620(0x528);
+                D_8010A322++;
+            } else {
+                D_801DA2F0 = (u8)res;
+            }
+            func_801C2A3C();
+            return;
+        }
+
+    case 0x05:
+        if (func_8006F0DC(0x40, 0) == 0) {
+            return;
+        }
+        /* Note: asm triggers break 7 if (D_80108668 >> 1) == 0 */
+        if ((D_8010866A % (D_80108668 >> 1)) == 0) {
+            D_8010A322 = 0x0A;
+        } else {
+            func_8018E538(0);
+            D_8010A322 = 0x1F;
+        }
+        break;
+
+    case 0x0A:
+        D_801DA2F0 = 1;
+        func_801C1D94();
+        func_801C20A8();
+        func_801C19EC(func_801C3150);
+        D_8010A322++;
+        break;
+
+    case 0x0B:
+        if (func_8006F07C(0x10) != 0) {
+            D_8010A322++;
+        }
+        break;
+
+    case 0x0C:
+        {
+            s32 res = func_801C16DC(1);
+            if (res == 1) {
+                func_800AB620(0x529);
+                D_8010A322++;
+            } else if (res == 2) {
+                func_800AB620(0x528);
+                D_8010A322++;
+            } else {
+                D_801DA2F0 = 1;
+            }
+            func_801C3150();
+            return;
+        }
+
+    case 0x0D:
+        if (func_8006F0DC(0x40, 0) == 0) {
+            return;
+        }
+        if (D_801DAE50 == 1) {
+            D_8010A322++;
+        } else if (D_801DAE50 == 2) {
+            D_8010A322 = 0x14;
+        }
+        break;
+
+    case 0x0E:
+        func_801C2064();
+        func_801C19EC(func_801C2A3C);
+        D_8010A320 = 0;
+        D_8010A322++;
+        break;
+
+    case 0x0F:
+        if (func_8006F07C(0x10) != 0) {
+            D_8010A322 = 4;
+        }
+        break;
+
+    case 0x14:
+        D_801DA2F0 = 0;
+        D_8010A320 = 0;
+        D_8010A322++;
+        break;
+
+    case 0x15:
+        {
+            s32 res = func_801AE294(0);
+            if (res == 1) {
+                D_8010A322++;
+            } else if (res == 2) {
                 D_8010A322 = 0x17;
+            }
+            return;
+        }
+
+    case 0x16:
+        if (func_8006F0DC(0x40, 0) != 0) {
+            D_8010A322 = 0x0A;
+        }
+        break;
+
+    case 0x17:
+        D_8010A320 = 0;
+        D_8010A322++;
+        break;
+
+    case 0x18:
+        {
+            s32 res = func_801AE294(1);
+            if (res == 1) {
+                D_8010A322 = 0x14;
+            } else if (res == 2) {
+                D_8010A322 = 0x1E;
+            }
+            return;
+        }
+
+    case 0x1E:
+        {
+            u32 teams = D_80108668;
+            u32 total_matches = (u32)((s32)(teams * (teams - 1)) / 2);
+
+            if (D_8010866A == total_matches) {
+                D_8010A322 = 0x32;
             } else {
                 D_8010A322++;
             }
-        } else if (res == 2) {
-            D_8010A322 = 0x23;
-        } else if (res == 3) {
-            SPAD_29F = 0;
-            func_800171C4(0xFF);
+            D_8010A320 = 0;
+            return;
         }
-        return;
-    }
 
-L_801C10AC:
-    if (func_8006F0DC(0x40, 0) == 0) {
-        return;
-    }
-    func_801C2064();
-    func_801C19EC(func_801C2A3C);
-    D_8010A320 = 0;
-    D_8010A322++;
-    return;
-
-L_801C10F8:
-    if (func_8006F07C(0x10) != 0) {
-        D_8010A322 = 4;
-    }
-    return;
-
-L_801C1110:
-    if (func_8006F0DC(0x40, 0) != 0) {
+    case 0x1F:
+        SPAD_2A2 = 0x41;
+        func_801A8CD0();
+        D_801D8DFC = 1;
+        D_8010A320 = 0;
         D_8010A322++;
+        break;
+
+    case 0x20:
+        {
+            s32 res = func_801ACE2C((D_801D8DFB != 0) ? 2 : 0);
+            if (res == 1) {
+                /* Note: asm triggers break 7 if (D_80108668 >> 1) == 0 */
+                if ((D_8010866A % (D_80108668 >> 1)) == 0) {
+                    D_8010A322 = 0x17;
+                } else {
+                    D_8010A322++;
+                }
+            } else if (res == 2) {
+                D_8010A322 = 0x23;
+            } else if (res == 3) {
+                SPAD_29F = 0;
+                func_800171C4(0xFF);
+            }
+            return;
+        }
+
+    case 0x21:
+        if (func_8006F0DC(0x40, 0) == 0) {
+            return;
+        }
+        func_801C2064();
+        func_801C19EC(func_801C2A3C);
+        D_8010A320 = 0;
+        D_8010A322++;
+        break;
+
+    case 0x22:
+        if (func_8006F07C(0x10) != 0) {
+            D_8010A322 = 4;
+        }
+        break;
+
+    case 0x23:
+        if (func_8006F0DC(0x40, 0) != 0) {
+            D_8010A322++;
+        }
+        break;
+
+    case 0x24:
+        D_801D8DFC = 1;
+        D_801D8DFB = 0;
+        func_800171FC(1);
+        D_8010A322 = 0x28;
+        break;
+
+    case 0x28:
+        func_8018E538(0);
+        SPAD_330 = 0;
+        SPAD_29F = 0;
+        D_801DA2F0 = 0;
+        D_8010A322++;
+        break;
+
+    case 0x29:
+        if (func_80019B64(0xCA) == 0) {
+            return;
+        }
+        SPAD_330 = 1;
+        D_8010A31E = 0xFF;
+        func_801A8CD0();
+        D_8010A322++;
+        break;
+
+    case 0x2A:
+        func_800AB620(0x205);
+        D_8010A322 = 1;
+        break;
+
+    case 0x32:
+        func_800171FC(4);
+        D_8010A322 = 0x32;
+        break;
+    default:
+        break;
     }
-    return;
-
-L_801C1138:
-    D_801D8DFC = 1;
-    D_801D8DFB = 0;
-    func_800171FC(1);
-    D_8010A322 = 0x28;
-    return;
-
-L_801C115C:
-    func_8018E538(0);
-    SPAD_330 = 0;
-    SPAD_29F = 0;
-    D_801DA2F0 = 0;
-    D_8010A322++;
-    return;
-
-L_801C1188:
-    if (func_80019B64(0xCA) == 0) {
-        return;
-    }
-    SPAD_330 = 1;
-    D_8010A31E = 0xFF;
-    func_801A8CD0();
-    D_8010A322++;
-    return;
-
-L_801C11C8:
-    func_800AB620(0x205);
-    D_8010A322 = 1;
-    return;
-
-L_801C11D8:
-    func_800171FC(4);
-    D_8010A322 = 0x32;
 }

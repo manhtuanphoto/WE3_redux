@@ -36,7 +36,6 @@
 extern unsigned char D_800FF748[];
 extern unsigned char D_800E8208[];
 extern unsigned char D_800F3560[];
-extern void *jtbl_800101E8[];
 
 extern void func_8005C1CC(unsigned char *actor, unsigned int arg1);
 extern void func_80019E90(unsigned char *verts, unsigned char *outPrim);
@@ -77,17 +76,34 @@ void func_8001A544(unsigned char *actor) {
 
             act_id = H(actor, 0x38E);
             if ((unsigned int)(act_id - 0x1Eu) < 0x5Au) {
-                /*
-                 * UNCLEAR: dispatches through jump table jtbl_800101E8[act_id - 0x1E]
-                 * to one of 4 orientation formulas below; exact per-entry table
-                 * mapping is not embedded in the .s file:
-                 *   case A (.L8001A650): base_ang = 0x40 - actor[0x3AA];
-                 *   case B (.L8001A65C): base_ang = (0x1C0 - actor[0x3AA]) + (actor[0x3AC] ? -0x40 : 0x40);
-                 *   case C (.L8001A67C): base_ang = (0x1C0 - actor[0x3AA]) + (actor[0x3AC] ? 0x40 : -0x40);
-                 *   case D (.L8001A69C): base_ang = 0xC0 - actor[0x3AA];
-                 */
-                (void)jtbl_800101E8;
-                base_ang = 0xC0u - B(actor, 0x3AA);
+                switch (act_id - 0x1Eu) {
+                case 0:
+                case 14:
+                case 46:
+                case 47:
+                case 86:
+                    base_ang = 0x40u - B(actor, 0x3AA);
+                    break;
+                case 62:
+                case 63:
+                case 68:
+                case 69:
+                case 71:
+                case 73:
+                case 77:
+                case 83:
+                case 87:
+                case 89:
+                    base_ang = (0x1C0u - B(actor, 0x3AA)) + (B(actor, 0x3AC) != 0 ? -0x40 : 0x40);
+                    break;
+                case 9:
+                case 16:
+                    base_ang = (0x1C0u - B(actor, 0x3AA)) + (B(actor, 0x3AC) != 0 ? 0x40 : -0x40);
+                    break;
+                default:
+                    base_ang = 0xC0u - B(actor, 0x3AA);
+                    break;
+                }
             } else {
                 base_ang = 0xC0u - B(actor, 0x3AA);
             }

@@ -165,13 +165,6 @@ int func_8019E620(void) {
         return 0;
     }
 
-    /*
-     * UNCLEAR: jtbl_8018A018 word table is not included in the asm; case numbers
-     * 0, 1, 2, 10 (0xA), 20 (0x14), 30 (0x1E), 31 (0x1F), and 32 (0x20) are
-     * inferred from writes to D_8010A322 (D_800FF748+0xABDA), and unused
-     * indices 3..9, 11..19, 21..29 are assumed to target the default exit
-     * (.L8019F954).
-     */
     switch (state) {
     case 0:
         /* Initialize team-select state, 3D flag cloth meshes, and unlock flags */

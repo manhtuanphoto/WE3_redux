@@ -191,30 +191,27 @@ s32 func_801CD224(u32 arg0, u32 arg1)
         /*
          * Dispatches via jump table jtbl_8018DA98 when (u32)(res + 4) < 6
          * (i.e. res in [-4, 1]).
-         *
-         * UNCLEAR: The exact jtbl_8018DA98 target for each value in [-4, 1] is
-         * stored in the overlay .rodata table and not present in the .s file.
-         * Observed target blocks within this case are:
-         *   - .L801CD770 (success):
-         *       D_801D94D0 = 0;
-         *       ret_val = 1;
-         *   - .L801CD780 (unformatted / prompt):
-         *       D_800FF748[0x8F1E] = 0;
-         *       draw_mc_msg(arg1, D_801D58E4);
-         *       D_801D94D0 = 0x40;
-         *   - .L801CD830 (error / default, also entered when res == -4 or (u32)(res + 4) >= 6):
-         *       func_800AB620(0x512);
-         *       if (arg0 & 1U) {
-         *           D_801D94D0 = 0;
-         *           ret_val = 2;
-         *       } else {
-         *           msg_idx = (res == -4) ? 0x24 : 0xA;
-         *           draw_mc_msg(arg1, D_801D58C4[msg_idx]);
-         *           D_801D94D0 = 0xF0;
-         *       }
-         *   - .L801CD918 (keep polling if D_801D94D0 == 0x10).
          */
-        if ((u32)(res + 4) >= 6U || res == -4) {
+        switch (res) {
+        case 1:
+            D_801D94D0 = 0;
+            ret_val = 1;
+            break;
+
+        case -2:
+            D_800FF748[0x8F1E] = 0;
+            draw_mc_msg(arg1, D_801D58E4);
+            D_801D94D0 = 0x40;
+            break;
+
+        case 0:
+            /* Wait / keep polling in state 0x10 */
+            break;
+
+        case -4:
+        case -3:
+        case -1:
+        default:
             func_800AB620(0x512);
             if (arg0 & 1U) {
                 D_801D94D0 = 0;
@@ -224,19 +221,7 @@ s32 func_801CD224(u32 arg0, u32 arg1)
                 draw_mc_msg(arg1, D_801D58C4[msg_idx]);
                 D_801D94D0 = 0xF0;
             }
-        } else {
-            /* UNCLEAR: Exact jump table branch for res in {-3, -2, -1, 0, 1} */
-            if (res == 0) {
-                /* Wait / keep polling in state 0x10 */
-            } else if (res == 1) {
-                D_801D94D0 = 0;
-                ret_val = 1;
-            } else {
-                /* Placeholder for remaining jtbl_8018DA98 entries (.L801CD780 / .L801CD830) */
-                D_800FF748[0x8F1E] = 0;
-                draw_mc_msg(arg1, D_801D58E4);
-                D_801D94D0 = 0x40;
-            }
+            break;
         }
 
         if (D_801D94D0 != 0x10U) {

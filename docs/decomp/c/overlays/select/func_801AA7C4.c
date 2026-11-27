@@ -47,8 +47,6 @@ extern u8  D_80108619;      /* team 1 yellow card count (D_800FF748 + 0x8ED1) */
 #define BUF_RED_COUNTS      (D_800FF748 + 0x8ECE)   /* 2 bytes: D_80108616..80108617 */
 #define BUF_YELLOW_COUNTS   (D_800FF748 + 0x8ED0)   /* 2 bytes: D_80108618..80108619 */
 
-extern void *jtbl_8018A2C0[];
-
 extern u8  *func_801AAE5C(u32 arg0);
 extern s32  func_8001E6B8(s32 range);
 
@@ -197,14 +195,23 @@ void func_801AA7C4(u8 arg0)
         u32 card_idx;
         u8 *team_cards;
 
-        /* UNCLEAR: jtbl_8018A2C0 (8 entries) not included in compact asm;
-         * targets are .L801AACC0 (0), .L801AACC8 (1), and .L801AACD0 (2).
-         */
-        if (card_rng < 8) {
-            /* Dispatches via jtbl_8018A2C0[card_rng] to set card_idx = 0, 1, or 2 */
-            card_idx = 2; /* UNCLEAR: placeholder for jtbl_8018A2C0[card_rng] */
-        } else {
+        /* jtbl_8018A2C0 (8 entries): 0..1 -> 0, 2..4 -> 1, 5..7 -> 2 */
+        switch (card_rng) {
+        case 0:
+        case 1:
+            card_idx = 0;
+            break;
+        case 2:
+        case 3:
+        case 4:
+            card_idx = 1;
+            break;
+        case 5:
+        case 6:
+        case 7:
+        default:
             card_idx = 2;
+            break;
         }
 
         team_cards = BUF_CARDS_TEAM0 + team * 22;

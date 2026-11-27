@@ -41,7 +41,6 @@ extern unsigned char  D_8010A323;
 extern unsigned char  D_8010A3AE;
 extern unsigned short D_800C7D64[];
 extern unsigned short D_800C7D68[];
-extern void          *jtbl_80011EDC[];
 
 extern void         func_800AB620(unsigned int sfx_id);
 extern unsigned int func_8001E6B8(unsigned int n);
@@ -72,20 +71,17 @@ void func_800573EC(unsigned char *actor /* UNCLEAR: passed in $s0 in asm */) {
 
     evt = B(D_800FF748, 0xAC4F);
     if (evt < 0x0Du) {
-        /*
-         * UNCLEAR: dispatches via jump table jtbl_80011EDC[evt] (13 entries)
-         * to one of the 7 blocks below; exact index-to-block mapping is
-         * external to the .s file.
-         */
-        (void)jtbl_80011EDC;
-
-        if (0) {
-            /* Block .L800574C8 */
-            if (func_8001E6B8(3) != 0) {
-                func_800AB620(0xCD3);
+        switch (evt) {
+        case 0:
+            /* .L80057718 */
+            if (func_8001E6B8(8) == 0) {
+                func_800AB620(D_800C7D68[func_8001E6B8(2)]);
+                return;
             }
-        } else if (0) {
-            /* Block .L800574E8 */
+            break;
+        case 4:
+        case 6:
+            /* .L800574E8 */
             if (func_8001E6B8(4) == 0) {
                 unsigned int stat_off = (unsigned int)B(actor, 0x392) * 12u + (unsigned int)B(actor, 0x398) * 264u;
                 unsigned int pref_foot = (W(D_8010C330, stat_off) >> 4) & 1u;
@@ -97,8 +93,9 @@ void func_800573EC(unsigned char *actor /* UNCLEAR: passed in $s0 in asm */) {
                     func_800AB620(0xCDE);
                 }
             }
-        } else if (0) {
-            /* Block .L800575C4 */
+            break;
+        case 7:
+            /* .L800575C4 */
             if (func_8001E6B8(4) == 0) {
                 unsigned int stat_off = (unsigned int)B(actor, 0x392) * 12u + (unsigned int)B(actor, 0x398) * 264u;
                 unsigned int pref_foot = (W(D_8010C330, stat_off) >> 4) & 1u;
@@ -112,24 +109,36 @@ void func_800573EC(unsigned char *actor /* UNCLEAR: passed in $s0 in asm */) {
             } else if (func_8001E6B8(2) == 0) {
                 func_800AB620(0xCDD);
             }
-        } else if (0) {
-            /* Block .L800576C0 */
+            break;
+        case 10:
+            /* .L800576C0 */
             if (func_8001E6B8(2) == 0) {
                 func_800AB620(D_800C7D64[func_8001E6B8(2)]);
                 return;
             }
-        } else if (0) {
-            /* Block .L800576F8 */
+            break;
+        case 11:
+            /* .L800576F8 */
             if (func_8001E6B8(2) == 0) {
                 func_800AB620(0xCEC);
                 return;
             }
-        } else if (0) {
-            /* Block .L80057718 */
-            if (func_8001E6B8(8) == 0) {
-                func_800AB620(D_800C7D68[func_8001E6B8(2)]);
-                return;
+            break;
+        case 12:
+            /* .L800574C8 */
+            if (func_8001E6B8(3) != 0) {
+                func_800AB620(0xCD3);
             }
+            break;
+        case 1:
+        case 2:
+        case 3:
+        case 5:
+        case 8:
+        case 9:
+        default:
+            /* .L80057750 */
+            break;
         }
     }
 

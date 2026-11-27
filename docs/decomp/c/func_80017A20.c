@@ -370,7 +370,7 @@ int func_80017A20(void)
     }
 
     case 4:
-        /* UNCLEAR: jtbl_800100D8[4] branches directly to epilogue without setting $v0 */
+        /* jtbl_800100D8[4] branches directly to epilogue (.L80018884) without setting $v0 */
         return 0;
 
     case 5:
@@ -456,7 +456,7 @@ int func_80017A20(void)
     case 13:
     case 14:
     case 15:
-        /* UNCLEAR: jtbl_800100D8[12..15] branch directly to epilogue without setting $v0 */
+        /* jtbl_800100D8[12..15] branch directly to epilogue (.L80018884) without setting $v0 */
         return 0;
 
     case 16:

@@ -9,9 +9,6 @@
 #define SPAD_DEF_LINE_X(side) (*(volatile int16_t *)(0x1F80030C + (side) * 2))
 #define SPAD_OFF_LINE_X(side) (*(volatile int32_t *)(0x1F800314 + (side) * 4))
 
-extern void *jtbl_80014280[20];
-extern void *jtbl_800142D0[17];
-
 extern int32_t func_8009FEDC(void *player);
 extern void func_8005A85C(void *player, volatile int16_t *out_x, volatile int16_t *out_z);
 extern int16_t func_8005A76C(int16_t val, int32_t target, int32_t step);
@@ -49,29 +46,43 @@ void func_8009EBC0(uint8_t *player) {
 
         SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X + attack_sign * 0xB00);
 
-        if (idx >= 20) {
-            /* Default (.L8009ED08) */
+        switch (idx) {
+        case 0:
+        case 1:
+        case 3:
+        case 4:
+        case 5:
+        case 6: {
+            int32_t s_ball_z;
+            int32_t s_tgt_z;
+
+            ball = SPAD_BALL_PTR;
+            s_ball_z = (*(int16_t *)(ball + 0x06) >= 0) ? 1 : -1;
+            s_tgt_z = (SPAD_TARGET_Z >= 0) ? 1 : -1;
+            if (s_ball_z == s_tgt_z) {
+                SPAD_TARGET_Z = func_8005A76C(SPAD_TARGET_Z, 0, 3);
+            }
+            SPAD_TARGET_X = (int16_t)(((int32_t)SPAD_DEF_LINE_X(player[0x399]) + (int32_t)SPAD_TARGET_X) / 2);
+            break;
+        }
+        case 2:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        default:
             SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X + (attack_sign << 11));
-        } else {
-            /*
-             * UNCLEAR: jtbl_80014280[idx] dispatch for player->unk_391 in [6..25].
-             * The jump table data is external to this assembly unit; its two
-             * target blocks are:
-             *
-             * Target A (.L8009EC88):
-             *   ball = SPAD_BALL_PTR;
-             *   s_ball_z = (*(int16_t *)(ball + 0x06) >= 0) ? 1 : -1;
-             *   s_tgt_z  = (SPAD_TARGET_Z >= 0) ? 1 : -1;
-             *   if (s_ball_z == s_tgt_z) {
-             *       SPAD_TARGET_Z = func_8005A76C(SPAD_TARGET_Z, 0, 3);
-             *   }
-             *   SPAD_TARGET_X = (int16_t)(((int32_t)SPAD_DEF_LINE_X(player[0x399]) + (int32_t)SPAD_TARGET_X) / 2);
-             *
-             * Target B (.L8009ED08):
-             *   SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X + (attack_sign << 11));
-             */
-            (void)jtbl_80014280[idx];
-            SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X + (attack_sign << 11));
+            break;
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+        case 18:
+        case 19:
+            break;
         }
     } else {
         /* Team has possession (attacking) */
@@ -80,34 +91,35 @@ void func_8009EBC0(uint8_t *player) {
 
         SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X - (((int32_t)team_poss + attack_sign) << 8));
 
-        if (idx >= 17) {
-            /* Default (.L8009EE10) */
+        switch (idx) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            SPAD_TARGET_X = (int16_t)((SPAD_OFF_LINE_X(player[0x399]) + (int32_t)SPAD_TARGET_X) / 2);
+            break;
+        case 5:
+        case 6:
+            SPAD_TARGET_Z = func_8005A76C(SPAD_TARGET_Z, 0, 4);
+            /* fall through */
+        case 7:
+            SPAD_TARGET_X = (int16_t)((SPAD_OFF_LINE_X(player[0x399]) + (int32_t)SPAD_TARGET_X - attack_sign * 0x500) / 2);
+            break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+            SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X - attack_sign * 0x500);
+            break;
+        default:
             SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X - attack_sign * 0x600);
-        } else {
-            /*
-             * UNCLEAR: jtbl_800142D0[idx] dispatch for player->unk_391 in [9..25].
-             * The jump table data is external to this assembly unit; its five
-             * target blocks are:
-             *
-             * Target A (.L8009ED60):
-             *   SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X - attack_sign * 0x500);
-             *
-             * Target B (.L8009ED7C):
-             *   SPAD_TARGET_Z = func_8005A76C(SPAD_TARGET_Z, 0, 4);
-             *   // falls through to Target C:
-             *   SPAD_TARGET_X = (int16_t)((SPAD_OFF_LINE_X(player[0x399]) + (int32_t)SPAD_TARGET_X - attack_sign * 0x500) / 2);
-             *
-             * Target C (.L8009ED98):
-             *   SPAD_TARGET_X = (int16_t)((SPAD_OFF_LINE_X(player[0x399]) + (int32_t)SPAD_TARGET_X - attack_sign * 0x500) / 2);
-             *
-             * Target D (.L8009EDDC):
-             *   SPAD_TARGET_X = (int16_t)((SPAD_OFF_LINE_X(player[0x399]) + (int32_t)SPAD_TARGET_X) / 2);
-             *
-             * Target E (.L8009EE10):
-             *   SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X - attack_sign * 0x600);
-             */
-            (void)jtbl_800142D0[idx];
-            SPAD_TARGET_X = (int16_t)(SPAD_TARGET_X - attack_sign * 0x600);
+            break;
         }
     }
 

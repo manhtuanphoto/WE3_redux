@@ -192,11 +192,6 @@ void func_80138018(void)
         if (btn == 0x1000 || btn == 0x4000) {
             unsigned short cur = D_800AD638;
             if (cur < 6) {
-                /*
-                 * UNCLEAR: jtbl_80138000 (.rodata) is outside this .s file; its 3 jump targets
-                 * (.L80138684, .L801386FC, .L80138710) correspond to rows 0..2 (bars),
-                 * rows 3..4 (toggles at slot cur+8), and row 5 (slot 0xD).
-                 */
                 switch (cur) {
                 case 0:
                 case 1:

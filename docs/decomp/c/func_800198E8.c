@@ -33,7 +33,6 @@ extern unsigned int D_80014D54;
 extern unsigned int D_80014D58;
 
 extern unsigned short D_800C6A40[];
-extern void *jtbl_800101C0[];
 
 extern unsigned int func_80017684(unsigned short clip_id);
 extern void func_80017564(unsigned short clip_id);
@@ -63,14 +62,20 @@ unsigned int func_800198E8(unsigned int idx)
     (void)tmpDst;
 
     if (index < 10) {
-        /* UNCLEAR: jtbl_800101C0[0..9] is external rodata mapping each index
-         * 0..9 to either the func_80017684 path (.L800199F0) or the
-         * func_80017564 path (.L80019A14).
-         */
         switch (index) {
-        default:
-            /* Jump table target .L800199F0 or .L80019A14 depending on jtbl_800101C0[index] */
+        case 0:
+        case 1:
+        case 3:
+        case 4:
+        case 5:
+        case 7:
+        case 8:
+        case 9:
+            /* .L800199F0 */
             return func_80017684(D_800C6A40[index]) & 0xFF;
+        case 2:
+        case 6:
+            break;
         }
     }
 

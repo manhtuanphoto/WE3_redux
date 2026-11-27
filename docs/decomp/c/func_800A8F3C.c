@@ -33,17 +33,6 @@
 #define W(p, o)  (*(unsigned int *)((p) + (o)))
 #define Scratchpad ((unsigned char *)0x1F800000)
 
-/*
- * UNCLEAR: jtbl_80014AA0 table entries for cases 0..5 are not present in this
- * .s file. Observed branch targets inside func_800A8F3C set z_bound to:
- *   .L800A8FB8 -> 0x2A20
- *   .L800A8FC0 -> 0x2710
- *   .L800A8FC8 -> 0x28A0
- *   .L800A8FD0 -> 0x2580
- *   (and possibly .L800A9120 -> early return)
- */
-extern void *jtbl_80014AA0[];
-
 void func_800A8F3C(void)
 {
     unsigned char *ball = (unsigned char *)W(Scratchpad, 0x2F4);
@@ -62,18 +51,19 @@ void func_800A8F3C(void)
         return;
     }
 
-    /* UNCLEAR: exact mapping of jtbl_80014AA0[0..5] to the 4 boundary constants */
-    switch ((unsigned int)(unsigned long)jtbl_80014AA0[mode]) {
+    switch (mode) {
     case 0:
+    case 2:
         z_bound = 0x2A20;
         break;
     case 1:
-        z_bound = 0x2710;
-        break;
-    case 2:
         z_bound = 0x28A0;
         break;
+    case 4:
+        z_bound = 0x2710;
+        break;
     case 3:
+    case 5:
         z_bound = 0x2580;
         break;
     default:
