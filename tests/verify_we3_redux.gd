@@ -346,6 +346,10 @@ func _run_tests() -> void:
 	winger.global_position = Vector3(-1.0, 0.0, 24.0)
 	nr_match.ball.global_position = Vector3(-5.0, 0.1, 0.0)
 	_assert(passer._find_wing_switch_target(1.0) == winger, "Wing switch evaluator picks open winger at |z|=24m (func_80066150)")
+
+	# 9n. Verify func_8002F2B0 iterative pass power solver
+	var solved_spd := passer._solve_pass_speed(20.0, 3.0, winger)
+	_assert(solved_spd >= 6.0 and solved_spd <= 16.0, "Ball-flight pass solver returns valid speed for 20m pass (func_8002F2B0)")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

@@ -1033,14 +1033,15 @@ func _find_best_open_teammate(attack_dir: float) -> Player:
 		if p == self or p.team_side != team_side or p.role == Role.GK or p.is_sent_off:
 			continue
 		var dist := global_position.distance_to(p.global_position)
-		if dist < 4.5 or dist > 38.0:
+		if dist < 3.2 or dist > 32.8 or absf(p.global_position.x) >= 47.14:
 			continue
 		if _is_player_offside(p):
 			continue
-		var forward_gain := (p.global_position.x - global_position.x) * attack_dir
-		var opp := _find_nearest_opponent(p.global_position)
-		var space := opp.global_position.distance_to(p.global_position) if opp != null else 15.0
-		var lane_bonus := 4.0 if _is_pass_lane_clear(global_position, p.global_position) else -8.0
+		var pred_pos := p.global_position + p.vel * (2.0 * LOGIC_DT)
+		var forward_gain := (pred_pos.x - global_position.x) * attack_dir
+		var opp := _find_nearest_opponent(pred_pos)
+		var space := opp.global_position.distance_to(pred_pos) if opp != null else 15.0
+		var lane_bonus := 4.0 if _is_pass_lane_clear(global_position, pred_pos) else -8.0
 		# func_80066414: bonus if teammate is inside +/-0x28 (56.25 deg) facing cone and clear of defender cone ahead
 		var to_mate := (p.global_position - global_position)
 		to_mate.y = 0.0
@@ -1112,15 +1113,28 @@ func _get_offside_line_x(atk_dir: float) -> float:
 		return opp_xs[opp_xs.size() - 2]
 	return opp_xs[1]
 
-func _solve_pass_speed(dist_m: float, min_arrival_spd: float) -> float:
-	# func_8002EB3C: smallest push that still arrives with >= min speed, simulated with the real rolling friction.
-	# Authentic pass push is clamped to 112 units/frame = 13.44 m/s.
+func _solve_pass_speed(dist_m: float, min_arrival_spd: float, target: Player = null) -> float:
+	# func_8002F2B0 / func_8002EB3C: sweep kick speed in 0.48 m/s (0x400>>8 = 4 units/frame) steps,
+	# simulating 30Hz rolling friction (h -= h>>6) until ball covers dist_m with >= min_arrival_spd
+	# and receiver can reach landing point within travel steps.
 	var cap := 13.44 * _kick_mul
 	var v := min_arrival_spd + 1.0
 	while v < cap:
 		if Ball.roll_distance(v, min_arrival_spd) >= dist_m:
-			return v
-		v += 0.3
+			if target == null:
+				return v
+			var sim_d := 0.0
+			var sim_v := v
+			var steps := 0
+			while sim_d < dist_m and sim_v > 0.25 and steps < 180:
+				sim_d += sim_v * LOGIC_DT
+				sim_v *= 63.0 / 64.0
+				steps += 1
+			var rec_spd := maxf(target._sprint_speed, 4.5)
+			var lead_d := (target.vel * (steps * LOGIC_DT)).length()
+			if lead_d / rec_spd <= float(maxi(steps, 1)) * LOGIC_DT + 0.35:
+				return v
+		v += 0.48
 	return cap
 
 ## Lob: pick flight time from distance (flight limited by pass power), vertical speed from gravity.
@@ -1139,7 +1153,7 @@ func _kick_pass_to_target(target: Player, is_through: bool, is_loft: bool) -> vo
 	var dist := to_dest.length()
 	var kick_dir := to_dest.normalized() if dist > 0.01 else -global_transform.basis.z
 	var min_arrive := 4.8 if is_through else 3.0
-	var speed := _solve_pass_speed(dist, min_arrive)
+	var speed := _solve_pass_speed(dist, min_arrive, target)
 	kick_dir = _apply_tech_error(kick_dir)
 	var kick_vel := kick_dir * speed
 	if is_loft:
