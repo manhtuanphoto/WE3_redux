@@ -51,13 +51,14 @@ func _build_visuals() -> void:
 		_mesh_node.mesh = sphere
 
 	var mat := StandardMaterial3D.new()
-	if ResourceLoader.exists("res://assets/3d/ball_tex.png"):
-		mat.albedo_texture = load("res://assets/3d/ball_tex.png") as Texture2D
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var ball_tex_path := "res://assets/3d/ball_tex_equirect.png" if ResourceLoader.exists("res://assets/3d/ball_tex_equirect.png") else "res://assets/3d/ball_tex.png"
+	if ResourceLoader.exists(ball_tex_path):
+		mat.albedo_texture = load(ball_tex_path) as Texture2D
 		mat.albedo_color = Color.WHITE
 		mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	else:
 		mat.albedo_color = Color(0.95, 0.95, 0.93)
-	mat.roughness = 0.45
 	_mesh_node.material_override = mat
 	add_child(_mesh_node)
 
