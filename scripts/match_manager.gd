@@ -277,6 +277,7 @@ func _setup_kickoff(kicking_team: int) -> void:
 	var a_abbr := GameData.get_team_abbr(GameData.away_team_id)
 	hud.show_banner("KICK OFF!  %s vs %s" % [h_abbr, a_abbr], 1.2)
 	SoundFX.play_sfx("whistle")
+	SoundFX.play_commentary("kickoff")
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_focus_next"):
@@ -471,7 +472,7 @@ func _on_goal_detected(scoring_team: int) -> void:
 	hud.show_banner("GOAL!!  %s (%d')  [%d - %d]" % [scorer, goal_min, MatchState.home_score, MatchState.away_score], 2.5)
 	SoundFX.play_sfx("whistle")
 	SoundFX.play_sfx("cheer")
-	SoundFX.play_commentary("goal")
+	SoundFX.play_commentary("goal", scorer)
 
 func _apply_stadium_lighting() -> void:
 	var is_night := GameData.stadium_is_night or GameData.selected_stadium == "GRDM_FN"
@@ -517,6 +518,7 @@ func _on_out_of_bounds(event_type: String, restart_pos: Vector3, restart_team: i
 	_pending_restart_team = restart_team
 	_phase_timer = 1.1
 	SoundFX.play_sfx("whistle")
+	SoundFX.play_commentary(event_type)
 	match event_type:
 		"throw_in":
 			MatchState.set_phase(MatchState.Phase.OUT_THROW_IN)

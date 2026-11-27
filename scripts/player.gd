@@ -1205,6 +1205,7 @@ func _perform_shoot(aim_dir: Vector3, power: float, exact_aim: bool = false) -> 
 		_play_anim("volley", 0.05)
 	else:
 		_play_anim("shoot", 0.06)
+	SoundFX.play_commentary("shot", player_name)
 
 func _update_mirror_foot() -> void:
 	if _model_root == null or _ball == null:
@@ -1405,6 +1406,7 @@ func _apply_foul_card(severity: int) -> void:
 		visible = false
 		global_position = Vector3(0.0, -10.0, -50.0)
 		MatchState.log_event("RED CARD! %s sent off!" % player_name)
+		SoundFX.play_commentary("red_card", player_name)
 	elif severity == 2:
 		yellow_cards += 1
 		if yellow_cards >= 2:
@@ -1412,8 +1414,10 @@ func _apply_foul_card(severity: int) -> void:
 			visible = false
 			global_position = Vector3(0.0, -10.0, -50.0)
 			MatchState.log_event("2nd YELLOW -> RED CARD! %s sent off!" % player_name)
+			SoundFX.play_commentary("red_card", player_name)
 		else:
 			MatchState.log_event("YELLOW CARD: %s" % player_name)
+			SoundFX.play_commentary("yellow_card", player_name)
 
 func _move_and_clamp(delta: float) -> void:
 	global_position += vel * delta

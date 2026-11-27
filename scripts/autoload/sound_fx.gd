@@ -9,6 +9,10 @@ var _bgm_player: AudioStreamPlayer = null
 var _crowd_player: AudioStreamPlayer = null
 var _commentary_player: AudioStreamPlayer = null
 var _commentary_banks: Dictionary = {}
+var _commentary_en_banks: Dictionary = {}
+var _commentary_player_clips: Dictionary = {}
+var _commentary_queue: Array[AudioStream] = []
+var _last_comm_ms: int = 0
 var _current_bgm: String = ""
 var music_muted: bool = false
 
@@ -55,6 +59,7 @@ func _ready() -> void:
 
 	_commentary_player = AudioStreamPlayer.new()
 	_commentary_player.volume_db = -4.0
+	_commentary_player.finished.connect(_on_commentary_finished)
 	add_child(_commentary_player)
 	_commentary_banks = {
 		"goal": ["res://assets/audio/commentary/isspro3a_00.wav", "res://assets/audio/commentary/isspro3b_00.wav"],
@@ -62,19 +67,90 @@ func _ready() -> void:
 		"setpiece": ["res://assets/audio/commentary/isspro2b_01.wav", "res://assets/audio/commentary/isspro2c_01.wav"],
 		"shot": ["res://assets/audio/commentary/isspro3a_01.wav", "res://assets/audio/commentary/isspro3b_01.wav"],
 	}
+	_scan_external_commentary()
 
-func play_commentary(event_key: String) -> void:
-	if _commentary_player == null or not is_inside_tree() or not _commentary_banks.has(event_key):
-		return
-	var list: Array = _commentary_banks[event_key]
-	if list.is_empty():
-		return
-	var path: String = list[randi() % list.size()]
-	if ResourceLoader.exists(path):
-		var s := load(path) as AudioStream
-		if s != null:
-			_commentary_player.stream = s
+func _scan_external_commentary() -> void:
+	const EVENTS := ["goal", "kickoff", "shot", "save", "post", "foul", "yellow_card", "red_card", "offside", "corner", "throw_in", "free_kick", "penalty", "halftime", "fulltime", "setpiece"]
+	for ev in EVENTS:
+		var dir_p := "res://assets/audio/commentary/en/%s/" % ev
+		var files := _list_audio_files(dir_p)
+		if not files.is_empty():
+			_commentary_en_banks[ev] = files
+	var p_dir := "res://assets/audio/commentary/players/"
+	for p_path in _list_audio_files(p_dir):
+		var key := p_path.get_file().get_basename().to_lower()
+		_commentary_player_clips[key] = p_path
+
+func _list_audio_files(dir_path: String) -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return out
+	dir.list_dir_begin()
+	var fn := dir.get_next()
+	while fn != "":
+		if not dir.current_is_dir() and not fn.ends_with(".import"):
+			var low := fn.to_lower()
+			if low.ends_with(".wav") or low.ends_with(".ogg") or low.ends_with(".mp3"):
+				out.append(dir_path + fn)
+		fn = dir.get_next()
+	dir.list_dir_end()
+	out.sort()
+	return out
+
+func _on_commentary_finished() -> void:
+	if not _commentary_queue.is_empty() and _commentary_player != null and is_inside_tree():
+		var next_s: AudioStream = _commentary_queue.pop_front()
+		if next_s != null:
+			_commentary_player.stream = next_s
 			_commentary_player.play()
+
+func play_commentary(event_key: String, player_name: String = "") -> void:
+	if _commentary_player == null or not is_inside_tree():
+		return
+	var high_prio := event_key in ["goal", "red_card", "penalty", "halftime", "fulltime"]
+	var now_ms := Time.get_ticks_msec()
+	if not high_prio:
+		if _commentary_player.playing or (now_ms - _last_comm_ms) < 1600:
+			return
+	else:
+		_commentary_queue.clear()
+
+	# Prefer external English pack (assets/audio/commentary/en/<event>/), fallback to Japanese WE3 clips
+	var list: Array = _commentary_en_banks.get(event_key, [])
+	if list.is_empty():
+		var fb_key := event_key if _commentary_banks.has(event_key) else ("setpiece" if event_key in ["corner", "throw_in", "free_kick", "foul", "offside"] else "")
+		if fb_key != "":
+			list = _commentary_banks.get(fb_key, [])
+	var ev_stream: AudioStream = null
+	if not list.is_empty():
+		var path: String = list[randi() % list.size()]
+		if ResourceLoader.exists(path):
+			ev_stream = load(path) as AudioStream
+
+	var name_stream: AudioStream = null
+	if player_name != "":
+		var norm := player_name.strip_edges().to_lower().replace(" ", "_")
+		if _commentary_player_clips.has(norm):
+			var np: String = _commentary_player_clips[norm]
+			if ResourceLoader.exists(np):
+				name_stream = load(np) as AudioStream
+
+	var seq: Array[AudioStream] = []
+	if event_key == "goal":
+		if ev_stream != null: seq.append(ev_stream)
+		if name_stream != null: seq.append(name_stream)
+	else:
+		if name_stream != null: seq.append(name_stream)
+		if ev_stream != null: seq.append(ev_stream)
+	if seq.is_empty():
+		return
+
+	_last_comm_ms = now_ms
+	_commentary_player.stream = seq[0]
+	_commentary_player.play()
+	for i in range(1, seq.size()):
+		_commentary_queue.append(seq[i])
 
 func _load_sfx_or_fallback(path: String, fallback: AudioStream) -> AudioStream:
 	if ResourceLoader.exists(path):
