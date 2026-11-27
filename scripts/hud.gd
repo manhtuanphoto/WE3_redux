@@ -291,7 +291,21 @@ func _build_ui() -> void:
 	bot_left.offset_right = 276
 	bot_left.offset_top = -96
 	bot_left.offset_bottom = -16
-	bot_left.add_theme_stylebox_override("panel", sb_style)
+	if ResourceLoader.exists("res://assets/textures/hud/we3_nameplate_frame.png"):
+		var np_style := StyleBoxTexture.new()
+		np_style.texture = load("res://assets/textures/hud/we3_nameplate_frame.png") as Texture2D
+		np_style.texture_margin_left = 10
+		np_style.texture_margin_right = 10
+		np_style.texture_margin_top = 6
+		np_style.texture_margin_bottom = 6
+		np_style.content_margin_left = 12
+		np_style.content_margin_right = 12
+		np_style.content_margin_top = 6
+		np_style.content_margin_bottom = 6
+		bot_left.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		bot_left.add_theme_stylebox_override("panel", np_style)
+	else:
+		bot_left.add_theme_stylebox_override("panel", sb_style)
 	add_child(bot_left)
 
 	var vbox_pl := VBoxContainer.new()
