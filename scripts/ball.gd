@@ -273,8 +273,9 @@ func _physics_process(delta: float) -> void:
 			vel.y = 0.0
 			state = BallState.ROLLING
 
-	# Goalpost & crossbar collisions
+	# Goalpost, crossbar, goal-net & perimeter adboard collisions (func_800A8F3C)
 	pos = _collide_goalposts(pos)
+	pos = _collide_goal_net_and_adboards(pos)
 
 	global_position = pos
 	_roll_visual(vel, delta)
@@ -333,6 +334,40 @@ func _collide_goalposts(pos: Vector3) -> Vector3:
 				if dot < 0.0:
 					vel.x -= 1.65 * dot * nx
 					vel.y -= 1.65 * dot * ny
+					SoundFX.play_sfx("post")
+	return pos
+
+## Authentic WE3 perimeter adboard bounce (func_800A8F3C) + goal-net containment.
+func _collide_goal_net_and_adboards(pos: Vector3) -> Vector3:
+	# Goal net pocket: HALF_LEN..HALF_LEN+2.2m, |z| < GOAL_HALF_W, y < GOAL_HEIGHT
+	var net_depth := 2.2
+	if absf(pos.x) > PitchBuilder.HALF_LEN and absf(pos.x) <= PitchBuilder.HALF_LEN + net_depth + 0.6 and absf(pos.z) <= PitchBuilder.GOAL_HALF_W + 0.2 and pos.y <= PitchBuilder.GOAL_HEIGHT + 0.2:
+		var max_x := PitchBuilder.HALF_LEN + net_depth - BALL_RADIUS
+		if absf(pos.x) > max_x:
+			pos.x = signf(pos.x) * max_x
+			vel.x = -vel.x * 0.22
+			vel.z *= 0.45
+			vel.y *= 0.45
+		if absf(pos.z) > PitchBuilder.GOAL_HALF_W - BALL_RADIUS:
+			pos.z = signf(pos.z) * (PitchBuilder.GOAL_HALF_W - BALL_RADIUS)
+			vel.z = -vel.z * 0.25
+		if pos.y > PitchBuilder.GOAL_HEIGHT - BALL_RADIUS:
+			pos.y = PitchBuilder.GOAL_HEIGHT - BALL_RADIUS
+			vel.y = -absf(vel.y) * 0.25
+		return pos
+
+	# func_800A8F3C: adboard bounce when ball height <= 1.024m
+	if pos.y <= 1.024:
+		var ad_z := 40.0   # 0x2710 = 10000 raw = 40.0m
+		var ad_x := 58.5   # 0x39F0..0x3B30 (~58.5m)
+		if absf(pos.x) <= ad_x and absf(pos.z) >= ad_z:
+			pos.z = signf(pos.z) * (ad_z - 0.05)
+			vel.z = -vel.z * 0.5
+			vel.x *= 0.5
+		if absf(pos.z) <= ad_z and absf(pos.x) >= ad_x:
+			pos.x = signf(pos.x) * (ad_x - 0.05)
+			vel.x = -vel.x * 0.5
+			vel.z *= 0.5
 	return pos
 
 func _check_pitch_boundaries(pos: Vector3) -> void:

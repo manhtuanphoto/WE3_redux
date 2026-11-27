@@ -177,6 +177,17 @@ func _run_tests() -> void:
 	_assert(pk_match._pk_active and pk_match._pk_kicker != null and pk_match._pk_gk != null, "PK Shootout initializes kicker & GK on penalty spot (func_800820A0)")
 	pk_match._resolve_pk_turn(true)
 	_assert(MatchState.home_score == 1 and pk_match._pk_results[0].size() == 1, "PK Shootout scores goal and logs round result")
+
+	# 8b. Verify ball perimeter adboard bounce (func_800A8F3C) & goal-net containment
+	pk_match.ball.is_active_play = false
+	pk_match.ball.owner_player = null
+	pk_match.ball.vel = Vector3(0.0, 0.0, 10.0)
+	var bounced := pk_match.ball._collide_goal_net_and_adboards(Vector3(10.0, 0.2, 40.5))
+	_assert(bounced.z < 40.0 and pk_match.ball.vel.z < 0.0, "Adboard collision reflects ball & halves speed (func_800A8F3C)")
+	pk_match.ball.vel = Vector3(12.0, 0.0, 0.0)
+	var netted := pk_match.ball._collide_goal_net_and_adboards(Vector3(PitchBuilder.HALF_LEN + 2.5, 1.0, 0.0))
+	_assert(netted.x < PitchBuilder.HALF_LEN + 2.2 and pk_match.ball.vel.x < 0.0, "Goal net catches & damps ball inside net pocket")
+
 	pk_match.queue_free()
 	await get_tree().process_frame
 	GameData.game_mode = "exhibition"
