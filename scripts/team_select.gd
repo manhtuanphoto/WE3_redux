@@ -172,6 +172,20 @@ func _build_ui() -> void:
 	stad_opt.item_selected.connect(func(idx): GameData.selected_stadium = GameData.STADIUM_NAMES[idx])
 	opt_row.add_child(stad_opt)
 
+	var time_opt := OptionButton.new()
+	time_opt.add_item("Day", 0)
+	time_opt.add_item("Night", 1)
+	time_opt.select(1 if GameData.stadium_is_night else 0)
+	time_opt.item_selected.connect(func(idx): GameData.stadium_is_night = (idx == 1))
+	opt_row.add_child(time_opt)
+
+	var weather_opt := OptionButton.new()
+	weather_opt.add_item("Clear", 0)
+	weather_opt.add_item("Rain", 1)
+	weather_opt.select(1 if GameData.stadium_is_rain else 0)
+	weather_opt.item_selected.connect(func(idx): GameData.stadium_is_rain = (idx == 1))
+	opt_row.add_child(weather_opt)
+
 	var form_row := HBoxContainer.new()
 	form_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	form_row.add_theme_constant_override("separation", 18)

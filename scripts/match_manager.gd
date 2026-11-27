@@ -428,17 +428,29 @@ func _on_goal_detected(scoring_team: int) -> void:
 	SoundFX.play_commentary("goal")
 
 func _apply_stadium_lighting() -> void:
-	var is_night := GameData.selected_stadium == "GRDM_FN"
+	var is_night := GameData.stadium_is_night or GameData.selected_stadium == "GRDM_FN"
+	var is_rain := GameData.stadium_is_rain
 	var sun := get_node_or_null("StadiumSun") as DirectionalLight3D
 	if sun != null:
-		sun.light_energy = 0.85 if is_night else 1.35
-		sun.light_color = Color(0.82, 0.88, 1.0) if is_night else Color(1.0, 0.98, 0.94)
+		if is_night:
+			sun.light_energy = 0.78 if is_rain else 0.85
+			sun.light_color = Color(0.76, 0.82, 0.96) if is_rain else Color(0.82, 0.88, 1.0)
+		else:
+			sun.light_energy = 1.05 if is_rain else 1.35
+			sun.light_color = Color(0.84, 0.88, 0.94) if is_rain else Color(1.0, 0.98, 0.94)
 	var env_node := get_node_or_null("WorldEnvironment") as WorldEnvironment
 	if env_node != null and env_node.environment != null and env_node.environment.sky != null:
 		var sky_mat := env_node.environment.sky.sky_material as ProceduralSkyMaterial
 		if sky_mat != null:
-			sky_mat.sky_top_color = Color(0.03, 0.05, 0.14) if is_night else Color(0.12, 0.25, 0.52)
-			sky_mat.sky_horizon_color = Color(0.10, 0.14, 0.26) if is_night else Color(0.55, 0.72, 0.88)
+			if is_night:
+				sky_mat.sky_top_color = Color(0.03, 0.05, 0.14)
+				sky_mat.sky_horizon_color = Color(0.10, 0.14, 0.26)
+			elif is_rain:
+				sky_mat.sky_top_color = Color(0.24, 0.30, 0.38)
+				sky_mat.sky_horizon_color = Color(0.46, 0.52, 0.60)
+			else:
+				sky_mat.sky_top_color = Color(0.12, 0.25, 0.52)
+				sky_mat.sky_horizon_color = Color(0.55, 0.72, 0.88)
 
 func _on_out_of_bounds(event_type: String, restart_pos: Vector3, restart_team: int) -> void:
 	if MatchState.phase != MatchState.Phase.OPEN_PLAY:

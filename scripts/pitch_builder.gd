@@ -505,14 +505,17 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 			stadium.add_child(mi_mirror)
 
 func _resolve_stadium_tex_dir(stadium_name: String) -> String:
-	if stadium_name == "GRDM_FN":
-		return "res://assets/textures/stadiums/GDC_FNS/"
 	if stadium_name == "GRDM_I":
 		return "res://assets/textures/stadiums/GDC_I/"
-	var suffix := stadium_name.replace("GRDM_", "")
+	var is_night := GameData.stadium_is_night or stadium_name == "GRDM_FN"
+	var is_rain := GameData.stadium_is_rain
+	var suffix := "F" if stadium_name == "GRDM_FN" else stadium_name.replace("GRDM_", "")
+	var dn := "N" if is_night else "D"
+	var wr := "R" if is_rain else "S"
 	var candidates := [
+		"res://assets/textures/stadiums/GDC_%s%s%s/" % [suffix, dn, wr],
+		"res://assets/textures/stadiums/GDC_%s%sS/" % [suffix, dn],
 		"res://assets/textures/stadiums/GDC_%sDS/" % suffix,
-		"res://assets/textures/stadiums/GDC_%sNS/" % suffix,
 		"res://assets/textures/stadiums/GDC_CDS/",
 	]
 	for c in candidates:

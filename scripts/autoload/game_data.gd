@@ -25,6 +25,8 @@ var half_duration_seconds: float = 120.0
 var ai_difficulty: int = 1  # 0=Easy, 1=Normal, 2=Hard
 var is_ai_vs_ai: bool = false
 var selected_stadium: String = "GRDM_C"
+var stadium_is_night: bool = false
+var stadium_is_rain: bool = false
 var home_formation: String = "4-4-2"
 var away_formation: String = "4-4-2"
 var home_formation_manual: bool = false
