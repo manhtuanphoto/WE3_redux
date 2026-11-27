@@ -257,12 +257,13 @@ func _process(delta: float) -> void:
 		_home_digit_rect.visible = false
 		_away_digit_rect.visible = false
 		_score_label.text = "%s  %d  -  %d  %s" % [h_abbr, MatchState.home_score, MatchState.away_score, a_abbr]
-	var half_names := {1: "1ST", 2: "2ND", 3: "ET1", 4: "ET2"}
-	var half_str: String = half_names.get(MatchState.current_half, "2ND")
+	var half_names := {1: "1st", 2: "2nd", 3: "ET1", 4: "ET2"}
+	var half_str: String = half_names.get(MatchState.current_half, "2nd")
 	var spd_str := " [2X]" if Engine.time_scale > 1.5 else ""
 	var half_dur := GameData.half_duration_seconds * (0.3333 if MatchState.current_half >= 3 else 1.0)
 	var added_str := "+" if (MatchState.match_elapsed_real > half_dur and MatchState.phase == MatchState.Phase.OPEN_PLAY) else ""
-	_clock_label.text = "%s %02d'%s%s" % [half_str, MatchState.get_display_minutes(), added_str, spd_str]
+	var total_sec := int(MatchState.match_elapsed_real)
+	_clock_label.text = "%s %d:%02d%s%s" % [half_str, total_sec / 60, total_sec % 60, added_str, spd_str]
 	if _loss_time_rect != null:
 		_loss_time_rect.visible = added_str != ""
 
@@ -289,9 +290,24 @@ func _process(delta: float) -> void:
 		_power_bar.visible = false
 
 	if _p2_panel != null:
-		_p2_panel.visible = GameData.is_two_player and _controlled_p2_ref != null and is_instance_valid(_controlled_p2_ref)
+		var shown_right: Player = null
+		if GameData.is_two_player and _controlled_p2_ref != null and is_instance_valid(_controlled_p2_ref):
+			shown_right = _controlled_p2_ref
+		elif not GameData.is_ai_vs_ai and _ball_ref != null:
+			# Authentic WE3: right nameplate shows opponent ball-carrier or closest opponent to ball
+			if _ball_ref.owner_player is Player and is_instance_valid(_ball_ref.owner_player) and (_ball_ref.owner_player as Player).team_side == 1:
+				shown_right = _ball_ref.owner_player as Player
+			else:
+				var best_d2 := INF
+				for p in _players_ref:
+					if p != null and is_instance_valid(p) and not p.is_sent_off and p.team_side == 1:
+						var d2 := p.global_position.distance_squared_to(_ball_ref.global_position)
+						if d2 < best_d2:
+							best_d2 = d2
+							shown_right = p
+		_p2_panel.visible = shown_right != null
 		if _p2_panel.visible:
-			_update_nameplate(_controlled_p2_ref, _p2_pos_badge, _p2_player_label, _p2_card_badge, null, _p2_stamina_bar, _p2_power_bar)
+			_update_nameplate(shown_right, _p2_pos_badge, _p2_player_label, _p2_card_badge, null, _p2_stamina_bar, _p2_power_bar)
 
 	# func_8004F82C: 3-state vertical slide-in / hold / slide-out HUD banner
 	if _banner_panel != null and _banner_panel.visible:
@@ -367,26 +383,34 @@ func _build_ui() -> void:
 	sb_style.content_margin_top = 6
 	sb_style.content_margin_bottom = 6
 
-	# Top-left WE3 Scoreboard + Clock
+	# Top-left WE3 Scoreboard (minimalist Flag 0-0 Flag broadcast bar)
+	var score_style := StyleBoxFlat.new()
+	score_style.bg_color = Color(0.02, 0.04, 0.10, 0.42)
+	score_style.set_corner_radius_all(2)
+	score_style.content_margin_left = 8
+	score_style.content_margin_right = 8
+	score_style.content_margin_top = 4
+	score_style.content_margin_bottom = 4
+
 	var top_box := PanelContainer.new()
 	top_box.position = Vector2(20, 16)
-	top_box.add_theme_stylebox_override("panel", sb_style)
+	top_box.add_theme_stylebox_override("panel", score_style)
 	add_child(top_box)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 10)
+	hbox.add_theme_constant_override("separation", 6)
 	top_box.add_child(hbox)
 
 	var home_swatch := ColorRect.new()
 	home_swatch.color = GameData.get_team_primary_color(GameData.home_team_id)
-	home_swatch.custom_minimum_size = Vector2(8, 22)
+	home_swatch.custom_minimum_size = Vector2(22, 15)
 	hbox.add_child(home_swatch)
 
 	if ResourceLoader.exists("res://assets/textures/hud/we3_score_digits.png"):
 		_digits_tex = load("res://assets/textures/hud/we3_score_digits.png") as Texture2D
 
 	_home_abbr_lbl = Label.new()
-	_home_abbr_lbl.add_theme_font_size_override("font_size", 20)
+	_home_abbr_lbl.add_theme_font_size_override("font_size", 16)
 	_home_abbr_lbl.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
 	hbox.add_child(_home_abbr_lbl)
 
@@ -418,56 +442,83 @@ func _build_ui() -> void:
 	hbox.add_child(_away_digit_rect)
 
 	_away_abbr_lbl = Label.new()
-	_away_abbr_lbl.add_theme_font_size_override("font_size", 20)
+	_away_abbr_lbl.add_theme_font_size_override("font_size", 16)
 	_away_abbr_lbl.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
 	hbox.add_child(_away_abbr_lbl)
 
 	var away_swatch := ColorRect.new()
 	away_swatch.color = GameData.get_team_primary_color(GameData.away_team_id)
-	away_swatch.custom_minimum_size = Vector2(8, 22)
+	away_swatch.custom_minimum_size = Vector2(22, 15)
 	hbox.add_child(away_swatch)
 
-	var sep := VSeparator.new()
-	hbox.add_child(sep)
+	# Top-right WE3 Broadcast Clock + Loss Time + Green-Gold Replay Pill
+	var top_right := PanelContainer.new()
+	top_right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	top_right.offset_left = -280
+	top_right.offset_right = -20
+	top_right.offset_top = 16
+	top_right.offset_bottom = 52
+	top_right.add_theme_stylebox_override("panel", score_style)
+	add_child(top_right)
 
-	_clock_label = Label.new()
-	_clock_label.add_theme_font_size_override("font_size", 20)
-	_clock_label.add_theme_color_override("font_color", Color(0.98, 0.86, 0.22))
-	hbox.add_child(_clock_label)
+	var tr_hbox := HBoxContainer.new()
+	tr_hbox.alignment = BoxContainer.ALIGNMENT_END
+	tr_hbox.add_theme_constant_override("separation", 8)
+	top_right.add_child(tr_hbox)
+
+	_tactic_badge = Label.new()
+	_tactic_badge.add_theme_font_size_override("font_size", 12)
+	_tactic_badge.add_theme_color_override("font_color", Color(0.65, 0.88, 1.0))
+	tr_hbox.add_child(_tactic_badge)
+	update_tactics(GameData.home_tactic_level, GameData.home_offside_trap)
 
 	# Authentic WE3 "LOSS TIME" sprite (hud_03), shown while injury time is being played
 	if ResourceLoader.exists("res://assets/textures/hud/we3_loss_time.png"):
 		_loss_time_rect = TextureRect.new()
 		_loss_time_rect.texture = load("res://assets/textures/hud/we3_loss_time.png") as Texture2D
-		_loss_time_rect.custom_minimum_size = Vector2(98, 20)
+		_loss_time_rect.custom_minimum_size = Vector2(88, 18)
 		_loss_time_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_loss_time_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		_loss_time_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_loss_time_rect.visible = false
-		hbox.add_child(_loss_time_rect)
+		tr_hbox.add_child(_loss_time_rect)
 
+	_clock_label = Label.new()
+	_clock_label.add_theme_font_size_override("font_size", 22)
+	_clock_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
+	_clock_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+	_clock_label.add_theme_constant_override("outline_size", 3)
+	tr_hbox.add_child(_clock_label)
+
+	# Authentic WE3 Top-Right Green-Gold "Replay" pill
 	_replay_badge = Label.new()
-	_replay_badge.text = "● REPLAY"
+	_replay_badge.text = "  Replay  "
 	_replay_badge.add_theme_font_size_override("font_size", 18)
-	_replay_badge.add_theme_color_override("font_color", Color(1.0, 0.25, 0.20))
+	_replay_badge.add_theme_color_override("font_color", Color(0.98, 0.96, 0.72))
+	var rep_style := StyleBoxFlat.new()
+	rep_style.bg_color = Color(0.10, 0.34, 0.12, 0.92)
+	rep_style.border_color = Color(0.75, 0.88, 0.42, 0.95)
+	rep_style.set_border_width_all(2)
+	rep_style.set_corner_radius_all(12)
+	_replay_badge.add_theme_stylebox_override("normal", rep_style)
 	_replay_badge.visible = false
-	hbox.add_child(_replay_badge)
+	tr_hbox.add_child(_replay_badge)
 
-	_tactic_badge = Label.new()
-	_tactic_badge.add_theme_font_size_override("font_size", 13)
-	_tactic_badge.add_theme_color_override("font_color", Color(0.65, 0.88, 1.0))
-	hbox.add_child(_tactic_badge)
-	update_tactics(GameData.home_tactic_level, GameData.home_offside_trap)
-
-	# PK Shootout scoreboard (shown under main scoreboard during PK tiebreaker)
+	# PK Shootout scoreboard (authentic WE3 bottom-right dark-green PK box)
 	_pk_panel = PanelContainer.new()
-	_pk_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_pk_panel.offset_left = -165
-	_pk_panel.offset_right = 165
-	_pk_panel.offset_top = 66
-	_pk_panel.offset_bottom = 122
+	_pk_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_pk_panel.offset_left = -330
+	_pk_panel.offset_right = -20
+	_pk_panel.offset_top = -170
+	_pk_panel.offset_bottom = -108
 	_pk_panel.visible = false
-	_pk_panel.add_theme_stylebox_override("panel", sb_style)
+	var pk_style := StyleBoxFlat.new()
+	pk_style.bg_color = Color(0.04, 0.18, 0.06, 0.88)
+	pk_style.border_color = Color(0.75, 0.88, 0.72, 0.90)
+	pk_style.set_border_width_all(2)
+	pk_style.set_corner_radius_all(2)
+	pk_style.set_content_margin_all(8)
+	_pk_panel.add_theme_stylebox_override("panel", pk_style)
 	add_child(_pk_panel)
 
 	var pk_vbox := VBoxContainer.new()
@@ -613,25 +664,26 @@ func _build_ui() -> void:
 	_p2_panel.add_child(vbox_p2)
 
 	var p2_row := HBoxContainer.new()
+	p2_row.alignment = BoxContainer.ALIGNMENT_END
 	p2_row.add_theme_constant_override("separation", 10)
 	vbox_p2.add_child(p2_row)
-
-	_p2_pos_badge = Label.new()
-	_p2_pos_badge.text = "FW 10"
-	_p2_pos_badge.add_theme_font_size_override("font_size", 16)
-	p2_row.add_child(_p2_pos_badge)
-
-	_p2_player_label = Label.new()
-	_p2_player_label.text = "2P"
-	_p2_player_label.add_theme_font_size_override("font_size", 18)
-	_p2_player_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.80))
-	p2_row.add_child(_p2_player_label)
 
 	_p2_card_badge = ColorRect.new()
 	_p2_card_badge.color = Color(0.98, 0.84, 0.12)
 	_p2_card_badge.custom_minimum_size = Vector2(10, 14)
 	_p2_card_badge.visible = false
 	p2_row.add_child(_p2_card_badge)
+
+	_p2_player_label = Label.new()
+	_p2_player_label.text = "2P"
+	_p2_player_label.add_theme_font_size_override("font_size", 18)
+	_p2_player_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
+	p2_row.add_child(_p2_player_label)
+
+	_p2_pos_badge = Label.new()
+	_p2_pos_badge.text = "FW 10"
+	_p2_pos_badge.add_theme_font_size_override("font_size", 16)
+	p2_row.add_child(_p2_pos_badge)
 
 	_p2_stamina_bar = ProgressBar.new()
 	_p2_stamina_bar.max_value = 100.0
