@@ -14,26 +14,97 @@ const LINE_WIDTH := 0.14
 const LINE_Y := 0.015
 
 var _animated_flags: Array[Node3D] = []
+var _crowd_flashes: Array[MeshInstance3D] = []
+var _flash_timers: Array[float] = []
 var _flag_time: float = 0.0
 
 func _ready() -> void:
-	# Authentic WE3 stadium (grass, lines, ad boards, stands) + 3D goals + 3D corner flags + stand flags.
+	# Authentic WE3 stadium (grass, lines, ad boards, stands) + 3D goals + 3D corner flags + stand flags + crowd flashes/rain.
 	_build_extracted_stadium(GameData.selected_stadium)
 	_build_goal(-HALF_LEN, -1.0)
 	_build_goal(HALF_LEN, 1.0)
 	_build_we3_corner_flags()
 	_build_stand_flags()
+	_build_crowd_flashes()
+	if GameData.stadium_is_rain:
+		_build_rain_particles()
 
 func _process(delta: float) -> void:
-	if _animated_flags.is_empty():
-		return
 	_flag_time += delta
+	var wind_mul := 1.45 if GameData.stadium_is_rain else 1.0
 	for i in range(_animated_flags.size()):
 		var f := _animated_flags[i]
 		if is_instance_valid(f):
 			var base_rot: float = float(f.get_meta("base_rot_y", 0.0))
 			var phase: float = float(f.get_meta("phase", float(i) * 0.7))
-			f.rotation.y = base_rot + sin(_flag_time * 4.2 + phase) * 0.16
+			f.rotation.y = base_rot + sin(_flag_time * 4.2 * wind_mul + phase) * 0.18
+			f.rotation.z = sin(_flag_time * 6.5 * wind_mul + phase * 1.3) * 0.07
+
+	var flash_rate := 0.28 if MatchState.phase == MatchState.Phase.GOAL_CELEBRATION else 0.025
+	for i in range(_crowd_flashes.size()):
+		var fl := _crowd_flashes[i]
+		if not is_instance_valid(fl):
+			continue
+		if _flash_timers[i] > 0.0:
+			_flash_timers[i] -= delta
+			if _flash_timers[i] <= 0.0:
+				fl.visible = false
+		elif randf() < flash_rate * delta * 12.0:
+			fl.visible = true
+			_flash_timers[i] = randf_range(0.06, 0.14)
+
+func _build_crowd_flashes() -> void:
+	var flash_mat := StandardMaterial3D.new()
+	flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	flash_mat.albedo_color = Color(1.0, 0.98, 0.88)
+	flash_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	var qm := QuadMesh.new()
+	qm.size = Vector2(0.75, 0.75)
+
+	var stands_root := Node3D.new()
+	stands_root.name = "CrowdFlashes"
+	add_child(stands_root)
+	for i in range(28):
+		var mi := MeshInstance3D.new()
+		mi.mesh = qm
+		mi.material_override = flash_mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visible = false
+		var side := i % 3
+		if side == 0:
+			mi.position = Vector3(randf_range(-48.0, 48.0), randf_range(3.5, 13.0), -HALF_WID - randf_range(9.0, 20.0))
+		elif side == 1:
+			mi.position = Vector3(randf_range(-48.0, 48.0), randf_range(3.5, 13.0), HALF_WID + randf_range(9.0, 20.0))
+		else:
+			var sx := -1.0 if (i % 2 == 0) else 1.0
+			mi.position = Vector3(sx * (HALF_LEN + randf_range(9.0, 18.0)), randf_range(3.5, 12.0), randf_range(-28.0, 28.0))
+		stands_root.add_child(mi)
+		_crowd_flashes.append(mi)
+		_flash_timers.append(0.0)
+
+func _build_rain_particles() -> void:
+	var rain := CPUParticles3D.new()
+	rain.name = "StadiumRain"
+	rain.position = Vector3(0.0, 22.0, 0.0)
+	rain.amount = 360
+	rain.lifetime = 0.85
+	rain.preprocess = 0.5
+	rain.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	rain.emission_box_extents = Vector3(HALF_LEN + 6.0, 1.0, HALF_WID + 6.0)
+	rain.direction = Vector3(0.08, -1.0, 0.04)
+	rain.spread = 3.0
+	rain.initial_velocity_min = 24.0
+	rain.initial_velocity_max = 30.0
+	rain.gravity = Vector3.ZERO
+	var drop_mesh := BoxMesh.new()
+	drop_mesh.size = Vector3(0.03, 0.75, 0.03)
+	var drop_mat := StandardMaterial3D.new()
+	drop_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	drop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	drop_mat.albedo_color = Color(0.75, 0.85, 0.98, 0.45)
+	drop_mesh.material = drop_mat
+	rain.mesh = drop_mesh
+	add_child(rain)
 
 func _build_we3_corner_flags() -> void:
 	# Crisp 3D WE3 corner flags (white pole + red/yellow diagonal pennant, animated in _process)

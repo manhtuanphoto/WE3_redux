@@ -358,6 +358,15 @@ func _process(delta: float) -> void:
 				SoundFX.stop_crowd_ambience()
 				var lost := (not GameData.is_ai_vs_ai) and (MatchState.home_score < MatchState.away_score)
 				SoundFX.play_music("03G_OVER" if lost else "07RESULT")
+				for pl in players:
+					if pl.is_sent_off:
+						continue
+					if MatchState.home_score == MatchState.away_score:
+						pl._play_anim("ending_bow", 0.12)
+					elif (pl.team_side == 0 and MatchState.home_score > MatchState.away_score) or (pl.team_side == 1 and MatchState.away_score > MatchState.home_score):
+						pl._play_anim("ending_celebrate", 0.12)
+					else:
+						pl._play_anim("ending_idle", 0.12)
 
 func _update_human_switching() -> void:
 	if GameData.is_ai_vs_ai:
@@ -421,6 +430,11 @@ func _on_goal_detected(scoring_team: int) -> void:
 	MatchState.record_goal(scoring_team, scorer)
 	_is_replaying = false
 	_phase_timer = 1.6
+	const CELEB_ANIMS := ["celebrate", "celebrate_alt", "celebrate_jump", "celebrate_3", "celebrate_4"]
+	for i in range(players.size()):
+		var pl := players[i]
+		if not pl.is_sent_off and pl.team_side == scoring_team:
+			pl._play_anim(CELEB_ANIMS[i % CELEB_ANIMS.size()], 0.08)
 	var goal_min := MatchState.get_display_minutes()
 	hud.show_banner("GOAL!!  %s (%d')  [%d - %d]" % [scorer, goal_min, MatchState.home_score, MatchState.away_score], 2.5)
 	SoundFX.play_sfx("whistle")
