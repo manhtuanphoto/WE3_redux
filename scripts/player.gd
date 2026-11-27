@@ -1213,15 +1213,10 @@ func _try_pickup_ball() -> void:
 		var sliding := tackle_timer > 0.0
 		if sliding and tackle_timer > 0.36 - 5.0 * LOGIC_DT:
 			return
-		var from_behind := false
-		if sliding:
-			var c_fwd := -carrier.global_transform.basis.z
-			c_fwd.y = 0.0
-			from_behind = c_fwd.length_squared() > 0.01 and c_fwd.normalized().dot(tackle_dir) > 0.5
-		var foul := sliding and from_behind and randf() < 0.5   # game-side heuristic: real foul rule not located
+		var foul_severity := _eval_we3_foul_severity(carrier) if sliding else 0
 		var win_chance := 1.0 if sliding else 0.34
 		win_chance *= clampf((0.7 + 0.06 * float(stats["defense"])) / (0.7 + 0.06 * float(carrier.stats["technique"])), 0.6, 1.5)
-		if not foul and randf() < win_chance:
+		if foul_severity == 0 and randf() < win_chance:
 			carrier.action_lock_timer = 0.45
 			MatchState.last_touch_team = team_side
 			MatchState.last_touch_player_name = player_name
@@ -1234,12 +1229,14 @@ func _try_pickup_ball() -> void:
 				fwd = fwd.normalized().rotated(Vector3.UP, float(randi() % 17 - randi() % 17) * ANG_U)
 				var push := maxf(72.0, _speed_u + 8.0 + float(randi() % 4)) * U2MS
 				_ball.kick(fwd * push + Vector3(0.0, float(randi() % 3) * 2.875 * U2MS, 0.0), self, team_side)
-		elif sliding and (foul or dist > 0.58):
-			# Reckless slide: foul & card. Game-side heuristic: func_8007CC00 is the replay quarter router, not the foul logic
+		elif sliding and (foul_severity > 0 or dist > 0.58):
+			# Authentic WE3 foul & card (func_80052720)
+			if foul_severity == 0:
+				foul_severity = 1
 			tackle_timer = 0.0
 			action_lock_timer = 0.65
 			_play_anim("foul_react", 0.05)
-			_apply_foul_card()
+			_apply_foul_card(foul_severity)
 			# Check if foul occurred inside defending team's 18-yard box -> Penalty Kick!
 			var def_goal_x := -PitchBuilder.HALF_LEN if team_side == 0 else PitchBuilder.HALF_LEN
 			if absf(carrier.global_position.x - def_goal_x) < 16.5 and absf(carrier.global_position.z) < 20.16:
@@ -1248,13 +1245,74 @@ func _try_pickup_ball() -> void:
 			else:
 				_ball.out_of_bounds_detected.emit("foul", carrier.global_position, carrier.team_side)
 
-func _apply_foul_card() -> void:
-	if randf() < 0.15:
+## Authentic WE3 foul & card evaluator (func_80052720 + jtbl_80011DA4).
+## Returns: 0 = clean, 1 = foul only, 2 = yellow card, 3 = straight red card.
+func _eval_we3_foul_severity(carrier: Player) -> int:
+	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
+		return 0
+	if role == Role.GK or team_side == carrier.team_side:
+		return 0
+
+	# Team booking cap: suppress new cards if >= 4 teammates are already booked
+	var booked_count := 0
+	var p_parent := get_parent()
+	if p_parent != null:
+		for ch in p_parent.get_children():
+			if ch is Player and (ch as Player).team_side == team_side:
+				var pl := ch as Player
+				if pl.yellow_cards > 0 or pl.is_sent_off:
+					booked_count += 1
+	var suppress_card := (booked_count >= 4 and yellow_cards == 0)
+
+	var to_other := carrier.global_position - global_position
+	to_other.y = 0.0
+	var c_fwd := -carrier.global_transform.basis.z
+	c_fwd.y = 0.0
+	var delta_u := 128
+	if to_other.length_squared() > 0.0001 and c_fwd.length_squared() > 0.0001:
+		var ref_dir := c_fwd.normalized().rotated(Vector3.UP, -8.0 * ANG_U)
+		var ang_rad := absf(ref_dir.signed_angle_to(to_other.normalized(), Vector3.UP))
+		delta_u = clampi(int(round(ang_rad / ANG_U)), 0, 128)
+
+	var bucket := delta_u >> 4
+	match bucket:
+		0:
+			# .L80052900: straight from behind (0..21 deg)
+			if suppress_card:
+				return 1
+			if randi() % 4 == 0 and yellow_cards == 0:
+				return 3
+			return 2
+		1, 2:
+			# .L8005295C: angled from behind (22..66 deg)
+			var r := randi() % 8
+			if r == 0 or r == 2 or r == 6 or suppress_card:
+				return 1
+			return 2
+		3, 4, 5:
+			# .L800529A8: side challenge (67.5..133.6 deg)
+			if randi() % 100 < 60:
+				if suppress_card or randi() % 12 != 0:
+					return 1
+				return 2
+		_:
+			# .L800529E0: front challenge (135..180 deg)
+			if randi() % 100 < 50:
+				return 1
+
+	# penalty_box_check: defending penalty area (15.6m from goal line, |z| < 19.4m)
+	var def_goal_x := -PitchBuilder.HALF_LEN if team_side == 0 else PitchBuilder.HALF_LEN
+	if absf(global_position.x - def_goal_x) <= 15.6 and absf(global_position.z) < 19.408:
+		return 1
+	return 0
+
+func _apply_foul_card(severity: int) -> void:
+	if severity == 3:
 		is_sent_off = true
 		visible = false
 		global_position = Vector3(0.0, -10.0, -50.0)
 		MatchState.log_event("RED CARD! %s sent off!" % player_name)
-	elif randf() < 0.55:
+	elif severity == 2:
 		yellow_cards += 1
 		if yellow_cards >= 2:
 			is_sent_off = true

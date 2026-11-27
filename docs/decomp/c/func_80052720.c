@@ -108,46 +108,46 @@ int func_80052720(unsigned char *actor, unsigned char *other) {
     }
 
     bucket = delta >> 4;
-    if (bucket < 9u) {
-        /*
-         * UNCLEAR: dispatches via jump table jtbl_80011DA4[bucket] (9 entries)
-         * to one of the 4 blocks below; exact bucket-to-label mapping is
-         * external to the .s file.
-         */
-        (void)jtbl_80011DA4;
-
-        if (0) {
-            /* Block .L80052900 */
-            if (suppress_card != 0) {
-                return 1;
-            }
-            if (func_8001E6B8(4) == 0 &&
-                D_800FF748[0x88A5 + B(actor, 0x398) * 22u + B(actor, 0x392)] == 0) {
-                return 3;
-            }
-            return 2;
-        } else if (0) {
-            /* Block .L8005295C */
-            unsigned int r = func_8001E6B8(8);
-            if (r == 0 || r == 2 || r == 6 || suppress_card != 0) {
-                return 1;
-            }
-            return 2;
-        } else if (0) {
-            /* Block .L800529A8 */
-            if ((func_8001E730(0x3C) & 0xFFu) != 0) {
-                if (suppress_card != 0 || func_8001E6B8(0x0C) != 0) {
-                    return 1;
-                }
-                return 2;
-            }
-            goto penalty_box_check;
+    switch (bucket) {
+    case 0:
+        /* Block .L80052900: straight from behind */
+        if (suppress_card != 0) {
+            return 1;
         }
+        if (func_8001E6B8(4) == 0 &&
+            D_800FF748[0x88A5 + B(actor, 0x398) * 22u + B(actor, 0x392)] == 0) {
+            return 3;
+        }
+        return 2;
+    case 1:
+    case 2: {
+        /* Block .L8005295C: angled from behind */
+        unsigned int r = func_8001E6B8(8);
+        if (r == 0 || r == 2 || r == 6 || suppress_card != 0) {
+            return 1;
+        }
+        return 2;
     }
-
-    /* Block .L800529E0 */
-    if ((func_8001E730(0x32) & 0xFFu) != 0) {
-        return 1;
+    case 3:
+    case 4:
+    case 5:
+        /* Block .L800529A8: side challenge */
+        if ((func_8001E730(0x3C) & 0xFFu) != 0) {
+            if (suppress_card != 0 || func_8001E6B8(0x0C) != 0) {
+                return 1;
+            }
+            return 2;
+        }
+        goto penalty_box_check;
+    case 6:
+    case 7:
+    case 8:
+    default:
+        /* Block .L800529E0: front challenge */
+        if ((func_8001E730(0x32) & 0xFFu) != 0) {
+            return 1;
+        }
+        break;
     }
 
 penalty_box_check:

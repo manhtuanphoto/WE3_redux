@@ -105,6 +105,24 @@ func _run_tests() -> void:
 	await get_tree().physics_frame
 	_assert(MatchState.phase == MatchState.Phase.OUT_THROW_IN, "Touchline out-of-bounds triggers THROW_IN phase")
 
+	# 6b. Verify authentic WE3 foul & card rules (func_80052720)
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	var home_gk: Player = match_inst.players[0]
+	var home_def: Player = match_inst.players[1]
+	var away_fwd: Player = match_inst.players[21]
+	away_fwd.global_position = Vector3(0.0, 0.0, 0.0)
+	away_fwd.rotation.y = 0.0   # facing -Z
+	home_def.global_position = Vector3(0.0, 0.0, 3.0)   # directly behind away_fwd (+Z -> -Z)
+	_assert(home_gk._eval_we3_foul_severity(away_fwd) == 0, "GK challenge never triggers foul (func_80052720)")
+	_assert(home_def._eval_we3_foul_severity(home_gk) == 0, "Same-team challenge never triggers foul")
+	var behind_sev := home_def._eval_we3_foul_severity(away_fwd)
+	_assert(behind_sev >= 1 and behind_sev <= 3, "Slide straight from behind always fouls (got %d)" % behind_sev)
+	for bi in range(2, 6):
+		match_inst.players[bi].yellow_cards = 1
+	_assert(home_def._eval_we3_foul_severity(away_fwd) == 1, "Team >=4 booked players caps new card to foul-only (1)")
+	for bi in range(2, 6):
+		match_inst.players[bi].yellow_cards = 0
+
 	match_inst.queue_free()
 	await get_tree().process_frame
 
