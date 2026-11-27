@@ -26,6 +26,8 @@ func _ready() -> void:
 	_build_we3_corner_flags()
 	_build_stand_flags()
 	_build_crowd_flashes()
+	if GameData.stadium_is_night or GameData.selected_stadium == "GRDM_FN":
+		_build_floodlights()
 	if GameData.stadium_is_rain:
 		_build_rain_particles()
 
@@ -105,6 +107,40 @@ func _build_rain_particles() -> void:
 	drop_mesh.material = drop_mat
 	rain.mesh = drop_mesh
 	add_child(rain)
+
+func _build_floodlights() -> void:
+	var fl_root := Node3D.new()
+	fl_root.name = "StadiumFloodlights"
+	add_child(fl_root)
+	var pole_mat := StandardMaterial3D.new()
+	pole_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	pole_mat.albedo_color = Color(0.28, 0.30, 0.36)
+	var glow_mat := StandardMaterial3D.new()
+	glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	glow_mat.albedo_color = Color(1.0, 0.98, 0.85)
+	var pole_mesh := CylinderMesh.new()
+	pole_mesh.top_radius = 0.28
+	pole_mesh.bottom_radius = 0.40
+	pole_mesh.height = 28.0
+	var head_mesh := BoxMesh.new()
+	head_mesh.size = Vector3(3.2, 1.8, 0.8)
+
+	for sx: float in [-1.0, 1.0]:
+		for sz: float in [-1.0, 1.0]:
+			var tower := Node3D.new()
+			tower.position = Vector3(sx * 64.0, 0.0, sz * 46.0)
+			tower.look_at_from_position(tower.position, Vector3.ZERO, Vector3.UP)
+			fl_root.add_child(tower)
+			var pole := MeshInstance3D.new()
+			pole.mesh = pole_mesh
+			pole.material_override = pole_mat
+			pole.position = Vector3(0.0, 14.0, 0.0)
+			tower.add_child(pole)
+			var head := MeshInstance3D.new()
+			head.mesh = head_mesh
+			head.material_override = glow_mat
+			head.position = Vector3(0.0, 28.2, 0.0)
+			tower.add_child(head)
 
 func _build_we3_corner_flags() -> void:
 	# Crisp 3D WE3 corner flags (white pole + red/yellow diagonal pennant, animated in _process)
@@ -541,7 +577,16 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 			continue
 
 		var is_pitch_part := obj_files[idx].begins_with("part_00")
-		# Use native .obj + stadium.mtl + exact PS1 UV/CLUT textures imported by Godot
+		var is_night := GameData.stadium_is_night or stadium_name == "GRDM_FN"
+		var is_rain := GameData.stadium_is_rain
+		var tint := Color.WHITE
+		if is_night and is_rain:
+			tint = Color(0.58, 0.65, 0.80)
+		elif is_night:
+			tint = Color(0.70, 0.76, 0.90)
+		elif is_rain:
+			tint = Color(0.84, 0.88, 0.92)
+		# Use native .obj + stadium.mtl + exact PS1 UV/CLUT textures imported by Godot (or Day/Night/Rain VRAM override)
 		var m := mesh_res as Mesh
 		for s in range(m.get_surface_count()):
 			var smat := m.surface_get_material(s)
@@ -550,6 +595,16 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 				std.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 				std.cull_mode = BaseMaterial3D.CULL_DISABLED
 				std.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				std.albedo_color = tint
+				var mname := std.resource_name
+				if mname.begins_with("mat_"):
+					var parts := mname.split("_")
+					if parts.size() >= 3:
+						var vtag := "vram_%s_%s_" % [parts[1], parts[2]]
+						for t in textures:
+							if t.resource_path.find(vtag) != -1:
+								std.albedo_texture = t
+								break
 				if is_pitch_part:
 					std.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 				else:
