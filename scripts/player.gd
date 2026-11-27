@@ -1233,6 +1233,24 @@ func _try_pickup_ball() -> void:
 		if role != Role.GK and _ball.global_position.y >= 0.95:
 			_perform_aerial_contest()
 			return
+		# Authentic WE3 high-speed ball deflection / heavy touch (func_8004DEFC)
+		var tech_stat := float(stats.get("technique", 6))
+		var defl_thresh := 11.5 + tech_stat * 0.65
+		if role != Role.GK and incoming_speed > defl_thresh and _ball.flight_frames < 32:
+			var bdir := Vector3(_ball.vel.x, 0.0, _ball.vel.z)
+			var normal := (global_position - _ball.global_position)
+			normal.y = 0.0
+			var out_dir := (-bdir.normalized() if bdir.length_squared() > 0.01 else -global_transform.basis.z)
+			if normal.length_squared() > 0.001:
+				out_dir = (out_dir * 0.6 + (-normal.normalized()) * 0.4).normalized()
+			out_dir = out_dir.rotated(Vector3.UP, randf_range(-0.45, 0.45))
+			var out_spd := clampf(incoming_speed * 0.38 + Vector2(vel.x, vel.z).length() * 0.3, 3.5, 8.5)
+			_ball.kick(out_dir * out_spd + Vector3(0.0, randf_range(1.2, 2.6), 0.0), self, team_side)
+			MatchState.last_touch_team = team_side
+			MatchState.last_touch_player_name = player_name
+			_play_anim("trap", 0.05)
+			action_lock_timer = 0.24
+			return
 		if role != Role.GK and incoming_speed > 8.5:
 			_play_anim("trap", 0.05)
 			action_lock_timer = 0.16

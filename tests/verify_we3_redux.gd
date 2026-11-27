@@ -208,6 +208,21 @@ func _run_tests() -> void:
 	for _bf in range(36):
 		await get_tree().physics_frame
 	_assert(p0_spin > 0 and nr_match.ball._spin_period >= p0_spin + 2, "Ball bounce increments spin_period by +2 (func_8004BAA4)")
+
+	# 9b. Verify high-speed ball deflection (func_8004DEFC)
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	var blk_df: Player = nr_match.players[1]
+	blk_df.action_lock_timer = 0.0
+	blk_df.stats["technique"] = 3
+	blk_df.global_position = Vector3(0.0, 0.0, 0.0)
+	nr_match.ball.owner_player = null
+	nr_match.ball.pickup_cooldown = 0.0
+	nr_match.ball.flight_frames = 4
+	nr_match.ball.global_position = Vector3(-0.3, 0.2, 0.0)
+	nr_match.ball.vel = Vector3(17.0, 0.0, 0.0)
+	blk_df._try_pickup_ball()
+	_assert(nr_match.ball.owner_player == null and nr_match.ball.vel.length() < 10.0, "High-speed shot (>thresh) deflects off low-technique defender (func_8004DEFC)")
+
 	nr_match.queue_free()
 	await get_tree().process_frame
 	GameData.stadium_is_night = false
