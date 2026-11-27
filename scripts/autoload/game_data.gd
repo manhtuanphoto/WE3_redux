@@ -31,6 +31,10 @@ var stadium_is_rain: bool = false
 var home_formation: String = "4-4-2"
 var away_formation: String = "4-4-2"
 var home_formation_manual: bool = false
+var home_tactic_level: int = 1      # func_800691A8 Scratchpad+0x2FF: 0=Def, 1=Normal, 2=Attack
+var away_tactic_level: int = 1
+var home_offside_trap: bool = false   # func_8002D9F4 Scratchpad+0x307
+var away_offside_trap: bool = false
 var human_side: int = 0          # 0 = Home, 1 = Away (ignored when is_ai_vs_ai)
 var return_scene: String = "res://scenes/main_menu.tscn"   # where F8 / Main Menu goes (Match Preview sets its own)
 var preview_speed: float = 1.0

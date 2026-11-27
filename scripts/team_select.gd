@@ -211,7 +211,26 @@ func _build_ui() -> void:
 	_formation_preview = FormationMiniPitch.new()
 	_formation_preview.custom_minimum_size = Vector2(200, 62)
 	_formation_preview.formation_name = GameData.resolve_formation(0)
+	_formation_preview.team_color = GameData.get_team_primary_color(GameData.home_team_id)
 	form_row.add_child(_formation_preview)
+
+	# selform tactics: Tactic Level (0=Def, 1=Normal, 2=Atk) & Offside Trap
+	var tac_lbl := Label.new()
+	tac_lbl.text = "Tactic:"
+	form_row.add_child(tac_lbl)
+	var tac_opt := OptionButton.new()
+	tac_opt.add_item("Defensive", 0)
+	tac_opt.add_item("Normal", 1)
+	tac_opt.add_item("Attacking", 2)
+	tac_opt.select(clampi(GameData.home_tactic_level, 0, 2))
+	tac_opt.item_selected.connect(func(idx): GameData.home_tactic_level = idx)
+	form_row.add_child(tac_opt)
+
+	var trap_chk := CheckButton.new()
+	trap_chk.text = "Offside Trap"
+	trap_chk.button_pressed = GameData.home_offside_trap
+	trap_chk.toggled.connect(func(on): GameData.home_offside_trap = on)
+	form_row.add_child(trap_chk)
 
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER

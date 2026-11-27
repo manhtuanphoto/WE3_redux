@@ -568,9 +568,10 @@ func _process_ai(delta: float) -> void:
 			_ai_hold_timer = 0.0
 			return
 
-		# Wing cross into the penalty box (only if a teammate is inside/near box)
-		if _ai_hold_timer > 0.25 and (global_position.x * attack_dir) > 34.0 and absf(global_position.z) > 15.0:
-			var box_dir := (Vector3(attack_dir * 42.0, 0.0, 0.0) - global_position).normalized()
+		# Wing cross into the penalty box (func_8002C28C: x >= 34.70m -> target x >= 41.92m, |z| = 8.92m)
+		if _ai_hold_timer > 0.25 and (global_position.x * attack_dir) >= 34.7 and absf(global_position.z) > 14.0:
+			var cross_z := 8.92 if global_position.z < 0.0 else -8.92
+			var box_dir := (Vector3(attack_dir * 42.5, 0.0, cross_z) - global_position).normalized()
 			if _find_pass_target(box_dir, false) != null:
 				_perform_pass(box_dir, false, true)
 				_ai_hold_timer = 0.0
@@ -622,9 +623,12 @@ func _process_ai(delta: float) -> void:
 
 	_ai_hold_timer = 0.0
 
-	# Off-ball AI (role-aware + WE3 func_800807F0 predictive path-cutting)
+	# Off-ball AI (role-aware + WE3 func_800807F0 path-cutting + func_800691A8 tactical shift & offside pull)
 	var team_has_ball: bool = _ball.owner_player != null and (_ball.owner_player as Player).team_side == team_side
 	var team_in_attack: bool = team_has_ball or (_ball.owner_player == null and _ball.last_touch_team == team_side)
+	var tactic_lvl := GameData.home_tactic_level if team_side == 0 else GameData.away_tactic_level
+	var offside_trap := GameData.home_offside_trap if team_side == 0 else GameData.away_offside_trap
+	var tactic_shift := (-3.072 if tactic_lvl == 0 else (6.144 if tactic_lvl == 2 else 3.072)) * attack_dir
 	var target_pos := home_anchor
 
 	if _ball.owner_player == null and _is_closest_presser():
@@ -635,19 +639,22 @@ func _process_ai(delta: float) -> void:
 			Role.DF:
 				var df_min_x := -PitchBuilder.HALF_LEN + 6.0 if attack_dir > 0.0 else -6.0
 				var df_max_x := 6.0 if attack_dir > 0.0 else PitchBuilder.HALF_LEN - 6.0
-				target_pos.x = clampf(lerpf(home_anchor.x, _ball.global_position.x - attack_dir * 16.0, 0.45), df_min_x, df_max_x)
+				target_pos.x = clampf(lerpf(home_anchor.x, _ball.global_position.x - attack_dir * 16.0, 0.45) + tactic_shift * 0.5, df_min_x, df_max_x)
 				target_pos.z = lerpf(home_anchor.z, _ball.global_position.z, 0.25)
 			Role.MF:
-				target_pos.x = clampf(lerpf(home_anchor.x, _ball.global_position.x + attack_dir * 17.0, 0.6), -PitchBuilder.HALF_LEN + 8.0, PitchBuilder.HALF_LEN - 14.0)
+				target_pos.x = clampf(lerpf(home_anchor.x, _ball.global_position.x + attack_dir * 17.0, 0.6) + tactic_shift, -PitchBuilder.HALF_LEN + 8.0, PitchBuilder.HALF_LEN - 14.0)
 				target_pos.z = lerpf(home_anchor.z, _ball.global_position.z, 0.35)
 			Role.FW:
-				# Attack space behind midfield while staying onside
-				var desired_x := lerpf(home_anchor.x, _ball.global_position.x + attack_dir * 28.0, 0.85)
+				# Attack space behind midfield while staying onside (func_800691A8)
+				var desired_x := lerpf(home_anchor.x, _ball.global_position.x + attack_dir * 28.0, 0.85) + tactic_shift
 				if attack_dir > 0.0:
 					target_pos.x = clampf(minf(desired_x, offside_lim - 1.2), -PitchBuilder.HALF_LEN + 10.0, PitchBuilder.HALF_LEN - 6.0)
 				else:
 					target_pos.x = clampf(maxf(desired_x, offside_lim + 1.2), -PitchBuilder.HALF_LEN + 6.0, PitchBuilder.HALF_LEN - 10.0)
 				target_pos.z = home_anchor.z * 0.85
+				# func_800691A8 case 5: spread wide opposite the ball-carrier's flank
+				if _ball.owner_player != null and signf(target_pos.z) == signf(_ball.owner_player.global_position.z) and absf(target_pos.z) > 4.0:
+					target_pos.z = -target_pos.z
 	else:
 		if _is_closest_presser():
 			if _ball.owner_player != null:
@@ -664,9 +671,11 @@ func _process_ai(delta: float) -> void:
 			else:
 				target_pos = _ball.predict_landing_point(20)
 		else:
-			# Defensive shape by role
+			# Defensive shape by role (+ offside trap step-up for DF)
 			var shift_ratio := 0.28 if role == Role.DF else 0.42
 			target_pos.x = lerpf(home_anchor.x, _ball.global_position.x - attack_dir * 10.0, shift_ratio)
+			if role == Role.DF and offside_trap:
+				target_pos.x += attack_dir * 5.5
 			if role == Role.DF:
 				# Keep DF behind the ball when defending
 				if attack_dir > 0.0:
