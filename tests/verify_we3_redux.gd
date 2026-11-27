@@ -191,6 +191,19 @@ func _run_tests() -> void:
 	pk_match.queue_free()
 	await get_tree().process_frame
 	GameData.game_mode = "exhibition"
+
+	# 9. Verify Night + Rain stadium mode (floodlights + rain particles + VRAM texture swap)
+	GameData.stadium_is_night = true
+	GameData.stadium_is_rain = true
+	var nr_match := match_sc.instantiate() as MatchManager
+	get_tree().root.add_child(nr_match)
+	await get_tree().physics_frame
+	_assert(nr_match.pitch.get_node_or_null("StadiumFloodlights") != null, "Night mode spawns StadiumFloodlights")
+	_assert(nr_match.pitch.get_node_or_null("StadiumRain") != null, "Rain mode spawns StadiumRain particles")
+	nr_match.queue_free()
+	await get_tree().process_frame
+	GameData.stadium_is_night = false
+	GameData.stadium_is_rain = false
 	PlayerAnimCache._cached_library = null
 
 	if _failures == 0:

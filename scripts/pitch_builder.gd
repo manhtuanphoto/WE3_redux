@@ -586,7 +586,7 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 			tint = Color(0.70, 0.76, 0.90)
 		elif is_rain:
 			tint = Color(0.84, 0.88, 0.92)
-		# Use native .obj + stadium.mtl + exact PS1 UV/CLUT textures imported by Godot (or Day/Night/Rain VRAM override)
+		# Use native .obj + stadium.mtl + exact PS1 UV/CLUT textures imported by Godot, tinted for Day/Night/Rain
 		var m := mesh_res as Mesh
 		for s in range(m.get_surface_count()):
 			var smat := m.surface_get_material(s)
@@ -596,15 +596,6 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 				std.cull_mode = BaseMaterial3D.CULL_DISABLED
 				std.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 				std.albedo_color = tint
-				var mname := std.resource_name
-				if mname.begins_with("mat_"):
-					var parts := mname.split("_")
-					if parts.size() >= 3:
-						var vtag := "vram_%s_%s_" % [parts[1], parts[2]]
-						for t in textures:
-							if t.resource_path.find(vtag) != -1:
-								std.albedo_texture = t
-								break
 				if is_pitch_part:
 					std.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 				else:
