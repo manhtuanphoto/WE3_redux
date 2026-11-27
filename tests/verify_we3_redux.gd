@@ -336,6 +336,16 @@ func _run_tests() -> void:
 	shooter._perform_shoot(Vector3(1.0, 0.0, 0.0), 1.0, true)
 	var spd_weak := shooter._pending_kick_vel.length()
 	_assert(spd_weak < spd_strong, "Weak-foot shot applies 16/17 power penalty (func_8002D9F4)")
+
+	# 9m. Verify func_80066150 wing/flank switch evaluation
+	for i in range(1, 11):
+		nr_match.players[i].global_position = Vector3(-25.0, 0.0, 0.0)
+	var passer: Player = nr_match.players[6]
+	passer.global_position = Vector3(-5.0, 0.0, 0.0)
+	var winger: Player = nr_match.players[5]
+	winger.global_position = Vector3(-1.0, 0.0, 24.0)
+	nr_match.ball.global_position = Vector3(-5.0, 0.1, 0.0)
+	_assert(passer._find_wing_switch_target(1.0) == winger, "Wing switch evaluator picks open winger at |z|=24m (func_80066150)")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

@@ -670,10 +670,20 @@ func _process_ai(delta: float) -> void:
 					_kick_pass_to_target(open_mate, use_through, false)
 					_ai_hold_timer = 0.0
 					return
+			else:
+				var wing_mate := _find_wing_switch_target(attack_dir)
+				if wing_mate != null:
+					var w_dist := global_position.distance_to(wing_mate.global_position)
+					_kick_pass_to_target(wing_mate, false, w_dist > 20.0)
+					_ai_hold_timer = 0.0
+					return
 
 		# Dribble toward goal with WE3 8-sector opponent avoidance (func_8005EF94)
 		var dir := (opp_goal - global_position).normalized()
-		if nearest_opp != null and opp_dist < 6.5:
+		if absf(global_position.z) >= 29.70:
+			# func_80063B94: touchline |Z| >= 0x1D01 (29.70 m) forces straight heading along attack_dir
+			dir = Vector3(attack_dir, 0.0, 0.0)
+		elif nearest_opp != null and opp_dist < 6.5:
 			var best_dir := dir
 			var best_score := -INF
 			for s_i in range(8):
@@ -1043,6 +1053,32 @@ func _find_best_open_teammate(attack_dir: float) -> Player:
 		var score := forward_gain * fwd_w + minf(space, 12.0) * 0.6 - dist * 0.12 + lane_bonus + cone_bonus
 		if score > best_score:
 			best_score = score
+			best = p
+	return best
+
+## WE3 func_80066150: evaluates whether a wing/flank switch pass is viable (19.4m <= |tz| < 30.72m).
+func _find_wing_switch_target(attack_dir: float) -> Player:
+	if absf(global_position.x) >= 36.75:
+		return null
+	var best: Player = null
+	var best_score := -INF
+	for p in _all_players:
+		if p == self or p.team_side != team_side or p.role == Role.GK or p.is_sent_off:
+			continue
+		var abs_tz := absf(p.global_position.z)
+		if abs_tz < 19.4 or abs_tz >= 30.72 or absf(p.global_position.x) >= 40.84:
+			continue
+		var dist := global_position.distance_to(p.global_position)
+		if dist <= 3.0 or dist > 32.77:
+			continue
+		var x_off := -3.07 if abs_tz < absf(global_position.z) else 3.07
+		if (p.global_position.x - x_off) * attack_dir < global_position.x * attack_dir:
+			continue
+		if _is_player_offside(p) or not _is_pass_lane_clear(global_position, p.global_position):
+			continue
+		var sc := (p.global_position.x - global_position.x) * attack_dir + abs_tz * 0.25
+		if sc > best_score:
+			best_score = sc
 			best = p
 	return best
 
