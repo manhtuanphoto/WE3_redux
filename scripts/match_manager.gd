@@ -299,6 +299,22 @@ func _process(delta: float) -> void:
 			_toggle_pause()
 			return
 
+	if MatchState.phase == MatchState.Phase.OPEN_PLAY and not GameData.is_ai_vs_ai:
+		var tac_changed := false
+		if Input.is_key_pressed(KEY_1) and GameData.home_tactic_level != 0:
+			GameData.home_tactic_level = 0
+			tac_changed = true
+		elif Input.is_key_pressed(KEY_2) and GameData.home_tactic_level != 1:
+			GameData.home_tactic_level = 1
+			tac_changed = true
+		elif Input.is_key_pressed(KEY_3) and GameData.home_tactic_level != 2:
+			GameData.home_tactic_level = 2
+			tac_changed = true
+		if tac_changed:
+			var t_names := ["DEFENSIVE", "NORMAL", "ATTACKING"]
+			hud.update_tactics(GameData.home_tactic_level, GameData.home_offside_trap)
+			hud.show_banner("TACTIC: %s" % t_names[GameData.home_tactic_level], 1.1)
+
 	if MatchState.phase == MatchState.Phase.PAUSED or MatchState.phase == MatchState.Phase.HALFTIME or MatchState.phase == MatchState.Phase.FULLTIME:
 		return
 
@@ -509,6 +525,8 @@ func _on_goal_detected(scoring_team: int) -> void:
 		if not pl.is_sent_off and pl.team_side == scoring_team:
 			pl._play_anim(CELEB_ANIMS[i % CELEB_ANIMS.size()], 0.08)
 	var goal_min := MatchState.get_display_minutes()
+	if pitch != null:
+		pitch.trigger_goal_net_ripple(scoring_team)
 	hud.show_banner("GOAL!!  %s (%d')  [%d - %d]" % [scorer, goal_min, MatchState.home_score, MatchState.away_score], 2.5)
 	SoundFX.play_sfx("whistle")
 	SoundFX.play_sfx("cheer")
@@ -810,7 +828,11 @@ func _setup_pk_turn() -> void:
 		_pk_kicker._face_direction(Vector3(1.0, 0.0, 0.0), 1.0)
 		ball.set_owner_player(_pk_kicker, team)
 		if not GameData.is_ai_vs_ai:
-			_select_controlled_player(_pk_kicker if team == 0 else _pk_gk)
+			if GameData.is_two_player:
+				_select_controlled_player(_pk_kicker if team == 0 else _pk_gk)
+				_select_controlled_player_p2(_pk_gk if team == 0 else _pk_kicker)
+			else:
+				_select_controlled_player(_pk_kicker if team == 0 else _pk_gk)
 
 	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
 	var round_num := (_pk_kick_index / 2) + 1

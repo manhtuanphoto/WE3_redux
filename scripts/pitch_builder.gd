@@ -17,6 +17,11 @@ var _animated_flags: Array[Node3D] = []
 var _crowd_flashes: Array[MeshInstance3D] = []
 var _flash_timers: Array[float] = []
 var _flag_time: float = 0.0
+var _net_left: MeshInstance3D = null
+var _net_right: MeshInstance3D = null
+var _net_left_x: float = 0.0
+var _net_right_x: float = 0.0
+var _net_ripple_t: Array[float] = [-1.0, -1.0]
 
 func _ready() -> void:
 	# Authentic WE3 stadium (grass, lines, ad boards, stands) + 3D goals + 3D corner flags + stand flags + crowd flashes/rain.
@@ -54,6 +59,28 @@ func _process(delta: float) -> void:
 		elif randf() < flash_rate * delta * 12.0:
 			fl.visible = true
 			_flash_timers[i] = randf_range(0.06, 0.14)
+
+	for ni in range(2):
+		if _net_ripple_t[ni] >= 0.0:
+			_net_ripple_t[ni] += delta
+			var net_mi := _net_left if ni == 0 else _net_right
+			var base_x := _net_left_x if ni == 0 else _net_right_x
+			var dir_out := -1.0 if ni == 0 else 1.0
+			if is_instance_valid(net_mi):
+				var t := _net_ripple_t[ni]
+				if t >= 1.4:
+					_net_ripple_t[ni] = -1.0
+					net_mi.position.x = base_x
+					net_mi.scale = Vector3.ONE
+				else:
+					var wave := absf(sin(t * 24.0)) * exp(-t * 3.8)
+					net_mi.position.x = base_x + dir_out * wave * 0.28
+					net_mi.scale = Vector3(1.0, 1.0 + wave * 0.04, 1.0 + wave * 0.02)
+
+func trigger_goal_net_ripple(scoring_team: int) -> void:
+	# Team 0 scores into right net (index 1); Team 1 scores into left net (index 0)
+	var idx := 1 if scoring_team == 0 else 0
+	_net_ripple_t[idx] = 0.0
 
 func _build_crowd_flashes() -> void:
 	var flash_mat := StandardMaterial3D.new()
@@ -489,6 +516,12 @@ func _build_goal(goal_x: float, dir_out: float) -> void:
 	back_mi.material_override = net_mat
 	back_mi.position = Vector3(back_x, GOAL_HEIGHT * 0.5, 0.0)
 	goal_root.add_child(back_mi)
+	if dir_out < 0.0:
+		_net_left = back_mi
+		_net_left_x = back_x
+	else:
+		_net_right = back_mi
+		_net_right_x = back_x
 
 	# Top net panel
 	var top_panel := BoxMesh.new()

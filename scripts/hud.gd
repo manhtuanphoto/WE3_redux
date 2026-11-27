@@ -37,6 +37,7 @@ var _radar: RadarWidget
 var _log_panel: PanelContainer
 var _log_label: Label
 var _replay_badge: Label
+var _tactic_badge: Label
 var _loss_time_rect: TextureRect
 var _pk_panel: PanelContainer
 var _pk_home_lbl: Label
@@ -95,6 +96,15 @@ func set_controlled_player(p: Player) -> void:
 func set_replay_badge(active: bool) -> void:
 	if _replay_badge != null:
 		_replay_badge.visible = active
+
+func update_tactics(tactic_level: int, offside_trap: bool) -> void:
+	if _tactic_badge == null:
+		return
+	var tags: Array[String] = ["DEF", "BAL", "ATK"]
+	var txt: String = tags[clampi(tactic_level, 0, 2)]
+	if offside_trap:
+		txt += "+TRAP"
+	_tactic_badge.text = txt
 
 func update_pk_board(results: Array, active: bool) -> void:
 	if _pk_panel == null:
@@ -381,6 +391,12 @@ func _build_ui() -> void:
 	_replay_badge.add_theme_color_override("font_color", Color(1.0, 0.25, 0.20))
 	_replay_badge.visible = false
 	hbox.add_child(_replay_badge)
+
+	_tactic_badge = Label.new()
+	_tactic_badge.add_theme_font_size_override("font_size", 13)
+	_tactic_badge.add_theme_color_override("font_color", Color(0.65, 0.88, 1.0))
+	hbox.add_child(_tactic_badge)
+	update_tactics(GameData.home_tactic_level, GameData.home_offside_trap)
 
 	# PK Shootout scoreboard (shown under main scoreboard during PK tiebreaker)
 	_pk_panel = PanelContainer.new()

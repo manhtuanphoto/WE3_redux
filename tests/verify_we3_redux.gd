@@ -264,6 +264,10 @@ func _run_tests() -> void:
 	vs_match._phase_timer = 0.01
 	vs_match._process(0.02)
 	_assert(vs_match._is_replaying and vs_match.hud._replay_badge.visible, "Goal Instant Replay activates with REPLAY badge after celebration")
+	vs_match.pitch._process(0.05)
+	_assert(vs_match.pitch._net_ripple_t[1] >= 0.0 and vs_match.pitch._net_right.position.x > vs_match.pitch._net_right_x, "Goal Net Ripple 3D animates back net mesh on goal")
+	vs_match.hud.update_tactics(2, true)
+	_assert(vs_match.hud._tactic_badge.text == "ATK+TRAP", "In-match Tactics HUD badge updates to ATK+TRAP")
 	vs_match.queue_free()
 	GameData.is_two_player = false
 
