@@ -1101,6 +1101,34 @@ func _is_player_offside(target: Player) -> bool:
 	var line_x := opp_xs[1] if opp_xs.size() >= 2 else PitchBuilder.HALF_LEN
 	return tx > line_x + 0.5
 
+func _perform_aerial_contest() -> void:
+	var atk_dir := 1.0 if team_side == 0 else -1.0
+	var attack_x := PitchBuilder.HALF_LEN * atk_dir
+	var head_stat := float(stats.get("head", 6))
+	var is_header := _ball.global_position.y >= 1.25
+	_play_anim("header" if is_header else "volley", 0.05)
+	action_lock_timer = 0.36
+	MatchState.last_touch_team = team_side
+	MatchState.last_touch_player_name = player_name
+
+	if absf(attack_x - global_position.x) < 24.0 and absf(global_position.z) < 16.0:
+		# Attacking aerial strike on goal
+		MatchState.shot_attempts[team_side] += 1
+		var target_z := randf_range(-2.6, 2.6) * clampf(1.2 - 0.06 * head_stat, 0.5, 1.2)
+		var dir := (Vector3(attack_x, 0.0, target_z) - global_position)
+		dir.y = 0.0
+		dir = dir.normalized()
+		_face_direction(dir, 1.0)
+		var spd := (12.0 + 0.45 * head_stat) * _kick_mul
+		var lift := 1.8 if is_header else 2.6
+		_ball.kick(dir * spd + Vector3(0.0, lift, 0.0), self, team_side, randf_range(-1.5, 1.5))
+	else:
+		# Midfield / defensive aerial clearance downfield
+		var clear_dir := Vector3(atk_dir, 0.0, randf_range(-0.35, 0.35)).normalized()
+		_face_direction(clear_dir, 1.0)
+		var spd := 11.0 + 0.35 * head_stat
+		_ball.kick(clear_dir * spd + Vector3(0.0, 4.2, 0.0), self, team_side)
+
 func _perform_shoot(aim_dir: Vector3, power: float, exact_aim: bool = false) -> void:
 	MatchState.shot_attempts[team_side] += 1
 	var attack_x := PitchBuilder.HALF_LEN if team_side == 0 else -PitchBuilder.HALF_LEN
@@ -1155,7 +1183,7 @@ func _try_pickup_ball() -> void:
 		return
 	if role == Role.GK and _gk_dive_t >= 0.0:
 		return   # mid-dive: contact is decided only on dive frame 7 (func_80094EEC)
-	var max_h := 2.25 if role == Role.GK else 1.35
+	var max_h := 2.25 if role == Role.GK else (2.15 if _ball.owner_player == null else 1.35)
 	var radius := 1.25 if role == Role.GK else PICKUP_RADIUS
 	if _ball.global_position.y > max_h:
 		return
@@ -1181,6 +1209,10 @@ func _try_pickup_ball() -> void:
 			var def_team := _ball.offside_defending_team
 			_ball.offside_target = null
 			_ball.out_of_bounds_detected.emit("offside", global_position, def_team)
+			return
+		# Authentic WE3 aerial header / volley contest (func_80035A5C / func_8003A174)
+		if role != Role.GK and _ball.global_position.y >= 0.95:
+			_perform_aerial_contest()
 			return
 		if role != Role.GK and incoming_speed > 8.5:
 			_play_anim("trap", 0.05)

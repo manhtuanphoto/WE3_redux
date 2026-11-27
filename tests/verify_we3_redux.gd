@@ -133,6 +133,19 @@ func _run_tests() -> void:
 	var away_gk: Player = match_inst.players[11]
 	_assert(absf(away_gk.global_position.x - (PitchBuilder.HALF_LEN - 0.4)) < 0.2, "Penalty kick places defending GK on goal line")
 
+	# 6d. Verify aerial header contest (func_80035A5C)
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	var home_fw: Player = match_inst.players[10]
+	var prev_shots := MatchState.shot_attempts[0]
+	home_fw.action_lock_timer = 0.0
+	home_fw.global_position = Vector3(PitchBuilder.HALF_LEN - 10.0, 0.0, 0.0)
+	match_inst.ball.owner_player = null
+	match_inst.ball.pickup_cooldown = 0.0
+	match_inst.ball.global_position = Vector3(PitchBuilder.HALF_LEN - 10.0, 1.65, 0.0)
+	match_inst.ball.vel = Vector3(0.0, -1.0, 0.0)
+	home_fw._try_pickup_ball()
+	_assert(MatchState.shot_attempts[0] == prev_shots + 1 and match_inst.ball.vel.x > 8.0, "Aerial ball at 1.65m triggers header shot toward goal (func_80035A5C)")
+
 	match_inst.queue_free()
 	await get_tree().process_frame
 
