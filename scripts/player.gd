@@ -952,7 +952,9 @@ func _gk_dive_finish() -> void:
 	if _ball.owner_player != null:
 		return
 	var d2 := Vector2(_ball.global_position.x - global_position.x, _ball.global_position.z - global_position.z).length()
-	if d2 < GK_TOUCH_RADIUS and _ball.global_position.y < 2.6:
+	# func_8008CAB8: GK height_cm scales vertical/lateral save reach
+	var h_bonus := clampf((float(height_cm) - 178.0) * 0.008, -0.06, 0.16)
+	if d2 < (GK_TOUCH_RADIUS + h_bonus) and _ball.global_position.y < (2.55 + h_bonus):
 		_gk_touch_ball()
 	else:
 		action_lock_timer = 0.55   # beaten: lies on the ground

@@ -214,11 +214,18 @@ func _physics_process(delta: float) -> void:
 			fwd = Vector3.FORWARD
 		fwd = fwd.normalized()
 		var p_speed := Vector2(owner_player.vel.x, owner_player.vel.z).length() if "vel" in owner_player else 0.0
-		var lead_dist := lerpf(0.52, 0.76, clampf(p_speed / 7.8, 0.0, 1.0))
+		# func_80031024: keep ball 0x40..0x80 (0.256..0.512m) in front; snap immediately if behind or >0.384m off-axis
+		var lead_dist := lerpf(0.36, 0.62, clampf(p_speed / 7.8, 0.0, 1.0))
 		var target_pos := owner_player.global_position + fwd * lead_dist
 		target_pos.y = BALL_RADIUS
+		var rel := global_position - owner_player.global_position
+		rel.y = 0.0
+		var behind_or_far := fwd.dot(rel) < 0.0 or rel.distance_squared_to(fwd * lead_dist) > 0.147
 		var step := target_pos - global_position
-		global_position = global_position.lerp(target_pos, clampf(delta * 22.0, 0.0, 1.0))
+		if behind_or_far:
+			global_position = global_position.lerp(target_pos, clampf(delta * 32.0, 0.0, 1.0))
+		else:
+			global_position = global_position.lerp(target_pos, clampf(delta * 22.0, 0.0, 1.0))
 		vel = step / maxf(delta, 0.001)
 		_roll_visual(vel, delta)
 		_update_shadow()

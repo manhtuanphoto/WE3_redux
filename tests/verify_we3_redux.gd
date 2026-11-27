@@ -357,6 +357,15 @@ func _run_tests() -> void:
 	gk0._process_ai(0.10)
 	_assert(gk0._gk_jump_height > 0.2 and gk0.position.y > 0.1, "GK high-ball jump leaps vertically for aerial shots (func_8008D358)")
 	gk0._gk_dive_finish()
+
+	# 9p. Verify func_80031024 dribble ball snap-back when ball falls behind carrier
+	var drib: Player = nr_match.players[10]
+	drib.global_position = Vector3(0.0, 0.0, 0.0)
+	drib.rotation.y = -PI * 0.5 # facing +X
+	nr_match.ball.set_owner_player(drib, 0)
+	nr_match.ball.global_position = Vector3(-1.2, Ball.BALL_RADIUS, 0.0) # behind
+	nr_match.ball._physics_process(0.033)
+	_assert(nr_match.ball.global_position.x > -1.0, "Dribble snap-back pulls ball in front of carrier (func_80031024)")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()
