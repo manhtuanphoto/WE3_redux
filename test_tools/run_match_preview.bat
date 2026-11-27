@@ -13,6 +13,7 @@ if "%~2"=="" (
   set "CTRL=home"
   if /I "%~3"=="cpu" set "CTRL=cpu"
   if /I "%~3"=="away" set "CTRL=away"
+  if /I "%~3"=="2p" set "CTRL=2p"
   "%GODOT_EXE%" --path "%PROJECT%" "res://test_tools/match_preview.tscn" -- --home=%~1 --away=%~2 --control=%CTRL% --autostart
 )
 endlocal

@@ -11,7 +11,7 @@ extends Control
 const CFG_PATH := "user://match_preview.cfg"
 const HALF_CHOICES := [60, 120, 180, 300, 600]
 const SPEEDS := [0.5, 1.0, 2.0, 4.0]
-const CONTROLS := ["Home (you) vs CPU", "Away (you) vs CPU", "CPU vs CPU (watch)"]
+const CONTROLS := ["Home (you) vs CPU", "Away (you) vs CPU", "CPU vs CPU (watch)", "1P vs 2P (Local)"]
 
 var _home_opt: OptionButton
 var _away_opt: OptionButton
@@ -284,12 +284,19 @@ func _start_match() -> void:
 	match _ctrl_opt.selected:
 		0:
 			GameData.is_ai_vs_ai = false
+			GameData.is_two_player = false
 			GameData.human_side = 0
 		1:
 			GameData.is_ai_vs_ai = false
+			GameData.is_two_player = false
 			GameData.human_side = 1
+		3:
+			GameData.is_ai_vs_ai = false
+			GameData.is_two_player = true
+			GameData.human_side = 0
 		_:
 			GameData.is_ai_vs_ai = true
+			GameData.is_two_player = false
 			GameData.human_side = -1
 	Engine.time_scale = float(SPEEDS[_speed_opt.selected])
 	GameData.preview_speed = Engine.time_scale
@@ -398,6 +405,7 @@ func _apply_cmdline() -> void:
 			"home": _ctrl_opt.select(0)
 			"away": _ctrl_opt.select(1)
 			"cpu": _ctrl_opt.select(2)
+			"2p": _ctrl_opt.select(3)
 	if args.has("speed"):
 		var spd := float(args["speed"])
 		for i in range(SPEEDS.size()):
