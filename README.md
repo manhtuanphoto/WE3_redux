@@ -27,6 +27,9 @@
 ### Title Screen / Màn hình chính
 ![WE3 Redux Title Screen](docs/images/screenshot_title.png)
 
+### Mode Select (real WE3 stadium backdrop) / Chọn chế độ
+![WE3 Redux Mode Select](docs/images/screenshot_menu.png)
+
 ### Team Select & Tactics / Chọn đội & Chiến thuật
 ![WE3 Redux Team Select](docs/images/screenshot_team_select.png)
 
@@ -57,6 +60,7 @@
   - Pass speed solver (`func_8002EB3C`) and defensive-third pressure clearance (`func_80033B88`) ported from the C decompilation.
   - Full match rules: kick-off, throw-ins, corners, goal kicks, fouls/cards, offside, halftime, fulltime, instant replay, and **11v11 AI vs AI** mode.
 - **Classic Broadcast UI & HUD**:
+  - Real WE3 menu backdrops decoded from ``DATBG00/01`` (day & night stadium) with the original CLUT, authentic goal-net mesh sprite (``hud_17``) on the 3D goals, and the original ``LOSS TIME`` banner shown during injury time.
   - Authentic 2-stage Title Screen → 8-mode Main Menu.
   - Scoreboard, match clock, active player nameplate (position badge, stamina, shot power bar), translucent WE3 2D radar minimap, and F12 live event log.
 
@@ -84,6 +88,7 @@
   - Thuật toán tính lực chuyền (`func_8002EB3C`) và phá bóng khu vực phòng ngự (`func_80033B88`) chuyển thể trực tiếp từ mã decomp.
   - Đầy đủ luật thi đấu: giao bóng, ném biên, phạt góc, phát bóng lên, phạm lỗi/thẻ phạt, hiệp 1/hiệp 2, phát lại bàn thắng (Replay) và chế độ **11v11 AI vs AI**.
 - **Giao diện & HUD phong cách truyền hình 1998**:
+  - Phông nền menu gốc WE3 giải mã từ ``DATBG00/01`` (sân ban ngày/ban đêm) bằng đúng bảng màu CLUT gốc, lưới khung thành gốc (``hud_17``) trên gôn 3D và biểu ngữ ``LOSS TIME`` gốc khi vào thời gian bù giờ.
   - Màn hình Title Screen gốc → Menu 8 chế độ chơi.
   - Bảng tỉ số, đồng hồ trận đấu, bảng tên cầu thủ đang điều khiển (vị trí, thể lực, thanh lực sút), radar sân 2D trong suốt và nhật ký sự kiện (nhấn `F12`).
 

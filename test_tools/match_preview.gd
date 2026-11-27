@@ -44,6 +44,7 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.color = Color(0.04, 0.07, 0.15)
 	add_child(bg)
+	_add_we3_background("res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_night.png", 0.5)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -142,6 +143,20 @@ func _build_ui() -> void:
 	_status.add_theme_color_override("font_color", Color(0.6, 0.72, 0.9))
 	_status.text = "In match:  F8 = back to this preview   F5 = restart   Tab = 2x speed   F12 = event log   M = mute"
 	root.add_child(_status)
+
+func _add_we3_background(path: String, dim_alpha: float) -> void:
+	if ResourceLoader.exists(path):
+		var tex := TextureRect.new()
+		tex.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex.texture = load(path) as Texture2D
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(tex)
+		var dim := ColorRect.new()
+		dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dim.color = Color(0.02, 0.05, 0.14, dim_alpha)
+		add_child(dim)
 
 func _team_column(label_text: String, is_home: bool) -> VBoxContainer:
 	var col := VBoxContainer.new()

@@ -20,24 +20,25 @@ func _build_ui() -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.color = Color(0.05, 0.09, 0.18)
 	add_child(bg)
+	_add_we3_background("res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_night.png", 0.5)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 460)
+	panel.custom_minimum_size = Vector2(720, 0)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.09, 0.14, 0.26, 0.95)
 	style.border_color = Color(0.95, 0.80, 0.18)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(10)
-	style.set_content_margin_all(24)
+	style.set_content_margin_all(14)
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 18)
+	vbox.add_theme_constant_override("separation", 8)
 	panel.add_child(vbox)
 
 	var title := Label.new()
@@ -54,7 +55,7 @@ func _build_ui() -> void:
 
 	# Home side
 	var home_col := VBoxContainer.new()
-	home_col.add_theme_constant_override("separation", 10)
+	home_col.add_theme_constant_override("separation", 4)
 	hbox.add_child(home_col)
 	var h_lbl := Label.new()
 	h_lbl.text = "HOME (YOU)"
@@ -64,7 +65,7 @@ func _build_ui() -> void:
 	_home_opt.custom_minimum_size = Vector2(240, 38)
 	home_col.add_child(_home_opt)
 	_home_kit_rect = TextureRect.new()
-	_home_kit_rect.custom_minimum_size = Vector2(128, 128)
+	_home_kit_rect.custom_minimum_size = Vector2(88, 88)
 	_home_kit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_home_kit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	home_col.add_child(_home_kit_rect)
@@ -75,7 +76,7 @@ func _build_ui() -> void:
 
 	# Away side
 	var away_col := VBoxContainer.new()
-	away_col.add_theme_constant_override("separation", 10)
+	away_col.add_theme_constant_override("separation", 4)
 	hbox.add_child(away_col)
 	var a_lbl := Label.new()
 	a_lbl.text = "AWAY (CPU)"
@@ -85,7 +86,7 @@ func _build_ui() -> void:
 	_away_opt.custom_minimum_size = Vector2(240, 38)
 	away_col.add_child(_away_opt)
 	_away_kit_rect = TextureRect.new()
-	_away_kit_rect.custom_minimum_size = Vector2(128, 128)
+	_away_kit_rect.custom_minimum_size = Vector2(88, 88)
 	_away_kit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_away_kit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	away_col.add_child(_away_kit_rect)
@@ -166,7 +167,7 @@ func _build_ui() -> void:
 	form_row.add_child(form_opt)
 
 	_formation_preview = FormationMiniPitch.new()
-	_formation_preview.custom_minimum_size = Vector2(220, 92)
+	_formation_preview.custom_minimum_size = Vector2(200, 62)
 	_formation_preview.formation_name = GameData.resolve_formation(0)
 	form_row.add_child(_formation_preview)
 
@@ -192,6 +193,20 @@ func _build_ui() -> void:
 		get_tree().change_scene_to_file("res://scenes/match.tscn")
 	)
 	btn_row.add_child(btn_kickoff)
+
+func _add_we3_background(path: String, dim_alpha: float) -> void:
+	if ResourceLoader.exists(path):
+		var tex := TextureRect.new()
+		tex.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex.texture = load(path) as Texture2D
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(tex)
+		var dim := ColorRect.new()
+		dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+		dim.color = Color(0.02, 0.05, 0.14, dim_alpha)
+		add_child(dim)
 
 func _find_item_idx(opt: OptionButton, id: int) -> int:
 	for i in range(opt.item_count):

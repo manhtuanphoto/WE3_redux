@@ -357,9 +357,19 @@ func _build_goal(goal_x: float, dir_out: float) -> void:
 
 	# Back net frame & translucent net
 	var net_mat := StandardMaterial3D.new()
-	net_mat.albedo_color = Color(0.92, 0.95, 1.0, 0.28)
-	net_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	net_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	net_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	if ResourceLoader.exists("res://assets/textures/hud/we3_goal_net.png"):
+		# Authentic WE3 net mesh sprite (hud_17), tiled; lines are opaque, holes cut out
+		net_mat.albedo_texture = load("res://assets/textures/hud/we3_goal_net.png") as Texture2D
+		net_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		net_mat.texture_repeat = true
+		net_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		net_mat.alpha_scissor_threshold = 0.5
+		net_mat.uv1_scale = Vector3(3.0, 1.2, 1.0)
+	else:
+		net_mat.albedo_color = Color(0.92, 0.95, 1.0, 0.28)
+		net_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 
 	var back_x := goal_x + dir_out * GOAL_DEPTH
 	var mid_x := goal_x + dir_out * (GOAL_DEPTH * 0.5)

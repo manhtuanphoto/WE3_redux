@@ -26,6 +26,7 @@ var _radar: RadarWidget
 var _log_panel: PanelContainer
 var _log_label: Label
 var _replay_badge: Label
+var _loss_time_rect: TextureRect
 
 var _banner_timer: float = 0.0
 var _players_ref: Array[Player] = []
@@ -106,6 +107,8 @@ func _process(delta: float) -> void:
 	var spd_str := " [2X]" if Engine.time_scale > 1.5 else ""
 	var added_str := "+" if (MatchState.match_elapsed_real > GameData.half_duration_seconds and MatchState.phase == MatchState.Phase.OPEN_PLAY) else ""
 	_clock_label.text = "%s %02d'%s%s" % [half_str, MatchState.get_display_minutes(), added_str, spd_str]
+	if _loss_time_rect != null:
+		_loss_time_rect.visible = added_str != ""
 
 	var shown_player: Player = _controlled_ref
 	if (shown_player == null or not is_instance_valid(shown_player)) and _ball_ref != null:
@@ -196,6 +199,17 @@ func _build_ui() -> void:
 	_clock_label.add_theme_font_size_override("font_size", 20)
 	_clock_label.add_theme_color_override("font_color", Color(0.98, 0.86, 0.22))
 	hbox.add_child(_clock_label)
+
+	# Authentic WE3 "LOSS TIME" sprite (hud_03), shown while injury time is being played
+	if ResourceLoader.exists("res://assets/textures/hud/we3_loss_time.png"):
+		_loss_time_rect = TextureRect.new()
+		_loss_time_rect.texture = load("res://assets/textures/hud/we3_loss_time.png") as Texture2D
+		_loss_time_rect.custom_minimum_size = Vector2(98, 20)
+		_loss_time_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_loss_time_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_loss_time_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_loss_time_rect.visible = false
+		hbox.add_child(_loss_time_rect)
 
 	_replay_badge = Label.new()
 	_replay_badge.text = "● REPLAY"

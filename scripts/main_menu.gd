@@ -174,6 +174,19 @@ func _build_ui() -> void:
 	_mode_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_mode_layer.visible = false
 	add_child(_mode_layer)
+	# Mode select uses the real WE3 stadium backdrop (DATBG00)
+	if ResourceLoader.exists("res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_day.png"):
+		var mbg := TextureRect.new()
+		mbg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		mbg.texture = load("res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_day.png") as Texture2D
+		mbg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		mbg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		mbg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_mode_layer.add_child(mbg)
+		var mdim := ColorRect.new()
+		mdim.set_anchors_preset(Control.PRESET_FULL_RECT)
+		mdim.color = Color(0.02, 0.05, 0.14, 0.38)
+		_mode_layer.add_child(mdim)
 
 	var header := Label.new()
 	header.text = "MAIN MENU  —  SELECT GAME MODE"
