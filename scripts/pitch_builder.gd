@@ -594,7 +594,8 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 				var std := smat as StandardMaterial3D
 				std.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 				std.cull_mode = BaseMaterial3D.CULL_DISABLED
-				std.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				# Use mipmaps on the flat pitch to prevent pixel shimmer while keeping crisp PS1 pixels
+				std.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS if is_pitch_part else BaseMaterial3D.TEXTURE_FILTER_NEAREST
 				std.albedo_color = tint
 				if is_pitch_part:
 					std.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
@@ -602,13 +603,13 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 					std.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 					std.alpha_scissor_threshold = 0.5
 
-		# Primary mesh
+		# Primary mesh (offset non-pitch parts slightly below y=0 to prevent Z-fighting with pitch grass)
 		var mi := MeshInstance3D.new()
 		mi.mesh = mesh_res
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.rotation.y = PI * 0.5
 		mi.scale = stad_scale
-		mi.position.y = 0.0
+		mi.position.y = 0.0 if is_pitch_part else -0.02
 		stadium.add_child(mi)
 
 		# Mirror only half-stadium parts (aabb.end.z <= 8.0) onto the opposite half
@@ -618,7 +619,7 @@ func _build_extracted_stadium(stadium_name: String) -> void:
 			mi_mirror.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			mi_mirror.rotation.y = -PI * 0.5
 			mi_mirror.scale = stad_scale
-			mi_mirror.position.y = 0.0
+			mi_mirror.position.y = 0.0 if is_pitch_part else -0.025
 			stadium.add_child(mi_mirror)
 
 func _resolve_stadium_tex_dir(stadium_name: String) -> String:
