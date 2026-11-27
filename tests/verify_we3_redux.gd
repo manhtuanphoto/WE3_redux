@@ -311,6 +311,18 @@ func _run_tests() -> void:
 	# 9j. Verify extracted flag_shapes.json + HATA_CSR produces 64x40 flag textures
 	var f_bra := GameData.get_team_flag_texture(30)
 	_assert(f_bra != null and f_bra.get_width() == 64 and f_bra.get_height() == 40, "Extracted HATA_CSR + flag_shapes.json produces 64x40 flag texture")
+
+	# 9k. Verify Free-Kick Wall Jump & Deflection (func_8007B39C)
+	var wall_p: Player = nr_match.players[12]
+	wall_p.global_position = Vector3(10.0, 0.0, 0.0)
+	wall_p.trigger_wall_jump()
+	nr_match.ball.owner_player = null
+	nr_match.ball.last_touch_team = 0
+	nr_match.ball.global_position = Vector3(10.0, 1.8, 0.0)
+	nr_match.ball.vel = Vector3(18.0, 0.0, 0.0)
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	wall_p._physics_process(0.15)
+	_assert(wall_p.position.y > 0.2 and nr_match.ball.vel.x < 0.0, "Free-kick wall player jumps and deflects shot (func_8007B39C)")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

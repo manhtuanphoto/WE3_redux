@@ -141,6 +141,8 @@ var controlled_player: Player = null
 var controlled_player_p2: Player = null
 var _main_ref: Referee = null
 var _linesmen: Array[Referee] = []
+var _fk_wall_players: Array[Player] = []
+var _fk_wall_armed: bool = false
 
 var _phase_timer: float = 0.0
 var _pending_restart_pos: Vector3 = Vector3.ZERO
@@ -370,6 +372,12 @@ func _process(delta: float) -> void:
 
 	# OPEN_PLAY
 	MatchState.match_elapsed_real += delta
+	if _fk_wall_armed and ball.owner_player == null:
+		_fk_wall_armed = false
+		for wp in _fk_wall_players:
+			if wp != null and is_instance_valid(wp):
+				wp.trigger_wall_jump()
+		_fk_wall_players.clear()
 	if ball.owner_player != null:
 		MatchState.possession_time[ball.owner_player.team_side] += delta
 
@@ -668,6 +676,8 @@ func _execute_set_piece_restart() -> void:
 		var goal_dir := to_goal.normalized() if dist_to_goal > 0.01 else Vector3(signf(atk_goal_x), 0.0, 0.0)
 		var perp_dir := Vector3(-goal_dir.z, 0.0, goal_dir.x)
 		var wall_players: Array[Player] = []
+		_fk_wall_players.clear()
+		_fk_wall_armed = false
 		if _pending_restart_type == "foul" and dist_to_goal < 34.0:
 			var wall_count := 4 if dist_to_goal < 22.0 else (3 if dist_to_goal < 28.0 else 2)
 			var cands: Array[Player] = []
@@ -686,6 +696,8 @@ func _execute_set_piece_restart() -> void:
 				wp.vel = Vector3.ZERO
 				wp._face_direction(-goal_dir, 1.0)
 				wall_players.append(wp)
+				_fk_wall_players.append(wp)
+			_fk_wall_armed = not _fk_wall_players.is_empty()
 		for p in players:
 			if p.is_sent_off or p.team_side == _pending_restart_team or p.role == Player.Role.GK or p in wall_players:
 				continue

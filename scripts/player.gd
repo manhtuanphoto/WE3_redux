@@ -33,6 +33,7 @@ var vel: Vector3 = Vector3.ZERO
 var stamina: float = 100.0
 var action_lock_timer: float = 0.0
 var _one_two_run_timer: float = 0.0
+var _wall_jump_timer: float = -1.0
 var tackle_timer: float = 0.0
 var tackle_dir: Vector3 = Vector3.FORWARD
 var shot_charge: float = 0.0
@@ -432,6 +433,10 @@ func _find_anim_player(n: Node) -> AnimationPlayer:
 func has_ball() -> bool:
 	return _ball != null and _ball.owner_player == self
 
+func trigger_wall_jump() -> void:
+	_wall_jump_timer = 0.0
+	_play_anim("celebrate_jump", 0.05)
+
 func _physics_process(delta: float) -> void:
 	if is_sent_off:
 		return
@@ -466,6 +471,21 @@ func _physics_process(delta: float) -> void:
 		_one_touch_timer = maxf(0.0, _one_touch_timer - delta)
 		if _one_touch_timer <= 0.0:
 			_one_touch_action = ""
+	if _wall_jump_timer >= 0.0:
+		_wall_jump_timer += delta
+		if _wall_jump_timer >= 0.55:
+			_wall_jump_timer = -1.0
+			position.y = 0.0
+		else:
+			position.y = sin((_wall_jump_timer / 0.55) * PI) * 0.52
+			_play_anim("celebrate_jump", 0.05)
+			if _ball != null and _ball.owner_player == null and _ball.last_touch_team != team_side and _ball.vel.length() > 6.0:
+				var dxz := Vector2(_ball.global_position.x - global_position.x, _ball.global_position.z - global_position.z).length()
+				if dxz < 0.78 and _ball.global_position.y < 2.35:
+					_ball.vel = -_ball.vel * 0.45 + Vector3(0.0, 1.5, 0.0)
+					_ball.last_touch_team = team_side
+					SoundFX.play_sfx("kick")
+			return
 
 	if _pending_kick_timer > 0.0:
 		_pending_kick_timer -= delta
@@ -1088,7 +1108,13 @@ func _kick_pass_to_target(target: Player, is_through: bool, is_loft: bool) -> vo
 		_ball.offside_defending_team = 1 - team_side
 	MatchState.passes_completed[team_side] += 1
 	action_lock_timer = 0.22
-	_play_anim("pass_long" if is_loft else "pass", 0.06)
+	_play_pass_anim(is_through, is_loft, dist, kick_dir)
+
+func _play_pass_anim(is_through: bool, is_loft: bool, dist_m: float, kick_dir: Vector3) -> void:
+	var fwd_pre := -global_transform.basis.z
+	fwd_pre.y = 0.0
+	var is_side_heel := (not is_through and not is_loft and dist_m < 14.34 and int(stats["technique"]) > 6 and fwd_pre.length_squared() > 0.01 and fwd_pre.normalized().dot(kick_dir) < 0.25)
+	_play_anim("pass_long" if is_loft else ("pass_alt" if is_side_heel else "pass"), 0.06)
 
 func _find_pass_target(aim_dir: Vector3, is_through: bool) -> Player:
 	var dir := aim_dir if aim_dir.length_squared() > 0.05 else -global_transform.basis.z
@@ -1147,7 +1173,7 @@ func _perform_pass(aim_dir: Vector3, is_through: bool, is_loft: bool) -> void:
 		_ball.offside_defending_team = 1 - team_side
 	MatchState.passes_completed[team_side] += 1
 	action_lock_timer = 0.22
-	_play_anim("pass_long" if is_loft else "pass", 0.06)
+	_play_pass_anim(is_through, is_loft, pass_dist, kick_dir)
 
 func _is_player_offside(target: Player) -> bool:
 	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
