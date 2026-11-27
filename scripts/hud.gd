@@ -11,6 +11,7 @@ var _score_label: Label
 var _clock_label: Label
 var _pos_badge: Label
 var _player_label: Label
+var _card_badge: ColorRect
 var _stats_label: Label
 var _stamina_bar: ProgressBar
 var _power_bar: ProgressBar
@@ -27,16 +28,37 @@ var _log_panel: PanelContainer
 var _log_label: Label
 var _replay_badge: Label
 var _loss_time_rect: TextureRect
+var _card_toast: PanelContainer
+var _card_toast_rect: ColorRect
+var _card_toast_label: Label
+var _card_toast_timer: float = 0.0
 
 var _banner_timer: float = 0.0
+var _banner_state: int = 0   # func_8004F82C: 0 = slide in, 1 = hold, 2 = slide out
+var _banner_y: float = -70.0
 var _players_ref: Array[Player] = []
 var _ball_ref: Ball = null
 var _controlled_ref: Player = null
 
 func _ready() -> void:
 	_build_ui()
-	MatchState.event_logged.connect(func(_e): _refresh_log())
+	MatchState.event_logged.connect(_on_event_logged)
 	_refresh_log()
+
+func _on_event_logged(entry: String) -> void:
+	_refresh_log()
+	if _card_toast == null:
+		return
+	if "RED CARD!" in entry:
+		_card_toast_rect.color = Color(0.95, 0.16, 0.16)
+		_card_toast_label.text = entry.substr(entry.find("]") + 2) if "]" in entry else entry
+		_card_toast.visible = true
+		_card_toast_timer = 2.6
+	elif "YELLOW CARD:" in entry:
+		_card_toast_rect.color = Color(0.98, 0.84, 0.12)
+		_card_toast_label.text = entry.substr(entry.find("]") + 2) if "]" in entry else entry
+		_card_toast.visible = true
+		_card_toast_timer = 2.2
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -67,6 +89,10 @@ func show_banner(text: String, duration: float = 2.0) -> void:
 	_banner_label.text = text
 	_banner_panel.visible = true
 	_banner_timer = duration
+	_banner_state = 0
+	_banner_y = -70.0
+	_banner_panel.offset_top = _banner_y
+	_banner_panel.offset_bottom = _banner_y + 66.0
 
 func show_pause_menu(show_panel: bool) -> void:
 	if _overlay_panel == null:
@@ -126,6 +152,8 @@ func _process(delta: float) -> void:
 			_pos_badge.text = "%s %02d" % [role_names[r_idx], shown_player.shirt_number if shown_player.shirt_number > 0 else shown_player.slot_index + 1]
 			_pos_badge.add_theme_color_override("font_color", role_cols[r_idx])
 		_player_label.text = shown_player.player_name.to_upper()
+		if _card_badge != null:
+			_card_badge.visible = shown_player.yellow_cards > 0
 		if _stats_label != null:
 			_stats_label.visible = true
 			_stats_label.text = "SPD %d  ACC %d  KCK %d  TEC %d  STA %d" % [
@@ -144,13 +172,34 @@ func _process(delta: float) -> void:
 		_player_label.text = "AI vs AI"
 		if _stats_label != null:
 			_stats_label.visible = false
+		if _card_badge != null:
+			_card_badge.visible = false
 		_stamina_bar.visible = false
 		_power_bar.visible = false
 
-	if _banner_timer > 0.0:
-		_banner_timer -= delta
-		if _banner_timer <= 0.0:
-			_banner_panel.visible = false
+	# func_8004F82C: 3-state vertical slide-in / hold / slide-out HUD banner
+	if _banner_panel != null and _banner_panel.visible:
+		match _banner_state:
+			0:
+				_banner_y = move_toward(_banner_y, 90.0, 960.0 * delta)
+				if _banner_y >= 89.5:
+					_banner_y = 90.0
+					_banner_state = 1
+			1:
+				_banner_timer -= delta
+				if _banner_timer <= 0.0:
+					_banner_state = 2
+			2:
+				_banner_y = move_toward(_banner_y, -70.0, 960.0 * delta)
+				if _banner_y <= -69.5:
+					_banner_panel.visible = false
+		_banner_panel.offset_top = _banner_y
+		_banner_panel.offset_bottom = _banner_y + 66.0
+
+	if _card_toast_timer > 0.0:
+		_card_toast_timer -= delta
+		if _card_toast_timer <= 0.0 and _card_toast != null:
+			_card_toast.visible = false
 
 	if _radar != null:
 		_radar.queue_redraw()
@@ -264,6 +313,12 @@ func _build_ui() -> void:
 	_player_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
 	pl_row.add_child(_player_label)
 
+	_card_badge = ColorRect.new()
+	_card_badge.color = Color(0.98, 0.84, 0.12)
+	_card_badge.custom_minimum_size = Vector2(10, 14)
+	_card_badge.visible = false
+	pl_row.add_child(_card_badge)
+
 	_stats_label = Label.new()
 	_stats_label.add_theme_font_size_override("font_size", 10)
 	_stats_label.add_theme_color_override("font_color", Color(0.72, 0.84, 0.98))
@@ -321,6 +376,28 @@ func _build_ui() -> void:
 	_banner_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_banner_label.add_theme_font_size_override("font_size", 28)
 	_banner_panel.add_child(_banner_label)
+
+	# Yellow / Red Card Toast (top-right)
+	_card_toast = PanelContainer.new()
+	_card_toast.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_card_toast.offset_left = -330
+	_card_toast.offset_right = -20
+	_card_toast.offset_top = 16
+	_card_toast.offset_bottom = 58
+	_card_toast.visible = false
+	_card_toast.add_theme_stylebox_override("panel", sb_style)
+	add_child(_card_toast)
+	var ct_row := HBoxContainer.new()
+	ct_row.add_theme_constant_override("separation", 10)
+	_card_toast.add_child(ct_row)
+	_card_toast_rect = ColorRect.new()
+	_card_toast_rect.color = Color(0.98, 0.84, 0.12)
+	_card_toast_rect.custom_minimum_size = Vector2(14, 20)
+	ct_row.add_child(_card_toast_rect)
+	_card_toast_label = Label.new()
+	_card_toast_label.add_theme_font_size_override("font_size", 15)
+	_card_toast_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
+	ct_row.add_child(_card_toast_label)
 
 	# Pause / Halftime / Fulltime Modal
 	_overlay_panel = PanelContainer.new()
