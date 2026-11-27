@@ -123,6 +123,16 @@ func _run_tests() -> void:
 	for bi in range(2, 6):
 		match_inst.players[bi].yellow_cards = 0
 
+	# 6c. Verify free-kick goal-area clamping (func_800772F8) & penalty box clearance
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	match_inst._on_out_of_bounds("foul", Vector3(PitchBuilder.HALF_LEN - 1.0, 0.0, 2.0), 0)
+	_assert(absf(match_inst._pending_restart_pos.x) <= 47.14 and absf(match_inst._pending_restart_pos.z) >= 8.91, "Free-kick spot inside goal area clamped out (func_800772F8)")
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	match_inst._on_out_of_bounds("penalty", Vector3(PitchBuilder.HALF_LEN - 11.0, 0.0, 0.0), 0)
+	match_inst._execute_set_piece_restart()
+	var away_gk: Player = match_inst.players[11]
+	_assert(absf(away_gk.global_position.x - (PitchBuilder.HALF_LEN - 0.4)) < 0.2, "Penalty kick places defending GK on goal line")
+
 	match_inst.queue_free()
 	await get_tree().process_frame
 

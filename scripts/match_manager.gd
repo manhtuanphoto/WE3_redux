@@ -142,6 +142,7 @@ var controlled_player: Player = null
 var _phase_timer: float = 0.0
 var _pending_restart_pos: Vector3 = Vector3.ZERO
 var _pending_restart_team: int = 0
+var _pending_restart_type: String = ""
 var _pre_pause_phase: MatchState.Phase = MatchState.Phase.OPEN_PLAY
 var _injury_stall_timer: float = 0.0
 var _crowd_excited: bool = false
@@ -442,7 +443,16 @@ func _apply_stadium_lighting() -> void:
 func _on_out_of_bounds(event_type: String, restart_pos: Vector3, restart_team: int) -> void:
 	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
 		return
+	_pending_restart_type = event_type
 	_pending_restart_pos = restart_pos
+	if event_type == "foul":
+		# func_800772F8: clamp free-kick spot out of goal area (|x| > 47.136, |z| < 8.92) & inside pitch
+		var def_goal_x := PitchBuilder.HALF_LEN if restart_team == 0 else -PitchBuilder.HALF_LEN
+		if absf(_pending_restart_pos.z) < 8.92 and absf(_pending_restart_pos.x - def_goal_x) < (PitchBuilder.HALF_LEN - 47.136):
+			_pending_restart_pos.x = 47.136 if def_goal_x > 0.0 else -47.136
+			_pending_restart_pos.z = 8.92 if _pending_restart_pos.z >= 0.0 else -8.92
+		_pending_restart_pos.x = clampf(_pending_restart_pos.x, -52.096, 52.096)
+		_pending_restart_pos.z = clampf(_pending_restart_pos.z, -33.536, 33.536)
 	_pending_restart_team = restart_team
 	_phase_timer = 1.1
 	SoundFX.play_sfx("whistle")
@@ -469,21 +479,63 @@ func _on_out_of_bounds(event_type: String, restart_pos: Vector3, restart_team: i
 func _execute_set_piece_restart() -> void:
 	ball.place_at(_pending_restart_pos)
 	ball.is_active_play = true
-	# Move closest player of restart_team to take it
+	var is_penalty := (_pending_restart_type == "penalty")
+	var atk_goal_x := PitchBuilder.HALF_LEN if _pending_restart_team == 0 else -PitchBuilder.HALF_LEN
+
+	# Select taker (skip sent-off players; func_800A5340 prefers MF/FW for corners)
 	var taker: Player = null
-	var best_d2 := INF
+	var best_score := INF
 	for p in players:
-		if p.team_side == _pending_restart_team:
-			if MatchState.phase == MatchState.Phase.OUT_GOAL_KICK and p.role == Player.Role.GK:
+		if p.is_sent_off or p.team_side != _pending_restart_team:
+			continue
+		if MatchState.phase == MatchState.Phase.OUT_GOAL_KICK and p.role == Player.Role.GK:
+			taker = p
+			break
+		elif p.role != Player.Role.GK:
+			var sc := p.global_position.distance_squared_to(_pending_restart_pos)
+			if MatchState.phase == MatchState.Phase.OUT_CORNER or is_penalty:
+				# Prefer FW/MF specialists over defenders
+				var role_bias := 0.0 if p.role == Player.Role.FW else (40.0 if p.role == Player.Role.MF else 400.0)
+				sc = role_bias + float(10 - int(p.stats.get("kick_power", 5))) * 10.0
+			if sc < best_score:
+				best_score = sc
 				taker = p
-				break
-			elif p.role != Player.Role.GK:
-				var d2 := p.global_position.distance_squared_to(_pending_restart_pos)
-				if d2 < best_d2:
-					best_d2 = d2
-					taker = p
+
+	if is_penalty:
+		# Authentic penalty setup: defending GK on goal line, all other players outside 18-yard box
+		var def_team := 1 - _pending_restart_team
+		for p in players:
+			if p.is_sent_off or p == taker:
+				continue
+			if p.team_side == def_team and p.role == Player.Role.GK:
+				p.global_position = Vector3(atk_goal_x - signf(atk_goal_x) * 0.4, 0.0, 0.0)
+				p.vel = Vector3.ZERO
+				p._face_direction((_pending_restart_pos - p.global_position).normalized(), 1.0)
+			else:
+				var in_box_x := absf(p.global_position.x - atk_goal_x) < 17.5
+				var in_box_z := absf(p.global_position.z) < 20.5
+				if in_box_x and in_box_z:
+					p.global_position.x = atk_goal_x - signf(atk_goal_x) * (18.5 + randf() * 4.0)
+					p.vel = Vector3.ZERO
+	elif MatchState.phase == MatchState.Phase.OUT_FREE_KICK:
+		# func_800772F8: push opponents >= 9.15m back from free-kick spot
+		var to_goal := (Vector3(atk_goal_x, 0.0, 0.0) - _pending_restart_pos)
+		to_goal.y = 0.0
+		var goal_dir := to_goal.normalized() if to_goal.length_squared() > 0.01 else Vector3(signf(atk_goal_x), 0.0, 0.0)
+		for p in players:
+			if p.is_sent_off or p.team_side == _pending_restart_team or p.role == Player.Role.GK:
+				continue
+			var d := p.global_position.distance_to(_pending_restart_pos)
+			if d < 9.15:
+				p.global_position = _pending_restart_pos + goal_dir * 9.5
+				p.global_position.x = clampf(p.global_position.x, -PitchBuilder.HALF_LEN + 1.0, PitchBuilder.HALF_LEN - 1.0)
+				p.vel = Vector3.ZERO
+
 	if taker != null:
-		taker.global_position = _pending_restart_pos + Vector3(-0.6 if _pending_restart_team == 0 else 0.6, 0.0, 0.0)
+		var stand_off := 2.8 if is_penalty else (1.2 if MatchState.phase == MatchState.Phase.OUT_FREE_KICK else 0.6)
+		var back_dir := -1.0 if _pending_restart_team == 0 else 1.0
+		taker.global_position = _pending_restart_pos + Vector3(back_dir * stand_off, 0.0, 0.0)
+		taker.vel = Vector3.ZERO
 		ball.set_owner_player(taker, _pending_restart_team)
 		if MatchState.phase == MatchState.Phase.OUT_THROW_IN:
 			taker._play_anim("throw_in", 0.05)
@@ -492,11 +544,14 @@ func _execute_set_piece_restart() -> void:
 				var inward_z := -signf(_pending_restart_pos.z)
 				taker._perform_pass(Vector3(0.0, 0.0, inward_z).normalized(), false, false)
 		elif MatchState.phase == MatchState.Phase.OUT_CORNER and not taker.is_human:
-			var attack_x := PitchBuilder.HALF_LEN if _pending_restart_team == 0 else -PitchBuilder.HALF_LEN
-			var box_target := Vector3(attack_x - signf(attack_x) * 10.0, 0.0, 0.0)
+			var box_target := Vector3(atk_goal_x - signf(atk_goal_x) * 10.0, 0.0, 0.0)
 			taker._perform_pass((box_target - taker.global_position).normalized(), false, true)
+		elif is_penalty and not taker.is_human:
+			var pen_aim := Vector3(atk_goal_x, 0.0, randf_range(-2.6, 2.6))
+			taker._perform_shoot((pen_aim - taker.global_position).normalized(), 0.85, true)
 		if taker.is_human:
 			_select_controlled_player(taker)
+	_pending_restart_type = ""
 	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
 
 func _toggle_pause() -> void:
