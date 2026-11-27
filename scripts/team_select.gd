@@ -6,6 +6,10 @@ var _away_opt: OptionButton
 var _half_opt: OptionButton
 var _home_kit_rect: TextureRect
 var _away_kit_rect: TextureRect
+var _home_swatch: ColorRect
+var _away_swatch: ColorRect
+var _home_rating_label: Label
+var _away_rating_label: Label
 var _home_roster_label: Label
 var _away_roster_label: Label
 var _formation_preview: FormationMiniPitch
@@ -64,11 +68,23 @@ func _build_ui() -> void:
 	_home_opt = OptionButton.new()
 	_home_opt.custom_minimum_size = Vector2(240, 38)
 	home_col.add_child(_home_opt)
+	var h_kit_row := HBoxContainer.new()
+	h_kit_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	h_kit_row.add_theme_constant_override("separation", 10)
+	home_col.add_child(h_kit_row)
+	_home_swatch = ColorRect.new()
+	_home_swatch.custom_minimum_size = Vector2(12, 64)
+	h_kit_row.add_child(_home_swatch)
 	_home_kit_rect = TextureRect.new()
 	_home_kit_rect.custom_minimum_size = Vector2(88, 88)
 	_home_kit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_home_kit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	home_col.add_child(_home_kit_rect)
+	h_kit_row.add_child(_home_kit_rect)
+	_home_rating_label = Label.new()
+	_home_rating_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_home_rating_label.add_theme_font_size_override("font_size", 12)
+	_home_rating_label.add_theme_color_override("font_color", Color(0.96, 0.84, 0.22))
+	home_col.add_child(_home_rating_label)
 	_home_roster_label = Label.new()
 	_home_roster_label.add_theme_font_size_override("font_size", 11)
 	_home_roster_label.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
@@ -85,11 +101,23 @@ func _build_ui() -> void:
 	_away_opt = OptionButton.new()
 	_away_opt.custom_minimum_size = Vector2(240, 38)
 	away_col.add_child(_away_opt)
+	var a_kit_row := HBoxContainer.new()
+	a_kit_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	a_kit_row.add_theme_constant_override("separation", 10)
+	away_col.add_child(a_kit_row)
+	_away_swatch = ColorRect.new()
+	_away_swatch.custom_minimum_size = Vector2(12, 64)
+	a_kit_row.add_child(_away_swatch)
 	_away_kit_rect = TextureRect.new()
 	_away_kit_rect.custom_minimum_size = Vector2(88, 88)
 	_away_kit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_away_kit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	away_col.add_child(_away_kit_rect)
+	a_kit_row.add_child(_away_kit_rect)
+	_away_rating_label = Label.new()
+	_away_rating_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_away_rating_label.add_theme_font_size_override("font_size", 12)
+	_away_rating_label.add_theme_color_override("font_color", Color(0.96, 0.84, 0.22))
+	away_col.add_child(_away_rating_label)
 	_away_roster_label = Label.new()
 	_away_roster_label.add_theme_font_size_override("font_size", 11)
 	_away_roster_label.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
@@ -221,6 +249,10 @@ func _sync_selection() -> void:
 			GameData.home_formation_manual = false
 		GameData.home_team_id = new_home
 		_home_kit_rect.texture = GameData.get_team_kit_texture(GameData.home_team_id)
+		if _home_swatch != null:
+			_home_swatch.color = GameData.get_team_primary_color(GameData.home_team_id)
+		if _home_rating_label != null:
+			_home_rating_label.text = _format_team_rating(GameData.home_team_id)
 		_home_roster_label.text = _format_starting_xi(GameData.home_team_id)
 	if _away_opt.item_count > 0:
 		var new_away := _away_opt.get_selected_id()
@@ -228,6 +260,10 @@ func _sync_selection() -> void:
 			GameData.away_formation_manual = false
 		GameData.away_team_id = new_away
 		_away_kit_rect.texture = GameData.get_team_kit_texture(GameData.away_team_id)
+		if _away_swatch != null:
+			_away_swatch.color = GameData.get_team_primary_color(GameData.away_team_id)
+		if _away_rating_label != null:
+			_away_rating_label.text = _format_team_rating(GameData.away_team_id)
 		_away_roster_label.text = _format_starting_xi(GameData.away_team_id)
 	# Show the authentic formation of the selected home team (derived from its real starting XI)
 	if _form_opt != null:
@@ -235,7 +271,24 @@ func _sync_selection() -> void:
 		_form_opt.select(maxi(0, GameData.FORMATIONS.find(f)))
 		if _formation_preview != null:
 			_formation_preview.formation_name = f
+			_formation_preview.team_color = GameData.get_team_primary_color(GameData.home_team_id)
 			_formation_preview.queue_redraw()
+
+func _format_team_rating(tid: int) -> String:
+	var t := GameData.get_team(tid)
+	var players: Array = t.get("players", [])
+	var n := mini(11, players.size())
+	if n == 0:
+		return ""
+	var sum_off := 0.0
+	var sum_def := 0.0
+	var sum_spd := 0.0
+	for i in range(n):
+		var st: Dictionary = players[i].get("stats", {})
+		sum_off += float(st.get("offense", 5))
+		sum_def += float(st.get("defense", 5))
+		sum_spd += float(st.get("speed", 5))
+	return "OFF %.1f  |  DEF %.1f  |  SPD %.1f" % [sum_off / n, sum_def / n, sum_spd / n]
 
 func _format_starting_xi(tid: int) -> String:
 	var t := GameData.get_team(tid)
@@ -249,11 +302,16 @@ func _format_starting_xi(tid: int) -> String:
 
 class FormationMiniPitch extends Control:
 	var formation_name: String = "4-4-2"
+	var team_color: Color = Color.CYAN
 
 	func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.08, 0.34, 0.12), true)
-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.9, 0.95, 0.9), false, 1.5)
-		draw_line(Vector2(size.x * 0.5, 0), Vector2(size.x * 0.5, size.y), Color(0.9, 0.95, 0.9, 0.6), 1.0)
+		var line_col := Color(0.9, 0.95, 0.9, 0.75)
+		draw_rect(Rect2(Vector2.ZERO, size), line_col, false, 1.5)
+		draw_line(Vector2(size.x * 0.5, 0), Vector2(size.x * 0.5, size.y), line_col, 1.0)
+		draw_arc(Vector2(size.x * 0.5, size.y * 0.5), size.y * 0.18, 0.0, TAU, 20, line_col, 1.0)
+		draw_rect(Rect2(0, size.y * 0.22, size.x * 0.14, size.y * 0.56), line_col, false, 1.0)
+		draw_rect(Rect2(size.x * 0.86, size.y * 0.22, size.x * 0.14, size.y * 0.56), line_col, false, 1.0)
 		var pts := {
 			"4-4-2": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.5,0.18), Vector2(0.46,0.4), Vector2(0.46,0.6), Vector2(0.5,0.82), Vector2(0.76,0.38), Vector2(0.76,0.62)],
 			"4-3-3": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.48,0.28), Vector2(0.44,0.5), Vector2(0.48,0.72), Vector2(0.78,0.2), Vector2(0.82,0.5), Vector2(0.78,0.8)],
@@ -265,4 +323,5 @@ class FormationMiniPitch extends Control:
 		var list: Array = pts.get(formation_name, pts["4-4-2"])
 		for i in range(list.size()):
 			var pt: Vector2 = Vector2(list[i].x * size.x, list[i].y * size.y)
-			draw_circle(pt, 4.0, Color.YELLOW if i == 0 else Color.CYAN)
+			draw_circle(pt, 4.8, Color(0.05, 0.08, 0.12))
+			draw_circle(pt, 3.6, Color.YELLOW if i == 0 else team_color)
