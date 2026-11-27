@@ -592,14 +592,33 @@ func _execute_set_piece_restart() -> void:
 			taker._play_anim("throw_in", 0.05)
 			taker.action_lock_timer = 0.45
 			if not taker.is_human:
-				var inward_z := -signf(_pending_restart_pos.z)
-				taker._perform_pass(Vector3(0.0, 0.0, inward_z).normalized(), false, false)
+				var mate := taker._find_best_open_teammate(1.0 if _pending_restart_team == 0 else -1.0)
+				if mate != null:
+					taker._kick_pass_to_target(mate, false, false)
+				else:
+					var inward_z := -signf(_pending_restart_pos.z)
+					taker._perform_pass(Vector3(0.0, 0.0, inward_z).normalized(), false, false)
+		elif MatchState.phase == MatchState.Phase.OUT_GOAL_KICK and not taker.is_human:
+			# func_80083F68: AI goalkeeper launches goal kick upfield toward midfield/flank
+			var up_dir := Vector3(signf(atk_goal_x), 0.0, randf_range(-0.35, 0.35)).normalized()
+			taker._perform_pass(up_dir, false, true)
 		elif MatchState.phase == MatchState.Phase.OUT_CORNER and not taker.is_human:
 			var box_target := Vector3(atk_goal_x - signf(atk_goal_x) * 10.0, 0.0, 0.0)
 			taker._perform_pass((box_target - taker.global_position).normalized(), false, true)
 		elif is_penalty and not taker.is_human:
 			var pen_aim := Vector3(atk_goal_x, 0.0, randf_range(-2.6, 2.6))
 			taker._perform_shoot((pen_aim - taker.global_position).normalized(), 0.85, true)
+		elif MatchState.phase == MatchState.Phase.OUT_FREE_KICK and not taker.is_human:
+			var dist_goal := taker.global_position.distance_to(Vector3(atk_goal_x, 0.0, 0.0))
+			if dist_goal < 28.0 and _pending_restart_type == "foul":
+				var fk_aim := Vector3(atk_goal_x, 0.0, randf_range(-2.4, 2.4))
+				taker._perform_shoot((fk_aim - taker.global_position).normalized(), 0.78, true)
+			else:
+				var mate := taker._find_best_open_teammate(signf(atk_goal_x))
+				if mate != null:
+					taker._kick_pass_to_target(mate, false, false)
+				else:
+					taker._perform_pass(Vector3(signf(atk_goal_x), 0.0, 0.0), false, false)
 		if taker.is_human:
 			_select_controlled_player(taker)
 	_pending_restart_type = ""

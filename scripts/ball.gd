@@ -433,6 +433,7 @@ func _check_pitch_boundaries(pos: Vector3) -> void:
 			var corner_z := signf(pos.z) * (PitchBuilder.HALF_WID - 0.6)
 			out_of_bounds_detected.emit("corner", Vector3(corner_x, 0.0, corner_z), 1 - defending_team)
 		else:
-			# Goal kick for defending team
-			var gk_x := signf(pos.x) * (PitchBuilder.HALF_LEN - 5.5)
-			out_of_bounds_detected.emit("goal_kick", Vector3(gk_x, 0.0, 0.0), defending_team)
+			# Goal kick for defending team (func_80083F68: 6-yard corner +/-47.136m, +/-8.92m)
+			var gk_x := signf(pos.x) * 47.136
+			var gk_z := (8.92 if pos.z >= 0.0 else -8.92)
+			out_of_bounds_detected.emit("goal_kick", Vector3(gk_x, 0.0, gk_z), defending_team)
