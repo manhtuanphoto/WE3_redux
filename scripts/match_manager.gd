@@ -187,6 +187,8 @@ func _ready() -> void:
 	hud = MatchHUD.new()
 	add_child(hud)
 	hud.bind_entities(players, ball)
+	hud.set_controlled_player(controlled_player)
+	hud.set_controlled_player_p2(controlled_player_p2)
 	hud.resume_requested.connect(_toggle_pause)
 	hud.rematch_requested.connect(_restart_match)
 	hud.main_menu_requested.connect(_go_main_menu)
@@ -486,6 +488,8 @@ func _select_controlled_player_p2(p: Player) -> void:
 	controlled_player_p2 = p
 	if controlled_player_p2 != null:
 		controlled_player_p2.set_controlled(true)
+	if hud != null:
+		hud.set_controlled_player_p2(controlled_player_p2)
 
 func _get_closest_human_outfielder(to_pos: Vector3, exclude: Player = null, slot_num: int = 1) -> Player:
 	var best: Player = null

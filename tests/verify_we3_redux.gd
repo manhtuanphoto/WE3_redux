@@ -256,6 +256,8 @@ func _run_tests() -> void:
 	add_child(vs_match)
 	await get_tree().process_frame
 	_assert(InputMap.has_action("p2_shoot") and vs_match.controlled_player != null and vs_match.controlled_player_p2 != null and vs_match.controlled_player.human_slot == 1 and vs_match.controlled_player_p2.human_slot == 2, "1P vs 2P assigns P1 (slot 1) & P2 (slot 2) controlled players and P2 InputMap")
+	vs_match.hud._process(0.02)
+	_assert(vs_match.hud._p2_panel.visible and vs_match.hud._p2_player_label.text == vs_match.controlled_player_p2.player_name.to_upper(), "2P HUD nameplate displays active 2P player in 1P vs 2P")
 	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
 	for _rf in range(35):
 		await get_tree().physics_frame

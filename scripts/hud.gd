@@ -22,6 +22,12 @@ var _card_badge: ColorRect
 var _stats_label: Label
 var _stamina_bar: ProgressBar
 var _power_bar: ProgressBar
+var _p2_panel: PanelContainer
+var _p2_pos_badge: Label
+var _p2_player_label: Label
+var _p2_card_badge: ColorRect
+var _p2_stamina_bar: ProgressBar
+var _p2_power_bar: ProgressBar
 var _banner_panel: PanelContainer
 var _banner_label: Label
 var _overlay_panel: PanelContainer
@@ -56,6 +62,7 @@ var _banner_y: float = -70.0
 var _players_ref: Array[Player] = []
 var _ball_ref: Ball = null
 var _controlled_ref: Player = null
+var _controlled_p2_ref: Player = null
 
 func _ready() -> void:
 	_build_ui()
@@ -95,6 +102,9 @@ func bind_entities(players: Array[Player], ball: Ball) -> void:
 
 func set_controlled_player(p: Player) -> void:
 	_controlled_ref = p
+
+func set_controlled_player_p2(p: Player) -> void:
+	_controlled_p2_ref = p
 
 func show_prematch_card(home_name: String, away_name: String, home_form: String, away_form: String, stadium_name: String) -> void:
 	if _prematch_panel == null or _prematch_label == null:
@@ -264,26 +274,7 @@ func _process(delta: float) -> void:
 			shown_player = _ball_ref.last_touch_player as Player
 
 	if shown_player != null and is_instance_valid(shown_player):
-		var role_names := ["GK", "DF", "MF", "FW"]
-		var role_cols := [Color(0.98, 0.82, 0.18), Color(0.28, 0.60, 0.98), Color(0.26, 0.88, 0.42), Color(0.96, 0.30, 0.24)]
-		var r_idx := clampi(shown_player.role, 0, 3)
-		if _pos_badge != null:
-			_pos_badge.visible = true
-			_pos_badge.text = "%s %02d" % [role_names[r_idx], shown_player.shirt_number if shown_player.shirt_number > 0 else shown_player.slot_index + 1]
-			_pos_badge.add_theme_color_override("font_color", role_cols[r_idx])
-		_player_label.text = shown_player.player_name.to_upper()
-		if _card_badge != null:
-			_card_badge.visible = shown_player.yellow_cards > 0
-		if _stats_label != null:
-			_stats_label.visible = true
-			_stats_label.text = "SPD %d  ACC %d  KCK %d  TEC %d  STA %d" % [
-				shown_player.stats["speed"], shown_player.stats["acceleration"], shown_player.stats["kick_power"],
-				shown_player.stats["technique"], shown_player.stats["stamina"]]
-		_stamina_bar.visible = true
-		_stamina_bar.value = shown_player.stamina
-		_stamina_bar.modulate = Color(0.25, 0.90, 0.35) if shown_player.stamina > 50.0 else (Color(0.98, 0.80, 0.15) if shown_player.stamina > 22.0 else Color(0.95, 0.25, 0.20))
-		_power_bar.visible = shown_player.is_charging_shot
-		_power_bar.value = shown_player.shot_charge * 100.0
+		_update_nameplate(shown_player, _pos_badge, _player_label, _card_badge, _stats_label, _stamina_bar, _power_bar)
 	elif GameData.is_ai_vs_ai:
 		if _pos_badge != null:
 			_pos_badge.visible = true
@@ -296,6 +287,11 @@ func _process(delta: float) -> void:
 			_card_badge.visible = false
 		_stamina_bar.visible = false
 		_power_bar.visible = false
+
+	if _p2_panel != null:
+		_p2_panel.visible = GameData.is_two_player and _controlled_p2_ref != null and is_instance_valid(_controlled_p2_ref)
+		if _p2_panel.visible:
+			_update_nameplate(_controlled_p2_ref, _p2_pos_badge, _p2_player_label, _p2_card_badge, null, _p2_stamina_bar, _p2_power_bar)
 
 	# func_8004F82C: 3-state vertical slide-in / hold / slide-out HUD banner
 	if _banner_panel != null and _banner_panel.visible:
@@ -323,6 +319,41 @@ func _process(delta: float) -> void:
 
 	if _radar != null:
 		_radar.queue_redraw()
+
+func _update_nameplate(p: Player, pos_lbl: Label, name_lbl: Label, card_rect: ColorRect, stats_lbl: Label, stam_bar: ProgressBar, pow_bar: ProgressBar) -> void:
+	var role_names: Array[String] = ["GK", "DF", "MF", "FW"]
+	var role_cols: Array[Color] = [Color(0.98, 0.82, 0.18), Color(0.28, 0.60, 0.98), Color(0.26, 0.88, 0.42), Color(0.96, 0.30, 0.24)]
+	var r_idx := clampi(p.role, 0, 3)
+	if pos_lbl != null:
+		pos_lbl.visible = true
+		pos_lbl.text = "%s %02d" % [role_names[r_idx], p.shirt_number if p.shirt_number > 0 else p.slot_index + 1]
+		pos_lbl.add_theme_color_override("font_color", role_cols[r_idx])
+	name_lbl.text = p.player_name.to_upper()
+	if card_rect != null:
+		card_rect.visible = p.yellow_cards > 0
+	if stats_lbl != null:
+		stats_lbl.visible = true
+		stats_lbl.text = "SPD %d  ACC %d  KCK %d  TEC %d  STA %d" % [
+			p.stats["speed"], p.stats["acceleration"], p.stats["kick_power"],
+			p.stats["technique"], p.stats["stamina"]]
+	stam_bar.visible = true
+	stam_bar.value = p.stamina
+	stam_bar.modulate = Color(0.25, 0.90, 0.35) if p.stamina > 50.0 else (Color(0.98, 0.80, 0.15) if p.stamina > 22.0 else Color(0.95, 0.25, 0.20))
+	pow_bar.visible = p.is_charging_shot
+	pow_bar.value = p.shot_charge * 100.0
+	pow_bar.modulate = Color(0.28, 0.92, 0.38) if p.shot_charge < 0.45 else (Color(0.98, 0.82, 0.16) if p.shot_charge < 0.78 else Color(1.0, 0.26, 0.18))
+
+func _style_ps1_bar(bar: ProgressBar) -> void:
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.04, 0.07, 0.16, 0.95)
+	bg.border_color = Color(0.45, 0.55, 0.72, 0.85)
+	bg.set_border_width_all(1)
+	bg.set_corner_radius_all(0)
+	var fg := StyleBoxFlat.new()
+	fg.bg_color = Color(1.0, 1.0, 1.0, 0.95)
+	fg.set_corner_radius_all(0)
+	bar.add_theme_stylebox_override("background", bg)
+	bar.add_theme_stylebox_override("fill", fg)
 
 func _build_ui() -> void:
 	# WE3 classic bevelled dark-navy & gold broadcast style
@@ -553,6 +584,7 @@ func _build_ui() -> void:
 	_stamina_bar.value = 100.0
 	_stamina_bar.show_percentage = false
 	_stamina_bar.custom_minimum_size = Vector2(200, 8)
+	_style_ps1_bar(_stamina_bar)
 	vbox_pl.add_child(_stamina_bar)
 
 	_power_bar = ProgressBar.new()
@@ -562,7 +594,61 @@ func _build_ui() -> void:
 	_power_bar.custom_minimum_size = Vector2(200, 10)
 	_power_bar.modulate = Color(1.0, 0.45, 0.12)
 	_power_bar.visible = false
+	_style_ps1_bar(_power_bar)
 	vbox_pl.add_child(_power_bar)
+
+	# Bottom-right WE3 2P active player nameplate (visible in 1P vs 2P)
+	_p2_panel = PanelContainer.new()
+	_p2_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_p2_panel.offset_left = -276
+	_p2_panel.offset_right = -20
+	_p2_panel.offset_top = -96
+	_p2_panel.offset_bottom = -16
+	_p2_panel.visible = false
+	_p2_panel.add_theme_stylebox_override("panel", bot_left.get_theme_stylebox("panel"))
+	add_child(_p2_panel)
+
+	var vbox_p2 := VBoxContainer.new()
+	vbox_p2.add_theme_constant_override("separation", 4)
+	_p2_panel.add_child(vbox_p2)
+
+	var p2_row := HBoxContainer.new()
+	p2_row.add_theme_constant_override("separation", 10)
+	vbox_p2.add_child(p2_row)
+
+	_p2_pos_badge = Label.new()
+	_p2_pos_badge.text = "FW 10"
+	_p2_pos_badge.add_theme_font_size_override("font_size", 16)
+	p2_row.add_child(_p2_pos_badge)
+
+	_p2_player_label = Label.new()
+	_p2_player_label.text = "2P"
+	_p2_player_label.add_theme_font_size_override("font_size", 18)
+	_p2_player_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.80))
+	p2_row.add_child(_p2_player_label)
+
+	_p2_card_badge = ColorRect.new()
+	_p2_card_badge.color = Color(0.98, 0.84, 0.12)
+	_p2_card_badge.custom_minimum_size = Vector2(10, 14)
+	_p2_card_badge.visible = false
+	p2_row.add_child(_p2_card_badge)
+
+	_p2_stamina_bar = ProgressBar.new()
+	_p2_stamina_bar.max_value = 100.0
+	_p2_stamina_bar.value = 100.0
+	_p2_stamina_bar.show_percentage = false
+	_p2_stamina_bar.custom_minimum_size = Vector2(200, 8)
+	_style_ps1_bar(_p2_stamina_bar)
+	vbox_p2.add_child(_p2_stamina_bar)
+
+	_p2_power_bar = ProgressBar.new()
+	_p2_power_bar.max_value = 100.0
+	_p2_power_bar.value = 0.0
+	_p2_power_bar.show_percentage = false
+	_p2_power_bar.custom_minimum_size = Vector2(200, 10)
+	_p2_power_bar.visible = false
+	_style_ps1_bar(_p2_power_bar)
+	vbox_p2.add_child(_p2_power_bar)
 
 	# Bottom-center 2D Radar
 	_radar = RadarWidget.new()
@@ -713,6 +799,10 @@ class RadarWidget extends Control:
 
 		var c0 := GameData.get_team_primary_color(GameData.home_team_id)
 		var c1 := GameData.get_team_primary_color(GameData.away_team_id)
+		# Goalposts on left/right edges
+		var gw := (PitchBuilder.GOAL_WIDTH / PitchBuilder.PITCH_WIDTH) * size.y
+		draw_rect(Rect2(0.0, size.y * 0.5 - gw * 0.5, 3.0, gw), Color(0.95, 0.95, 0.95, 0.85))
+		draw_rect(Rect2(size.x - 3.0, size.y * 0.5 - gw * 0.5, 3.0, gw), Color(0.95, 0.95, 0.95, 0.85))
 		for p in players:
 			if p == null or not is_instance_valid(p) or p.is_sent_off:
 				continue
@@ -720,14 +810,15 @@ class RadarWidget extends Control:
 			var v := (p.global_position.z + PitchBuilder.HALF_WID) / PitchBuilder.PITCH_WIDTH
 			var pt := Vector2(clampf(u, 0.02, 0.98) * size.x, clampf(v, 0.02, 0.98) * size.y)
 			var col := Color(0.95, 0.85, 0.2) if p.role == Player.Role.GK else (c0 if p.team_side == 0 else c1)
-			draw_circle(pt, 4.0, Color(0.0, 0.0, 0.0, 0.85))
-			draw_circle(pt, 3.0, col)
+			draw_rect(Rect2(pt.x - 3.0, pt.y - 3.0, 6.0, 6.0), Color(0.0, 0.0, 0.0, 0.90))
+			draw_rect(Rect2(pt.x - 2.0, pt.y - 2.0, 4.0, 4.0), col)
 			if p.is_controlled or (ball != null and ball.owner_player == p):
-				draw_arc(pt, 5.4, 0.0, TAU, 16, Color.WHITE, 1.4)
+				var hi := Color(1.0, 0.35, 0.25) if (p.is_human and p.human_slot == 2) else Color(0.25, 0.95, 1.0)
+				draw_rect(Rect2(pt.x - 4.5, pt.y - 4.5, 9.0, 9.0), hi, false, 1.2)
 
 		if ball != null and is_instance_valid(ball):
 			var bu := (ball.global_position.x + PitchBuilder.HALF_LEN) / PitchBuilder.PITCH_LENGTH
 			var bv := (ball.global_position.z + PitchBuilder.HALF_WID) / PitchBuilder.PITCH_WIDTH
 			var bpt := Vector2(clampf(bu, 0.01, 0.99) * size.x, clampf(bv, 0.01, 0.99) * size.y)
-			draw_circle(bpt, 3.6, Color(0.0, 0.0, 0.0, 0.9))
-			draw_circle(bpt, 2.6, Color(1.0, 0.96, 0.35))
+			draw_rect(Rect2(bpt.x - 3.0, bpt.y - 3.0, 6.0, 6.0), Color(0.0, 0.0, 0.0, 0.95))
+			draw_rect(Rect2(bpt.x - 2.0, bpt.y - 2.0, 4.0, 4.0), Color(1.0, 0.96, 0.35))
