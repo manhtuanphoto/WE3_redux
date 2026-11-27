@@ -38,6 +38,7 @@ var gk_spills: Array[int] = [0, 0]
 var passes_completed: Array[int] = [0, 0]
 var possession_time: Array[float] = [0.0, 0.0]
 var subs_used: Array[int] = [0, 0]
+var gk_rush: Array[bool] = [false, false]
 var event_log: Array[String] = []
 
 func log_event(msg: String) -> void:
@@ -63,6 +64,7 @@ func reset_match() -> void:
 	gk_spills = [0, 0]
 	shots_on_target = [0, 0]
 	passes_completed = [0, 0]
+	gk_rush = [false, false]
 	possession_time = [0.0, 0.0]
 	subs_used = [0, 0]
 	event_log.clear()

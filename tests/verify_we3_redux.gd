@@ -284,6 +284,27 @@ func _run_tests() -> void:
 	_assert(nr_match.hud._prematch_panel.visible and "↑" in nr_match.hud._prematch_label.text and "↓" in nr_match.hud._prematch_label.text, "Pre-match PS1 card displays teams, formation, and condition arrows")
 	nr_match.hud.hide_prematch_card()
 	_assert(not nr_match.hud._prematch_panel.visible, "Pre-match PS1 card hides on OPEN_PLAY")
+
+	# 9i. Verify Condition Form speed scaling, GK Rush, and One-Two run
+	var p_cond: Player = nr_match.players[10]
+	GameData.team_condition[0] = 0
+	p_cond.apply_profile(GameData.get_team(GameData.home_team_id)["players"][10], 10)
+	var spd_bad := p_cond._sprint_speed
+	GameData.team_condition[0] = 4
+	p_cond.apply_profile(GameData.get_team(GameData.home_team_id)["players"][10], 10)
+	_assert(p_cond._sprint_speed > spd_bad, "Condition Form arrow TOP boosts sprint speed vs BAD")
+	GameData.team_condition = [2, 2]
+	MatchState.gk_rush[0] = true
+	var gk0: Player = nr_match.players[0]
+	gk0.global_position = Vector3(-50.0, 0.0, 0.0)
+	gk0.vel = Vector3.ZERO
+	gk0.action_lock_timer = 0.0
+	nr_match.ball.owner_player = null
+	nr_match.ball.global_position = Vector3(-30.0, 0.2, 0.0)
+	for _gt in range(6):
+		gk0._process_gk_ai(0.035)
+	_assert(gk0.vel.x > 0.1, "GK Rush sprints keeper toward ball")
+	MatchState.gk_rush[0] = false
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

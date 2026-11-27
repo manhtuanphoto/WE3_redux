@@ -139,6 +139,8 @@ var hud: MatchHUD
 var players: Array[Player] = []
 var controlled_player: Player = null
 var controlled_player_p2: Player = null
+var _main_ref: Referee = null
+var _linesmen: Array[Referee] = []
 
 var _phase_timer: float = 0.0
 var _pending_restart_pos: Vector3 = Vector3.ZERO
@@ -219,20 +221,23 @@ func _spawn_teams() -> void:
 		_select_controlled_player_p2(null)
 
 func _spawn_referees() -> void:
-	var main_ref := Referee.new()
-	main_ref.setup(ball, false, 0.0)
-	main_ref.position = Vector3(-4.0, 0.0, -8.0)
-	add_child(main_ref)
+	_main_ref = Referee.new()
+	_main_ref.setup(ball, false, 0.0)
+	_main_ref.position = Vector3(-4.0, 0.0, -8.0)
+	add_child(_main_ref)
 
+	_linesmen.clear()
 	var line_north := Referee.new()
 	line_north.setup(ball, true, -PitchBuilder.HALF_WID - 0.9)
 	line_north.position = Vector3(12.0, 0.0, -PitchBuilder.HALF_WID - 0.9)
 	add_child(line_north)
+	_linesmen.append(line_north)
 
 	var line_south := Referee.new()
 	line_south.setup(ball, true, PitchBuilder.HALF_WID + 0.9)
 	line_south.position = Vector3(-12.0, 0.0, PitchBuilder.HALF_WID + 0.9)
 	add_child(line_south)
+	_linesmen.append(line_south)
 
 func _spawn_team_side(side: int, tid: int, is_human_team: bool, slot_num: int = 1) -> void:
 	var team_data := GameData.get_team(tid)
@@ -571,6 +576,12 @@ func _on_out_of_bounds(event_type: String, restart_pos: Vector3, restart_team: i
 	if MatchState.phase != MatchState.Phase.OPEN_PLAY:
 		return
 	_pending_restart_type = event_type
+	if _main_ref != null and event_type in ["foul", "penalty", "offside"]:
+		_main_ref.trigger_signal("celebrate", 1.1)
+	if not _linesmen.is_empty() and event_type in ["offside", "throw_in"]:
+		var lm_idx := 0 if restart_pos.z < 0.0 else 1
+		if lm_idx < _linesmen.size():
+			_linesmen[lm_idx].trigger_signal("throw_in", 1.0)
 	_pending_restart_pos = restart_pos
 	if event_type == "foul":
 		# func_800772F8: clamp free-kick spot out of goal area (|x| > 47.136, |z| < 8.92) & inside pitch

@@ -32,6 +32,7 @@ var is_sent_off: bool = false
 var vel: Vector3 = Vector3.ZERO
 var stamina: float = 100.0
 var action_lock_timer: float = 0.0
+var _one_two_run_timer: float = 0.0
 var tackle_timer: float = 0.0
 var tackle_dir: Vector3 = Vector3.FORWARD
 var shot_charge: float = 0.0
@@ -108,10 +109,12 @@ func apply_profile(rec: Dictionary, p_roster_slot: int = -1) -> void:
 	var si := clampi(int(spd), 0, 9)
 	var ai := clampi(int(acc), 0, 9)
 	var speed_mul := float(53 + SPEED_TABLE[si]) / float(53 + SPEED_TABLE[7])
+	var cond_table: Array[float] = [0.96, 0.98, 1.0, 1.025, 1.05]
+	var cond_mul: float = cond_table[clampi(GameData.team_condition[team_side], 0, 4)]
 	var accel_div := 18.0 - float(ACCEL_TABLE[ai])
-	_walk_speed = WALK_SPEED
-	_sprint_speed = SPRINT_SPEED * speed_mul
-	_dribble_speed = DRIBBLE_SPEED * (1.0 + (speed_mul - 1.0) * 0.8 + (tech - 6.0) * 0.006)
+	_walk_speed = WALK_SPEED * cond_mul
+	_sprint_speed = SPRINT_SPEED * speed_mul * cond_mul
+	_dribble_speed = DRIBBLE_SPEED * (1.0 + (speed_mul - 1.0) * 0.8 + (tech - 6.0) * 0.006) * cond_mul
 	_accel = ACCEL * (18.0 / accel_div)
 	_stam_drain = 1.0 + (6.0 - sta) * 0.09
 	_kick_mul = 1.0 + (kp - 6.0) * 0.035
@@ -533,8 +536,12 @@ func _process_human(delta: float) -> void:
 
 	# Ball actions when in possession
 	if has_ball() and action_lock_timer <= 0.0:
+		MatchState.gk_rush[team_side] = false
 		if Input.is_action_just_pressed(_act("pass_short")):
+			var one_two := Input.is_action_pressed(_act("sprint"))
 			_perform_pass(move_dir, false, false)
+			if one_two:
+				_one_two_run_timer = 1.6
 		elif Input.is_action_just_pressed(_act("pass_through")):
 			_perform_pass(move_dir, true, false)
 		elif Input.is_action_just_pressed(_act("pass_loft")):
@@ -551,6 +558,7 @@ func _process_human(delta: float) -> void:
 	else:
 		is_charging_shot = false
 		shot_charge = 0.0
+		MatchState.gk_rush[team_side] = (_ball != null and (_ball.owner_player == null or _ball.owner_player.team_side != team_side) and Input.is_action_pressed(_act("pass_through")))
 		# WE3 One-Touch buffer (SUT_MOT_CHAM_CHON_CHAN_VA_NE_BONG_WE3.md)
 		if Input.is_action_just_pressed(_act("pass_short")):
 			_one_touch_action = "pass_short"
@@ -583,6 +591,13 @@ func _process_ai(delta: float) -> void:
 
 	var attack_dir := 1.0 if team_side == 0 else -1.0
 	var opp_goal := Vector3(attack_dir * PitchBuilder.HALF_LEN, 0.0, 0.0)
+
+	if _one_two_run_timer > 0.0:
+		_one_two_run_timer -= delta
+		if not has_ball():
+			var run_dir := Vector3(attack_dir, 0.0, 0.0)
+			_step_motion(run_dir, _sprint_speed * _fat_spd(), true, delta)
+			return
 
 	if has_ball():
 		_ai_hold_timer += delta
@@ -799,15 +814,16 @@ func _process_gk_ai(delta: float) -> void:
 			_gk_start_dive(aim)
 			return
 
-	# Rush out if ball is loose inside the 18-yard box and close
-	elif _ball.owner_player == null and absf(ball_pos.x - own_goal_x) < 14.0 and absf(ball_pos.z) < 12.0:
+	# Rush out on human GK Rush command (holding pass_through) or when ball is loose inside the 18-yard box
+	var rush_cmd := MatchState.gk_rush[team_side] and _ball.owner_player != self
+	if rush_cmd or (_ball.owner_player == null and absf(ball_pos.x - own_goal_x) < 14.0 and absf(ball_pos.z) < 12.0):
 		target = ball_pos
 
 	var to_t := target - global_position
 	to_t.y = 0.0
 	if to_t.length() > 0.2:
 		var dir := to_t.normalized()
-		var spd := (_sprint_speed * _fat_spd()) * 0.95 if shot_coming else (_walk_speed * _fat_spd()) * 1.05
+		var spd := (_sprint_speed * _fat_spd()) * (1.0 if rush_cmd else 0.95) if (shot_coming or rush_cmd) else (_walk_speed * _fat_spd()) * 1.05
 		_step_motion(dir, spd, spd > (_walk_speed * _fat_spd()) * 1.04, delta)
 	else:
 		_step_motion(Vector3.ZERO, 0.0, false, delta)

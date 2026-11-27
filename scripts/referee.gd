@@ -8,7 +8,13 @@ var _ball: Ball = null
 var _model_root: Node3D = null
 var _anim_player: AnimationPlayer = null
 var _current_anim: String = ""
+var _signal_timer: float = 0.0
+var _signal_anim: String = ""
 var vel: Vector3 = Vector3.ZERO
+
+func trigger_signal(anim_key: String = "celebrate", dur: float = 1.1) -> void:
+	_signal_anim = anim_key
+	_signal_timer = dur
 
 func setup(p_ball: Ball, p_is_linesman: bool = false, p_touchline_z: float = 34.8) -> void:
 	_ball = p_ball
@@ -125,6 +131,11 @@ func _apply_rec(n: Node, mat_shirt: Material, mat_shorts: Material, mat_socks: M
 
 func _physics_process(delta: float) -> void:
 	if _ball == null or MatchState.phase in [MatchState.Phase.PAUSED, MatchState.Phase.HALFTIME, MatchState.Phase.FULLTIME]:
+		return
+	if _signal_timer > 0.0:
+		_signal_timer -= delta
+		vel = Vector3.ZERO
+		_play_anim(_signal_anim, 0.08)
 		return
 
 	var bpos := _ball.global_position
