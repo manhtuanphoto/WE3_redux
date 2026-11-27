@@ -28,7 +28,19 @@ Verified findings from `SLPM_861.62` / overlays. File offset = VRAM address - 0x
 Estimates, not recovered from code: dive reach (`GK_DIVE_BASE + 0.10*defense`), and `level = defense stat` (the C reads `record[0x3B9]/10`, whose writer was not located).
 Also fixed: ball curve was far too strong; the C turns the heading 1 angle unit every `spin_interval` frames.
 
+## Function identities (checked against the C, corrections to earlier notes)
+| Function | Actually is | Earlier mis-citation |
+|---|---|---|
+| `func_8007CC00` | replay quarter router (roster quarter record from replay minute) | cited as foul/card logic |
+| `func_8001F2D0` | match-end/result setup (scratch 0x309, 0x2E1 mode) | cited as offside |
+| `func_800730F8` | injury/bench substitution using `D_800CA458` | cited as red-card rebalance |
+| `func_80081B94`, `func_80084750` | per-mode dispatchers on scratch 0x1F80029B (phases 8 and 10) | not used |
+| `func_80040DD4`, `func_80041898`, `func_800420E4` | tackle/contact checks, **assembly only** (0xAC4/..), no C | not used |
+
+Match phase table (`0x1F80029A`): 0 `func_800769C0`, 1 `func_80076E7C` (open play: clock, advantage zone 0x22E3, injury time), 2 `80077270`, 3 `8007A2A8`, 4 `8007B39C`, 6 `8007BE38`, 7 `8007CEDC`, 8 `80081B94` (6 modes), 9 `80083EE8`, 10 `80084750` (5 modes), 11 `80087CCC`, 12 `80089C70`, 14 `80075BBC`.
+
 ## Open
+- Real foul/tackle-contact and offside rules: only in MIPS asm (`func_80040DD4` ...), not yet decompiled.
 - Flag palettes (CLUT) for the 43 teams: not found in `SELECT.BIN`, `DATSEL.BIN` (only 23 flag-like palettes in its 192), `HATA_CSR.BIN` (no CLUT descriptors), `SLPM_861.62` (no contiguous 43x16 block).
 - `0x3BA` (dribble/sprint bonus) writer not located.
 - `func_80054F1C` shot-decision random helper semantics.

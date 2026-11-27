@@ -1075,7 +1075,7 @@ func _perform_pass(aim_dir: Vector3, is_through: bool, is_loft: bool) -> void:
 
 	_face_direction(kick_dir, 1.0)
 	_ball.kick(kick_vel, self, team_side)
-	# WE3 Offside check (BAT_VIET_VI_VA_THE_PHAT_WE3.md / func_8001F2D0.c)
+	# Offside check: game-side heuristic (second-last defender). NOTE: func_8001F2D0 is the match-end/result setup, not the offside rule; the real rule was not located in the C decomp
 	if target != null and _is_player_offside(target):
 		_ball.offside_target = target
 		_ball.offside_defending_team = 1 - team_side
@@ -1216,7 +1216,7 @@ func _try_pickup_ball() -> void:
 			MatchState.last_touch_team = team_side
 			MatchState.last_touch_player_name = player_name
 		elif tackle_timer > 0.0 and dist > 0.58:
-			# Reckless slide missed the ball -> Foul & Yellow/Red Card (func_8007CC00.c)
+			# Reckless slide missed the ball -> foul & card. Game-side heuristic: func_8007CC00 is the replay quarter router, not the foul logic; real foul code (func_80040DD4 area) has no C yet
 			tackle_timer = 0.0
 			action_lock_timer = 0.65
 			_play_anim("foul_react", 0.05)
