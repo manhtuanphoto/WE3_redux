@@ -243,6 +243,18 @@ func _build_ui() -> void:
 	trap_chk.toggled.connect(func(on): GameData.home_offside_trap = on)
 	form_row.add_child(trap_chk)
 
+	var mode_opt := OptionButton.new()
+	mode_opt.add_item("1P vs COM", 0)
+	mode_opt.add_item("1P vs 2P", 1)
+	mode_opt.add_item("COM vs COM", 2)
+	var cur_mode := 2 if GameData.is_ai_vs_ai else (1 if GameData.is_two_player else 0)
+	mode_opt.select(cur_mode)
+	mode_opt.item_selected.connect(func(idx):
+		GameData.is_two_player = (idx == 1)
+		GameData.is_ai_vs_ai = (idx == 2)
+	)
+	form_row.add_child(mode_opt)
+
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	btn_row.add_theme_constant_override("separation", 20)
@@ -258,7 +270,6 @@ func _build_ui() -> void:
 	btn_kickoff.text = "KICK OFF!"
 	btn_kickoff.custom_minimum_size = Vector2(200, 44)
 	btn_kickoff.pressed.connect(func():
-		GameData.is_ai_vs_ai = false
 		GameData.human_side = 0
 		GameData.return_scene = "res://scenes/main_menu.tscn"
 		GameData.preview_speed = 1.0

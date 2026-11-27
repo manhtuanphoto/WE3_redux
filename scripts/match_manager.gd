@@ -138,6 +138,7 @@ var cam: BroadcastCamera
 var hud: MatchHUD
 var players: Array[Player] = []
 var controlled_player: Player = null
+var controlled_player_p2: Player = null
 
 var _phase_timer: float = 0.0
 var _pending_restart_pos: Vector3 = Vector3.ZERO
@@ -199,13 +200,22 @@ func _ready() -> void:
 	SoundFX.start_crowd_ambience()
 
 func _spawn_teams() -> void:
-	var hs := -1 if GameData.is_ai_vs_ai else GameData.human_side
-	_spawn_team_side(0, GameData.home_team_id, hs == 0)
-	_spawn_team_side(1, GameData.away_team_id, hs == 1)
-	if hs >= 0:
-		_select_controlled_player(_get_closest_human_outfielder(Vector3.ZERO))
-	else:
+	if GameData.is_ai_vs_ai:
+		_spawn_team_side(0, GameData.home_team_id, false, 1)
+		_spawn_team_side(1, GameData.away_team_id, false, 1)
 		_select_controlled_player(null)
+		_select_controlled_player_p2(null)
+	elif GameData.is_two_player:
+		_spawn_team_side(0, GameData.home_team_id, true, 1)
+		_spawn_team_side(1, GameData.away_team_id, true, 2)
+		_select_controlled_player(_get_closest_human_outfielder(Vector3.ZERO, null, 1))
+		_select_controlled_player_p2(_get_closest_human_outfielder(Vector3.ZERO, null, 2))
+	else:
+		var hs := GameData.human_side
+		_spawn_team_side(0, GameData.home_team_id, hs == 0, 1)
+		_spawn_team_side(1, GameData.away_team_id, hs == 1, 1)
+		_select_controlled_player(_get_closest_human_outfielder(Vector3.ZERO, null, 1))
+		_select_controlled_player_p2(null)
 
 func _spawn_referees() -> void:
 	var main_ref := Referee.new()
@@ -223,7 +233,7 @@ func _spawn_referees() -> void:
 	line_south.position = Vector3(-12.0, 0.0, PitchBuilder.HALF_WID + 0.9)
 	add_child(line_south)
 
-func _spawn_team_side(side: int, tid: int, is_human_team: bool) -> void:
+func _spawn_team_side(side: int, tid: int, is_human_team: bool, slot_num: int = 1) -> void:
 	var team_data := GameData.get_team(tid)
 	var roster: Array = team_data.get("players", [])
 	var form_name := GameData.resolve_formation(side)
@@ -244,6 +254,7 @@ func _spawn_team_side(side: int, tid: int, is_human_team: bool) -> void:
 		p.setup(side, tid, i, pname, slot["role"], anchor, ball, players)
 		p.apply_profile(rec, r_idx)
 		p.is_human = is_human_team
+		p.human_slot = slot_num
 		p.position = anchor
 		add_child(p)
 		players.append(p)
@@ -308,9 +319,17 @@ func _process(delta: float) -> void:
 				if _replay_buffer.size() >= 30:
 					_is_replaying = true
 					_replay_cursor = 0.0
+					ball.owner_player = null
+					ball.vel = Vector3.ZERO
+					ball.is_active_play = false
 					hud.set_replay_badge(true)
 				else:
 					_setup_kickoff(MatchState.kickoff_team)
+		elif Input.is_action_just_pressed("pass_short") or Input.is_action_just_pressed("shoot") or Input.is_action_just_pressed("p2_pass_short"):
+			_is_replaying = false
+			hud.set_replay_badge(false)
+			_replay_buffer.clear()
+			_setup_kickoff(MatchState.kickoff_team)
 		return
 
 	if MatchState.phase in [MatchState.Phase.OUT_THROW_IN, MatchState.Phase.OUT_CORNER, MatchState.Phase.OUT_GOAL_KICK, MatchState.Phase.OUT_FREE_KICK]:
@@ -324,14 +343,16 @@ func _process(delta: float) -> void:
 	if ball.owner_player != null:
 		MatchState.possession_time[ball.owner_player.team_side] += delta
 
-	# Record 180-frame (3s) ring buffer for Goal Instant Replay
+	# Record 300-frame (5s) ring buffer for Goal Instant Replay
 	var p_pos: Array[Vector3] = []
 	var p_yaw: Array[float] = []
+	var p_anim: Array[String] = []
 	for p in players:
 		p_pos.append(p.global_position)
 		p_yaw.append(p.rotation.y)
-	_replay_buffer.append({"ball": ball.global_position, "p_pos": p_pos, "p_yaw": p_yaw})
-	if _replay_buffer.size() > 180:
+		p_anim.append(p._current_anim)
+	_replay_buffer.append({"ball": ball.global_position, "p_pos": p_pos, "p_yaw": p_yaw, "p_anim": p_anim})
+	if _replay_buffer.size() > 300:
 		_replay_buffer.pop_front()
 
 	# WE3 danger-zone crowd excitement (func_80076E7C.c / func_80055CD4.c)
@@ -401,17 +422,26 @@ func _process(delta: float) -> void:
 func _update_human_switching() -> void:
 	if GameData.is_ai_vs_ai:
 		return
-	# Auto-switch if a human teammate gains possession
-	if ball.owner_player != null and ball.owner_player.is_human and ball.owner_player != controlled_player:
-		_select_controlled_player(ball.owner_player)
-		return
+	# Auto-switch if a human teammate gains possession (P1 or P2)
+	if ball.owner_player != null and ball.owner_player.is_human:
+		if ball.owner_player.human_slot == 1 and ball.owner_player != controlled_player:
+			_select_controlled_player(ball.owner_player)
+		elif ball.owner_player.human_slot == 2 and ball.owner_player != controlled_player_p2:
+			_select_controlled_player_p2(ball.owner_player)
 
-	# Manual switch when defending / chasing loose ball
+	# Manual switch when defending / chasing loose ball (P1)
 	if Input.is_action_just_pressed("pass_short"):
 		if controlled_player == null or not controlled_player.has_ball():
-			var next_p := _get_closest_human_outfielder(ball.global_position, controlled_player)
+			var next_p := _get_closest_human_outfielder(ball.global_position, controlled_player, 1)
 			if next_p != null:
 				_select_controlled_player(next_p)
+
+	# Manual switch when defending / chasing loose ball (P2)
+	if GameData.is_two_player and Input.is_action_just_pressed("p2_pass_short"):
+		if controlled_player_p2 == null or not controlled_player_p2.has_ball():
+			var next_p2 := _get_closest_human_outfielder(ball.global_position, controlled_player_p2, 2)
+			if next_p2 != null:
+				_select_controlled_player_p2(next_p2)
 
 func _select_controlled_player(p: Player) -> void:
 	if controlled_player != null and is_instance_valid(controlled_player):
@@ -422,11 +452,18 @@ func _select_controlled_player(p: Player) -> void:
 	if hud != null:
 		hud.set_controlled_player(controlled_player)
 
-func _get_closest_human_outfielder(to_pos: Vector3, exclude: Player = null) -> Player:
+func _select_controlled_player_p2(p: Player) -> void:
+	if controlled_player_p2 != null and is_instance_valid(controlled_player_p2):
+		controlled_player_p2.set_controlled(false)
+	controlled_player_p2 = p
+	if controlled_player_p2 != null:
+		controlled_player_p2.set_controlled(true)
+
+func _get_closest_human_outfielder(to_pos: Vector3, exclude: Player = null, slot_num: int = 1) -> Player:
 	var best: Player = null
 	var best_d2 := INF
 	for p in players:
-		if p.is_human and p.role != Player.Role.GK and p != exclude and not p.is_sent_off:
+		if p.is_human and p.human_slot == slot_num and p.role != Player.Role.GK and p != exclude and not p.is_sent_off:
 			var d2 := p.global_position.distance_squared_to(to_pos)
 			if d2 < best_d2:
 				best_d2 = d2
@@ -446,9 +483,12 @@ func _physics_process(_delta: float) -> void:
 		ball.global_position = frame["ball"]
 		var p_pos: Array = frame["p_pos"]
 		var p_yaw: Array = frame["p_yaw"]
+		var p_anim: Array = frame.get("p_anim", [])
 		for i in range(mini(players.size(), p_pos.size())):
 			players[i].global_position = p_pos[i]
 			players[i].rotation.y = p_yaw[i]
+			if i < p_anim.size() and p_anim[i] != "":
+				players[i]._play_anim(p_anim[i], 0.04, 0.55)
 		_replay_cursor += 0.55 # Slow-motion 0.55x replay!
 
 func _on_goal_detected(scoring_team: int) -> void:
@@ -653,7 +693,10 @@ func _execute_set_piece_restart() -> void:
 				else:
 					taker._perform_pass(Vector3(signf(atk_goal_x), 0.0, 0.0), false, false)
 		if taker.is_human:
-			_select_controlled_player(taker)
+			if taker.human_slot == 2:
+				_select_controlled_player_p2(taker)
+			else:
+				_select_controlled_player(taker)
 	_pending_restart_type = ""
 	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
 

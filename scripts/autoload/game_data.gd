@@ -26,6 +26,7 @@ var extra_time_enabled: bool = false
 var half_duration_seconds: float = 120.0
 var ai_difficulty: int = 1  # 0=Easy, 1=Normal, 2=Hard
 var is_ai_vs_ai: bool = false
+var is_two_player: bool = false
 var selected_stadium: String = "GRDM_C"
 var stadium_is_night: bool = false
 var stadium_is_rain: bool = false
@@ -42,12 +43,58 @@ var preview_speed: float = 1.0
 var away_formation_manual: bool = false
 
 func _ready() -> void:
+	_ensure_p2_input_actions()
 	_load_teams()
 	_load_tactics()
 	_load_kit_map()
 	_load_extra_kit_map()
 	_load_anim_index()
 	_validate_default_teams()
+
+func _ensure_p2_input_actions() -> void:
+	var key_map := {
+		"p2_move_left": [KEY_KP_4],
+		"p2_move_right": [KEY_KP_6],
+		"p2_move_up": [KEY_KP_8],
+		"p2_move_down": [KEY_KP_2, KEY_KP_5],
+		"p2_pass_short": [KEY_KP_1, KEY_END],
+		"p2_pass_through": [KEY_KP_3, KEY_PAGEDOWN],
+		"p2_pass_loft": [KEY_KP_7, KEY_HOME],
+		"p2_shoot": [KEY_KP_0, KEY_INSERT],
+		"p2_sprint": [KEY_KP_ENTER, KEY_KP_ADD],
+	}
+	for act in key_map:
+		if not InputMap.has_action(act):
+			InputMap.add_action(act)
+		for kc in key_map[act]:
+			var ev := InputEventKey.new()
+			ev.keycode = kc
+			if not InputMap.action_has_event(act, ev):
+				InputMap.action_add_event(act, ev)
+	var joy_axes := {
+		"p2_move_left": [JOY_AXIS_LEFT_X, -1.0],
+		"p2_move_right": [JOY_AXIS_LEFT_X, 1.0],
+		"p2_move_up": [JOY_AXIS_LEFT_Y, -1.0],
+		"p2_move_down": [JOY_AXIS_LEFT_Y, 1.0],
+	}
+	for act in joy_axes:
+		var ax := InputEventJoypadMotion.new()
+		ax.device = 1
+		ax.axis = joy_axes[act][0]
+		ax.axis_value = joy_axes[act][1]
+		InputMap.action_add_event(act, ax)
+	var joy_btns := {
+		"p2_pass_short": JOY_BUTTON_A,
+		"p2_pass_through": JOY_BUTTON_Y,
+		"p2_pass_loft": JOY_BUTTON_B,
+		"p2_shoot": JOY_BUTTON_X,
+		"p2_sprint": JOY_BUTTON_RIGHT_SHOULDER,
+	}
+	for act in joy_btns:
+		var jb := InputEventJoypadButton.new()
+		jb.device = 1
+		jb.button_index = joy_btns[act]
+		InputMap.action_add_event(act, jb)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:

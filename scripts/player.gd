@@ -25,6 +25,7 @@ const ACCEL_TABLE := [-3, -3, -2, -2, -1, -1, 0, 0, 3, 6]  # D_800C6BF0 (s16)
 @export var home_anchor: Vector3 = Vector3.ZERO
 
 var is_human: bool = false
+var human_slot: int = 1              # 1 = 1P, 2 = 2P
 var is_controlled: bool = false
 var yellow_cards: int = 0
 var is_sent_off: bool = false
@@ -399,6 +400,9 @@ func set_controlled(val: bool) -> void:
 	is_controlled = val
 	if _ring_mesh != null:
 		_ring_mesh.visible = val
+		var rm := _ring_mesh.material_override as StandardMaterial3D
+		if rm != null:
+			rm.albedo_color = Color(1.0, 0.30, 0.20) if human_slot == 2 else Color(0.15, 0.92, 1.0)
 	if _name_label != null:
 		_name_label.visible = val
 
@@ -496,18 +500,21 @@ func _physics_process(delta: float) -> void:
 	_try_pickup_ball()
 	_update_locomotion_anim()
 
+func _act(base_name: String) -> String:
+	return ("p2_" + base_name) if human_slot == 2 else base_name
+
 func _process_human(delta: float) -> void:
 	var input_vec := Vector2(
-		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
-		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
+		Input.get_action_strength(_act("move_right")) - Input.get_action_strength(_act("move_left")),
+		Input.get_action_strength(_act("move_down")) - Input.get_action_strength(_act("move_up"))
 	)
 	var move_dir := Vector3(input_vec.x, 0.0, input_vec.y)
 	if move_dir.length() > 1.0:
 		move_dir = move_dir.normalized()
 
-	var sprinting := Input.is_action_pressed("sprint") and stamina > 5.0 and move_dir.length() > 0.1
+	var sprinting := Input.is_action_pressed(_act("sprint")) and stamina > 5.0 and move_dir.length() > 0.1
 	# WE3 Knock-on burst (func_80027140.c): pressing sprint while dribbling knocks ball ahead
-	if has_ball() and Input.is_action_just_pressed("sprint") and stamina > 10.0 and action_lock_timer <= 0.0:
+	if has_ball() and Input.is_action_just_pressed(_act("sprint")) and stamina > 10.0 and action_lock_timer <= 0.0:
 		var ko_dir := move_dir if move_dir.length() > 0.1 else -global_transform.basis.z
 		ko_dir.y = 0.0
 		_ball.kick(ko_dir.normalized() * 7.0, self, team_side)
@@ -526,18 +533,18 @@ func _process_human(delta: float) -> void:
 
 	# Ball actions when in possession
 	if has_ball() and action_lock_timer <= 0.0:
-		if Input.is_action_just_pressed("pass_short"):
+		if Input.is_action_just_pressed(_act("pass_short")):
 			_perform_pass(move_dir, false, false)
-		elif Input.is_action_just_pressed("pass_through"):
+		elif Input.is_action_just_pressed(_act("pass_through")):
 			_perform_pass(move_dir, true, false)
-		elif Input.is_action_just_pressed("pass_loft"):
+		elif Input.is_action_just_pressed(_act("pass_loft")):
 			_perform_pass(move_dir, false, true)
-		elif Input.is_action_just_pressed("shoot"):
+		elif Input.is_action_just_pressed(_act("shoot")):
 			is_charging_shot = true
 			shot_charge = 0.2
-		elif is_charging_shot and Input.is_action_pressed("shoot"):
+		elif is_charging_shot and Input.is_action_pressed(_act("shoot")):
 			shot_charge = minf(1.0, shot_charge + 1.35 * delta)
-		elif is_charging_shot and Input.is_action_just_released("shoot"):
+		elif is_charging_shot and Input.is_action_just_released(_act("shoot")):
 			_perform_shoot(move_dir, shot_charge)
 			is_charging_shot = false
 			shot_charge = 0.0
@@ -545,13 +552,13 @@ func _process_human(delta: float) -> void:
 		is_charging_shot = false
 		shot_charge = 0.0
 		# WE3 One-Touch buffer (SUT_MOT_CHAM_CHON_CHAN_VA_NE_BONG_WE3.md)
-		if Input.is_action_just_pressed("pass_short"):
+		if Input.is_action_just_pressed(_act("pass_short")):
 			_one_touch_action = "pass_short"
 			_one_touch_timer = 0.35
-		elif Input.is_action_just_pressed("pass_through"):
+		elif Input.is_action_just_pressed(_act("pass_through")):
 			_one_touch_action = "pass_through"
 			_one_touch_timer = 0.35
-		elif Input.is_action_just_pressed("shoot") and action_lock_timer <= 0.0:
+		elif Input.is_action_just_pressed(_act("shoot")) and action_lock_timer <= 0.0:
 			if _ball != null and global_position.distance_to(_ball.global_position) < 3.2 and _ball.owner_player == null:
 				_one_touch_action = "shoot"
 				_one_touch_timer = 0.35

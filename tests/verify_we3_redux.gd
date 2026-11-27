@@ -249,6 +249,24 @@ func _run_tests() -> void:
 	nr_match._resolve_pk_turn(true)
 	_assert(nr_match.hud._pk_panel.visible and "●" in nr_match.hud._pk_home_lbl.text, "PK Shootout HUD scoreboard displays round dots")
 
+	# 9f. Verify 2-Player Local Versus (1P vs 2P) and Instant Replay playback
+	GameData.is_two_player = true
+	GameData.is_ai_vs_ai = false
+	var vs_match := (load("res://scenes/match.tscn") as PackedScene).instantiate() as MatchManager
+	add_child(vs_match)
+	await get_tree().process_frame
+	_assert(InputMap.has_action("p2_shoot") and vs_match.controlled_player != null and vs_match.controlled_player_p2 != null and vs_match.controlled_player.human_slot == 1 and vs_match.controlled_player_p2.human_slot == 2, "1P vs 2P assigns P1 (slot 1) & P2 (slot 2) controlled players and P2 InputMap")
+	MatchState.set_phase(MatchState.Phase.OPEN_PLAY)
+	for _rf in range(35):
+		await get_tree().physics_frame
+		vs_match._process(0.016)
+	vs_match._on_goal_detected(0)
+	vs_match._phase_timer = 0.01
+	vs_match._process(0.02)
+	_assert(vs_match._is_replaying and vs_match.hud._replay_badge.visible, "Goal Instant Replay activates with REPLAY badge after celebration")
+	vs_match.queue_free()
+	GameData.is_two_player = false
+
 	nr_match.queue_free()
 	await get_tree().process_frame
 	GameData.stadium_is_night = false
