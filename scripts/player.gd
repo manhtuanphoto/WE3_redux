@@ -629,13 +629,25 @@ func _process_ai(delta: float) -> void:
 					_ai_hold_timer = 0.0
 					return
 
-		# Dribble toward goal, steering slightly away from nearest opponent if close
+		# Dribble toward goal with WE3 8-sector opponent avoidance (func_8005EF94)
 		var dir := (opp_goal - global_position).normalized()
-		if nearest_opp != null and opp_dist < 5.5:
-			var away := (global_position - nearest_opp.global_position)
-			away.y = 0.0
-			if away.length_squared() > 0.01:
-				dir = (dir * 0.62 + away.normalized() * 0.38).normalized()
+		if nearest_opp != null and opp_dist < 6.5:
+			var best_dir := dir
+			var best_score := -INF
+			for s_i in range(8):
+				var cand := dir.rotated(Vector3.UP, float(s_i - 4) * (PI / 4.0) * 0.5)
+				var goal_dot := cand.dot(dir)
+				var min_opp_d := 99.0
+				for op in _all_players:
+					if op.team_side != team_side and not op.is_sent_off:
+						var to_op := op.global_position - (global_position + cand * 2.5)
+						to_op.y = 0.0
+						min_opp_d = minf(min_opp_d, to_op.length())
+				var sc := goal_dot * 2.2 + minf(min_opp_d, 6.0) * 0.85
+				if sc > best_score:
+					best_score = sc
+					best_dir = cand
+			dir = best_dir
 		# Open space ahead -> sprint-dribble (knock-on pace); pressured -> controlled dribble
 		if opp_dist > 3.4 and stamina > 25.0:
 			_step_motion(dir, _sprint_speed * 0.9 * _fat_spd(), true, delta)

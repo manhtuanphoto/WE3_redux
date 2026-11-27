@@ -223,6 +223,12 @@ func _run_tests() -> void:
 	blk_df._try_pickup_ball()
 	_assert(nr_match.ball.owner_player == null and nr_match.ball.vel.length() < 10.0, "High-speed shot (>thresh) deflects off low-technique defender (func_8004DEFC)")
 
+	# 9c. Verify in-match substitution (bench player replaces starter with 100% stamina)
+	nr_match.players[10].stamina = 22.0
+	var old_st_name: String = nr_match.players[10].player_name
+	nr_match._on_substitution_requested(10, 11)
+	_assert(MatchState.subs_used[0] == 1 and nr_match.players[10].stamina == 100.0 and nr_match.players[10].player_name != old_st_name, "Substitution replaces starter with bench player at 100% stamina")
+
 	nr_match.queue_free()
 	await get_tree().process_frame
 	GameData.stadium_is_night = false

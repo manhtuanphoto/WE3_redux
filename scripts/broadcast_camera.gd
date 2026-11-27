@@ -28,7 +28,12 @@ func _process(delta: float) -> void:
 	var desired_pos := Vector3.ZERO
 	var desired_look := Vector3(clamped_x, 2.0, clamped_z - 4.0)
 
-	if MatchState.phase == MatchState.Phase.GOAL_CELEBRATION:
+	if MatchState.phase == MatchState.Phase.KICKOFF:
+		# Pre-match stadium entrance sweep (enter overlay func_8018957C)
+		desired_pos = Vector3(clamped_x - 8.0, 11.5, 24.0)
+		desired_look = Vector3(0.0, 1.0, 0.0)
+		fov = lerpf(fov, 40.0, delta * 3.5)
+	elif MatchState.phase == MatchState.Phase.GOAL_CELEBRATION:
 		desired_pos = Vector3(clamped_x * 0.9, 9.5, clamped_z + 14.0)
 		desired_look = Vector3(clamped_x, 1.0, clamped_z)
 		fov = lerpf(fov, 36.0, delta * 4.0)

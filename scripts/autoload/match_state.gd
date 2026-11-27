@@ -37,6 +37,7 @@ var gk_saves: Array[int] = [0, 0]    # index = team whose keeper made the save
 var gk_spills: Array[int] = [0, 0]
 var passes_completed: Array[int] = [0, 0]
 var possession_time: Array[float] = [0.0, 0.0]
+var subs_used: Array[int] = [0, 0]
 var event_log: Array[String] = []
 
 func log_event(msg: String) -> void:
@@ -63,6 +64,7 @@ func reset_match() -> void:
 	shots_on_target = [0, 0]
 	passes_completed = [0, 0]
 	possession_time = [0.0, 0.0]
+	subs_used = [0, 0]
 	event_log.clear()
 	score_changed.emit(home_score, away_score)
 	half_changed.emit(current_half)
@@ -86,10 +88,14 @@ func record_goal(scoring_team: int, scorer_name: String) -> void:
 	set_phase(Phase.GOAL_CELEBRATION)
 
 func get_display_minutes() -> int:
-	var half_dur := maxf(GameData.half_duration_seconds, 10.0)
+	var is_et := current_half >= 3
+	var half_dur := maxf(GameData.half_duration_seconds * (0.3333 if is_et else 1.0), 10.0)
 	var ratio := clampf(match_elapsed_real / half_dur, 0.0, 1.0)
-	var base_min := 0 if current_half == 1 else 45
-	return base_min + int(floor(ratio * 45.0))
+	match current_half:
+		1: return int(floor(ratio * 45.0))
+		2: return 45 + int(floor(ratio * 45.0))
+		3: return 90 + int(floor(ratio * 15.0))
+		_: return 105 + int(floor(ratio * 15.0))
 
 func get_possession_percent(team_idx: int) -> int:
 	var total := possession_time[0] + possession_time[1]

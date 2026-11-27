@@ -6,6 +6,7 @@ signal resume_requested
 signal rematch_requested
 signal main_menu_requested
 signal next_half_requested
+signal substitution_requested(starter_slot: int, bench_idx: int)
 
 var _score_label: Label
 var _home_abbr_lbl: Label
@@ -28,6 +29,10 @@ var _overlay_stats: Label
 var _btn_primary: Button
 var _btn_rematch: Button
 var _btn_menu: Button
+var _sub_box: HBoxContainer
+var _sub_out_opt: OptionButton
+var _sub_in_opt: OptionButton
+var _btn_sub: Button
 var _radar: RadarWidget
 var _log_panel: PanelContainer
 var _log_label: Label
@@ -109,16 +114,43 @@ func show_pause_menu(show_panel: bool) -> void:
 		_btn_primary.text = "Resume Match"
 		_btn_primary.visible = true
 		_btn_rematch.visible = true
+		_refresh_sub_controls(true)
 
 func show_half_or_full_time(is_fulltime: bool) -> void:
 	if _overlay_panel == null:
 		return
 	_overlay_panel.visible = true
-	_overlay_title.text = "FULL TIME" if is_fulltime else "HALF TIME"
+	if is_fulltime:
+		_overlay_title.text = "FULL TIME"
+	elif MatchState.current_half == 2:
+		_overlay_title.text = "END OF 90 MIN — EXTRA TIME"
+	elif MatchState.current_half == 3:
+		_overlay_title.text = "EXTRA TIME HALF"
+	else:
+		_overlay_title.text = "HALF TIME"
 	_overlay_stats.text = _build_stats_text()
-	_btn_primary.text = "Start 2nd Half"
+	_btn_primary.text = "Start Extra Time" if (not is_fulltime and MatchState.current_half >= 2) else "Start 2nd Half"
 	_btn_primary.visible = not is_fulltime
 	_btn_rematch.visible = true
+	_refresh_sub_controls(not is_fulltime)
+
+func _refresh_sub_controls(allow: bool) -> void:
+	if _sub_box == null:
+		return
+	var can_sub := allow and not GameData.is_ai_vs_ai and MatchState.subs_used[0] < 3 and not _players_ref.is_empty()
+	_sub_box.visible = can_sub
+	if not can_sub:
+		return
+	_sub_out_opt.clear()
+	for p in _players_ref:
+		if p.team_side == 0 and not p.is_sent_off:
+			_sub_out_opt.add_item("%d. %s (%d%%)" % [p.shirt_number, p.player_name, int(p.stamina)], p.slot_index)
+	_sub_in_opt.clear()
+	var roster: Array = GameData.get_team(GameData.home_team_id).get("players", [])
+	for idx in range(11, roster.size()):
+		var rec: Dictionary = roster[idx]
+		_sub_in_opt.add_item("%d. %s (%s)" % [int(rec.get("shirt_number", idx + 1)), str(rec.get("name", "")), str(rec.get("pos_group", ""))], idx)
+	_btn_sub.text = "Sub (%d/3)" % MatchState.subs_used[0]
 
 func _build_stats_text() -> String:
 	var h_abbr := GameData.get_team_abbr(GameData.home_team_id)
@@ -149,9 +181,11 @@ func _process(delta: float) -> void:
 		_home_digit_rect.visible = false
 		_away_digit_rect.visible = false
 		_score_label.text = "%s  %d  -  %d  %s" % [h_abbr, MatchState.home_score, MatchState.away_score, a_abbr]
-	var half_str := "1ST" if MatchState.current_half == 1 else "2ND"
+	var half_names := {1: "1ST", 2: "2ND", 3: "ET1", 4: "ET2"}
+	var half_str: String = half_names.get(MatchState.current_half, "2ND")
 	var spd_str := " [2X]" if Engine.time_scale > 1.5 else ""
-	var added_str := "+" if (MatchState.match_elapsed_real > GameData.half_duration_seconds and MatchState.phase == MatchState.Phase.OPEN_PLAY) else ""
+	var half_dur := GameData.half_duration_seconds * (0.3333 if MatchState.current_half >= 3 else 1.0)
+	var added_str := "+" if (MatchState.match_elapsed_real > half_dur and MatchState.phase == MatchState.Phase.OPEN_PLAY) else ""
 	_clock_label.text = "%s %02d'%s%s" % [half_str, MatchState.get_display_minutes(), added_str, spd_str]
 	if _loss_time_rect != null:
 		_loss_time_rect.visible = added_str != ""
@@ -502,6 +536,25 @@ func _build_ui() -> void:
 			resume_requested.emit()
 	)
 	ov_box.add_child(_btn_primary)
+
+	_sub_box = HBoxContainer.new()
+	_sub_box.add_theme_constant_override("separation", 6)
+	_sub_box.visible = false
+	ov_box.add_child(_sub_box)
+	_sub_out_opt = OptionButton.new()
+	_sub_out_opt.custom_minimum_size = Vector2(130, 30)
+	_sub_box.add_child(_sub_out_opt)
+	_sub_in_opt = OptionButton.new()
+	_sub_in_opt.custom_minimum_size = Vector2(130, 30)
+	_sub_box.add_child(_sub_in_opt)
+	_btn_sub = Button.new()
+	_btn_sub.text = "Sub (0/3)"
+	_btn_sub.pressed.connect(func():
+		if _sub_out_opt.item_count > 0 and _sub_in_opt.item_count > 0:
+			substitution_requested.emit(_sub_out_opt.get_selected_id(), _sub_in_opt.get_selected_id())
+			_refresh_sub_controls(true)
+	)
+	_sub_box.add_child(_btn_sub)
 
 	_btn_rematch = Button.new()
 	_btn_rematch.text = "Restart Match"

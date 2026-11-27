@@ -188,6 +188,7 @@ func _ready() -> void:
 	hud.rematch_requested.connect(_restart_match)
 	hud.main_menu_requested.connect(_go_main_menu)
 	hud.next_half_requested.connect(_start_second_half)
+	hud.substitution_requested.connect(_on_substitution_requested)
 
 	if GameData.game_mode == "pk":
 		_start_pk_shootout()
@@ -344,7 +345,8 @@ func _process(delta: float) -> void:
 
 	# WE3 smart end-of-half / injury-time whistle (func_80076E7C.c):
 	# Blow immediately in midfield (|x| < 22m), but allow attacking plays in final third until stalled > 2.2s
-	if MatchState.match_elapsed_real >= GameData.half_duration_seconds:
+	var half_dur := GameData.half_duration_seconds * (0.3333 if MatchState.current_half >= 3 else 1.0)
+	if MatchState.match_elapsed_real >= half_dur:
 		var should_whistle := false
 		if bx_abs < 22.0:
 			should_whistle = true
@@ -366,11 +368,19 @@ func _process(delta: float) -> void:
 			_injury_stall_timer = 0.0
 			Engine.time_scale = 1.0
 			SoundFX.play_sfx("whistle_long")
-			if MatchState.current_half == 1:
+			if MatchState.current_half == 1 or MatchState.current_half == 3:
 				MatchState.set_phase(MatchState.Phase.HALFTIME)
 				hud.show_half_or_full_time(false)
 				SoundFX.stop_crowd_ambience()
 				SoundFX.play_music("07RESULT")
+			elif MatchState.current_half == 2 and GameData.extra_time_enabled and MatchState.home_score == MatchState.away_score:
+				MatchState.set_phase(MatchState.Phase.HALFTIME)
+				hud.show_half_or_full_time(false)
+				SoundFX.stop_crowd_ambience()
+				SoundFX.play_music("07RESULT")
+			elif MatchState.current_half == 4 and GameData.extra_time_enabled and MatchState.home_score == MatchState.away_score:
+				hud.show_banner("EXTRA TIME TIED — PK SHOOTOUT!", 2.0)
+				_start_pk_shootout()
 			else:
 				MatchState.set_phase(MatchState.Phase.FULLTIME)
 				hud.show_half_or_full_time(true)
@@ -636,12 +646,34 @@ func _toggle_pause() -> void:
 
 func _start_second_half() -> void:
 	hud.show_pause_menu(false)
-	MatchState.current_half = 2
+	MatchState.current_half += 1
 	MatchState.match_elapsed_real = 0.0
-	MatchState.half_changed.emit(2)
-	_setup_kickoff(1)
+	MatchState.half_changed.emit(MatchState.current_half)
+	_setup_kickoff(1 if (MatchState.current_half % 2 == 0) else 0)
 	SoundFX.stop_music()
 	SoundFX.start_crowd_ambience()
+
+func _on_substitution_requested(starter_slot: int, bench_idx: int) -> void:
+	if MatchState.subs_used[0] >= 3:
+		return
+	var roster: Array = GameData.get_team(GameData.home_team_id).get("players", [])
+	if bench_idx < 11 or bench_idx >= roster.size():
+		return
+	var target_p: Player = null
+	for p in players:
+		if p.team_side == 0 and p.slot_index == starter_slot and not p.is_sent_off:
+			target_p = p
+			break
+	if target_p == null:
+		return
+	var old_name := target_p.player_name
+	var rec: Dictionary = roster[bench_idx]
+	target_p.player_name = str(rec.get("name", "Sub"))
+	target_p.apply_profile(rec, bench_idx)
+	target_p.stamina = 100.0
+	target_p.yellow_cards = 0
+	MatchState.subs_used[0] += 1
+	MatchState.log_event("SUB (%d/3): OUT %s -> IN %s" % [MatchState.subs_used[0], old_name, target_p.player_name])
 
 func _restart_match() -> void:
 	Engine.time_scale = 1.0

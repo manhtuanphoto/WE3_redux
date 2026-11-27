@@ -22,6 +22,7 @@ const FORMATIONS := ["4-4-2", "4-3-3", "3-5-2", "5-3-2", "4-5-1", "3-4-3"]
 var home_team_id: int = 30  # Brazil
 var away_team_id: int = 33  # Argentina
 var game_mode: String = "exhibition"
+var extra_time_enabled: bool = false
 var half_duration_seconds: float = 120.0
 var ai_difficulty: int = 1  # 0=Easy, 1=Normal, 2=Hard
 var is_ai_vs_ai: bool = false
