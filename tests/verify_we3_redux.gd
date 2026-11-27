@@ -200,6 +200,13 @@ func _run_tests() -> void:
 	await get_tree().physics_frame
 	_assert(nr_match.pitch.get_node_or_null("StadiumFloodlights") != null, "Night mode spawns StadiumFloodlights")
 	_assert(nr_match.pitch.get_node_or_null("StadiumRain") != null, "Rain mode spawns StadiumRain particles")
+	nr_match.ball.reset_to_center()
+	nr_match.ball.kick(Vector3(10.0, 2.5, 0.0), null, 0, 2.0, 1)
+	nr_match.ball.pickup_cooldown = 5.0
+	var p0_spin: int = nr_match.ball._spin_period
+	for _bf in range(36):
+		await get_tree().physics_frame
+	_assert(p0_spin > 0 and nr_match.ball._spin_period >= p0_spin + 2, "Ball bounce increments spin_period by +2 (func_8004BAA4)")
 	nr_match.queue_free()
 	await get_tree().process_frame
 	GameData.stadium_is_night = false

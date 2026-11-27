@@ -8,7 +8,8 @@ signal out_of_bounds_detected(event_type: String, restart_pos: Vector3, restart_
 enum BallState { STOPPED, AIRBORNE, ROLLING, ATTACHED }
 
 const BALL_RADIUS := 0.16
-const GRAVITY := 10.35   # 736 raw/frame^2 (func_8004BAA4): 2.875 u * 0.12 m/s per 30 Hz frame
+const GRAVITY := 10.35   # 736 raw/frame^2 (func_8004BAA4 case 0): 2.875 u * 0.12 m/s per 30 Hz frame
+const GRAVITY_BY_TYPE := [10.35, 9.90, 11.25, 11.5875]   # func_8004BAA4: 0x2E0, 0x2C0, 0x320, 0x338
 const TICK := 1.0 / 30.0  # WE3 logic frame
 const DRAG_K := 6881.0    # ((s3*h)>>21)/7 expressed in m/s per frame: dv = s3*v/6881
 const GROUND_FRICTION := 1.65
@@ -17,6 +18,9 @@ const AIR_DRAG := 0.28
 var state: BallState = BallState.STOPPED
 var vel: Vector3 = Vector3.ZERO
 var angular_spin_y: float = 0.0
+var flight_type: int = 0         # func_8004BAA4 Scratch 0xBC (0=normal, 1=loft, 2=driven, 3=heavy)
+var _spin_period: int = 0        # func_8004BAA4 Scratch 0xB2 (0=none, +2 per bounce)
+var _spin_dir: float = 0.0       # func_8004BAA4 Scratch 0xB3 (+1 / -1)
 var owner_player: Node3D = null
 var last_touch_player: Node3D = null
 var last_touch_team: int = 0
@@ -100,13 +104,20 @@ func set_owner_player(p: Node3D, team_idx: int) -> void:
 	state = BallState.ATTACHED
 	offside_target = null
 
-func kick(kick_vel: Vector3, kicker: Node3D, team_idx: int, spin_y: float = 0.0) -> void:
+func kick(kick_vel: Vector3, kicker: Node3D, team_idx: int, spin_y: float = 0.0, p_flight_type: int = 0) -> void:
 	owner_player = null
 	last_touch_player = kicker
 	last_touch_team = team_idx
 	vel = kick_vel
 	flight_frames = 0
 	angular_spin_y = spin_y
+	flight_type = clampi(p_flight_type, 0, 3)
+	if absf(spin_y) > 0.05:
+		_spin_period = clampi(int(round(lerpf(12.0, 4.0, clampf(absf(spin_y) / 2.5, 0.0, 1.0)))), 3, 16)
+		_spin_dir = signf(spin_y)
+	else:
+		_spin_period = 0
+		_spin_dir = 0.0
 	state = BallState.AIRBORNE if kick_vel.y > 0.2 else BallState.ROLLING
 	pickup_cooldown = 0.16
 	offside_target = null
@@ -221,25 +232,61 @@ func _physics_process(delta: float) -> void:
 		var h := Vector2(vel.x, vel.z).length()
 		if in_air:
 			state = BallState.AIRBORNE
+			# func_8004BAA4 lines 73-79: discrete 1.40625 deg heading turn every _spin_period frames
+			if h > 0.1 and _spin_period > 0 and (flight_frames % _spin_period) == 0:
+				var hv := Vector2(vel.x, vel.z).rotated(_spin_dir * deg_to_rad(1.40625))
+				vel.x = hv.x
+				vel.z = hv.y
+			pos += vel * TICK
+			if pos.y > BALL_RADIUS:
+				var g: float = GRAVITY_BY_TYPE[clampi(flight_type, 0, 3)]
+				vel.y -= g * TICK
+			else:
+				# Ground contact: func_8004BAA4 lines 104-163 bounce damping by flight_type
+				pos.y = BALL_RADIUS
+				var k := minf(8.0, h / (absf(vel.y) + 1.0))
+				var damp := 4.0 * k
+				var h_keep := 1.0
+				var v_keep := 0.625
+				match flight_type:
+					0:
+						h_keep = 1.0 - (64.0 - damp) / 256.0
+						v_keep = 1.0 - (96.0 - damp) / 256.0
+					1:
+						h_keep = 1.0 - (64.0 - damp) / 128.0
+						v_keep = 1.0 - (64.0 - damp) / 240.0
+					2:
+						h_keep = 1.0 - (64.0 - damp) / 272.0
+						v_keep = 1.0 - (96.0 - damp) / 288.0
+						flight_type = 0
+					3:
+						h_keep = 1.0 - (64.0 - damp) / 288.0
+						v_keep = 1.0 - (96.0 - damp) / 304.0
+						flight_type = 0
+				vel.x *= h_keep
+				vel.z *= h_keep
+				vel.y = absf(vel.y) * v_keep
+				if _spin_period > 0:
+					_spin_period += 2
+				if vel.y <= 8.28:
+					flight_type = 0
+				if vel.y < 0.69:
+					vel.y = 0.0
+					state = BallState.ROLLING
+			# Quadratic air drag proportional to speed magnitude
+			h = Vector2(vel.x, vel.z).length()
 			var s3 := sqrt(h * h + vel.y * vel.y)
 			if h > 0.0:
 				var nh := maxf(0.0, h - s3 * h / DRAG_K)
 				vel.x *= nh / h
 				vel.z *= nh / h
 			vel.y -= s3 * vel.y / (DRAG_K * 4.0)
-			vel.y -= GRAVITY * TICK
-			# curve: heading drifts with spin while airborne (func_8004BAA4 spin_interval)
-			if h > 0.1 and absf(angular_spin_y) > 0.01:
-				# func_8004BAA4: heading moves 1 angle unit (1.40625 deg) every `spin_interval` frames; interval 4..12 here
-				var interval := lerpf(12.0, 4.0, clampf(absf(angular_spin_y) / 2.5, 0.0, 1.0))
-				var turn := signf(angular_spin_y) * deg_to_rad(1.40625) / interval
-				var hv := Vector2(vel.x, vel.z).rotated(turn)
-				vel.x = hv.x
-				vel.z = hv.y
 		else:
 			pos.y = BALL_RADIUS
 			vel.y = 0.0
 			angular_spin_y = 0.0
+			_spin_period = 0
+			pos += Vector3(vel.x, 0.0, vel.z) * TICK
 			# rolling: h -= h>>6 ; h -= ((h*h)>>21)/7
 			var nh2 := maxf(0.0, h * (1.0 - 1.0 / 64.0) - h * h / DRAG_K)
 			if h > 0.0:
@@ -251,27 +298,6 @@ func _physics_process(delta: float) -> void:
 				state = BallState.STOPPED
 			else:
 				state = BallState.ROLLING
-
-	pos += vel * delta
-
-	# WE3 angle-dependent bounce restitution (func_8004BAA4.s)
-	if pos.y < BALL_RADIUS:
-		pos.y = BALL_RADIUS
-		if vel.y < -1.4:
-			var h_spd := Vector2(vel.x, vel.z).length()
-			var k := minf(8.0, h_spd / (absf(vel.y) + 1.0))
-			var h_keep := 1.0 - (64.0 - 4.0 * k) / 256.0
-			var v_keep := 1.0 - (96.0 - 4.0 * k) / 256.0
-			vel.x *= h_keep
-			vel.z *= h_keep
-			vel.y = -vel.y * v_keep
-			angular_spin_y *= 0.65
-			if vel.y < 0.69:
-				vel.y = 0.0
-				state = BallState.ROLLING
-		else:
-			vel.y = 0.0
-			state = BallState.ROLLING
 
 	# Goalpost, crossbar, goal-net & perimeter adboard collisions (func_800A8F3C)
 	pos = _collide_goalposts(pos)
