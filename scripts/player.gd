@@ -1208,15 +1208,34 @@ func _try_pickup_ball() -> void:
 			if _tackle_cd > 0.0:
 				return
 			_tackle_cd = 0.7
-		var steal_chance := 0.80 if tackle_timer > 0.0 else 0.34
-		steal_chance *= clampf((0.7 + 0.06 * float(stats["defense"])) / (0.7 + 0.06 * float(carrier.stats["technique"])), 0.6, 1.5)
-		if randf() < steal_chance:
+		# func_80040DD4: the slide's contact check only becomes active from animation frame 5; mode 1/2 contact
+		# takes the ball cleanly (possession), mode 0 contact just knocks it away (poke).
+		var sliding := tackle_timer > 0.0
+		if sliding and tackle_timer > 0.36 - 5.0 * LOGIC_DT:
+			return
+		var from_behind := false
+		if sliding:
+			var c_fwd := -carrier.global_transform.basis.z
+			c_fwd.y = 0.0
+			from_behind = c_fwd.length_squared() > 0.01 and c_fwd.normalized().dot(tackle_dir) > 0.5
+		var foul := sliding and from_behind and randf() < 0.5   # game-side heuristic: real foul rule not located
+		var win_chance := 1.0 if sliding else 0.34
+		win_chance *= clampf((0.7 + 0.06 * float(stats["defense"])) / (0.7 + 0.06 * float(carrier.stats["technique"])), 0.6, 1.5)
+		if not foul and randf() < win_chance:
 			carrier.action_lock_timer = 0.45
-			_ball.set_owner_player(self, team_side)
 			MatchState.last_touch_team = team_side
 			MatchState.last_touch_player_name = player_name
-		elif tackle_timer > 0.0 and dist > 0.58:
-			# Reckless slide missed the ball -> foul & card. Game-side heuristic: func_8007CC00 is the replay quarter router, not the foul logic; real foul code (func_80040DD4 area) has no C yet
+			if sliding:
+				_ball.set_owner_player(self, team_side)   # clean win
+			else:
+				# poke: power = max(72 units, own speed + 8 + rand(4)) along own heading +/- 16 units, lift rand(3)
+				var fwd := -global_transform.basis.z
+				fwd.y = 0.0
+				fwd = fwd.normalized().rotated(Vector3.UP, float(randi() % 17 - randi() % 17) * ANG_U)
+				var push := maxf(72.0, _speed_u + 8.0 + float(randi() % 4)) * U2MS
+				_ball.kick(fwd * push + Vector3(0.0, float(randi() % 3) * 2.875 * U2MS, 0.0), self, team_side)
+		elif sliding and (foul or dist > 0.58):
+			# Reckless slide: foul & card. Game-side heuristic: func_8007CC00 is the replay quarter router, not the foul logic
 			tackle_timer = 0.0
 			action_lock_timer = 0.65
 			_play_anim("foul_react", 0.05)

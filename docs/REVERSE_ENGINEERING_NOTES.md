@@ -28,6 +28,13 @@ Verified findings from `SLPM_861.62` / overlays. File offset = VRAM address - 0x
 Estimates, not recovered from code: dive reach (`GK_DIVE_BASE + 0.10*defense`), and `level = defense stat` (the C reads `record[0x3B9]/10`, whose writer was not located).
 Also fixed: ball curve was far too strong; the C turns the heading 1 angle unit every `spin_interval` frames.
 
+## Tackle contact (read from MIPS asm `func_80040DD4`, no C exists)
+- Contact needs foot-to-ball distance < 128 units (dist^2 < 0x4000, 0.512 m); slide checks start at animation frame 5 (`func_80040DD4(actor,1)` from `func_80040324`).
+- Mode 1/2: clean win, ball becomes attached to the tackler (`ball+0x396 = 3`, owner = tackler).
+- Mode 0: poke - ball kicked along tackler heading +/- 16 units with power `max(72 units, speed+8+rand(4))` (>= 8.6 m/s), lift `rand(3)`.
+- Port: `_try_pickup_ball` (slide = clean win, stand-up = poke). Foul decision is still a heuristic (from-behind slides); the real foul rule is not in this function.
+- Player pivot != foot, so the port keeps the 0.85 m pickup radius instead of 0.512 m.
+
 ## Function identities (checked against the C, corrections to earlier notes)
 | Function | Actually is | Earlier mis-citation |
 |---|---|---|
