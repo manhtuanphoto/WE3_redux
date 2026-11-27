@@ -598,6 +598,8 @@ func _process_ai(delta: float) -> void:
 		return
 	if role == Role.GK and _gk_dive_t >= 0.0:
 		_gk_dive_t += delta
+		if _gk_jump_height > 0.0:
+			position.y = sin(clampf(_gk_dive_t / (GK_DIVE_FRAMES * LOGIC_DT), 0.0, 1.0) * PI) * _gk_jump_height
 		if _gk_dive_t >= GK_DIVE_FRAMES * LOGIC_DT:
 			_gk_dive_finish()
 		return
@@ -926,9 +928,12 @@ func _motion_tick(dir: Vector3, cap_u: float, sprint: bool) -> void:
 			_move_yaw = rotate_toward(_move_yaw, target_yaw, 24.0 * ANG_U)
 			_speed_u = minf(34.0, _speed_u + 8.0)
 
+var _gk_jump_height: float = 0.0
+
 func _gk_start_dive(aim: Vector3) -> void:
 	_gk_dive_aim = aim
 	_gk_dive_t = 0.0
+	_gk_jump_height = clampf(aim.y - 1.25, 0.25, 0.85) if aim.y >= 1.45 else 0.0
 	var target := Vector3(aim.x, 0.0, aim.z)
 	var to_t := target - global_position
 	to_t.y = 0.0
@@ -936,11 +941,13 @@ func _gk_start_dive(aim: Vector3) -> void:
 	_speed_u = 0.0
 	_face_direction(Vector3(1.0 if team_side == 0 else -1.0, 0.0, 0.0), 1.0)
 	_update_mirror_foot()
-	_play_anim("gk_dive", 0.04)
+	_play_anim("gk_save_alt" if _gk_jump_height > 0.0 else "gk_dive", 0.04)
 
 ## Frame 7 of the dive: contact test (func_80094EEC) then catch / spill (func_80094DC4).
 func _gk_dive_finish() -> void:
 	vel = Vector3.ZERO
+	position.y = 0.0
+	_gk_jump_height = 0.0
 	_gk_dive_t = -1.0
 	if _ball.owner_player != null:
 		return

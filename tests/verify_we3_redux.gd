@@ -350,6 +350,13 @@ func _run_tests() -> void:
 	# 9n. Verify func_8002F2B0 iterative pass power solver
 	var solved_spd := passer._solve_pass_speed(20.0, 3.0, winger)
 	_assert(solved_spd >= 6.0 and solved_spd <= 16.0, "Ball-flight pass solver returns valid speed for 20m pass (func_8002F2B0)")
+
+	# 9o. Verify func_8008D358 GK high-ball jump/punch
+	gk0.global_position = Vector3(-52.0, 0.0, 0.0)
+	gk0._gk_start_dive(Vector3(-52.0, 2.0, 0.5))
+	gk0._process_ai(0.10)
+	_assert(gk0._gk_jump_height > 0.2 and gk0.position.y > 0.1, "GK high-ball jump leaps vertically for aerial shots (func_8008D358)")
+	gk0._gk_dive_finish()
 	GameData.is_two_player = false
 
 	nr_match.queue_free()
