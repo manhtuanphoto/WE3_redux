@@ -42,6 +42,38 @@ var return_scene: String = "res://scenes/main_menu.tscn"   # where F8 / Main Men
 var preview_speed: float = 1.0
 var away_formation_manual: bool = false
 
+# Cup / World Cup knockout progression (0=Quarter-Final, 1=Semi-Final, 2=Final)
+var cup_active: bool = false
+var cup_round: int = 0
+var cup_opponents: Array[int] = []
+
+func start_cup_tournament(player_tid: int) -> void:
+	cup_active = true
+	cup_round = 0
+	cup_opponents.clear()
+	extra_time_enabled = true
+	var pool: Array[int] = []
+	for tid in range(mini(40, teams.size())):
+		if tid != player_tid:
+			pool.append(tid)
+	pool.shuffle()
+	for i in range(mini(3, pool.size())):
+		cup_opponents.append(pool[i])
+	if not cup_opponents.is_empty():
+		away_team_id = cup_opponents[0]
+
+func advance_cup_round() -> bool:
+	cup_round += 1
+	if cup_round < cup_opponents.size():
+		away_team_id = cup_opponents[cup_round]
+		return true
+	cup_active = false
+	return false
+
+func get_cup_round_name() -> String:
+	var names: Array[String] = ["QUARTER-FINAL", "SEMI-FINAL", "FINAL"]
+	return names[clampi(cup_round, 0, 2)]
+
 func _ready() -> void:
 	_ensure_p2_input_actions()
 	_load_teams()

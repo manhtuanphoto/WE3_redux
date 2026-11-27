@@ -273,6 +273,8 @@ func _build_ui() -> void:
 		GameData.human_side = 0
 		GameData.return_scene = "res://scenes/main_menu.tscn"
 		GameData.preview_speed = 1.0
+		if GameData.game_mode in ["cup", "world_cup"] and not GameData.cup_active:
+			GameData.start_cup_tournament(GameData.home_team_id)
 		get_tree().change_scene_to_file("res://scenes/match.tscn")
 	)
 	btn_row.add_child(btn_kickoff)

@@ -6,6 +6,7 @@ signal resume_requested
 signal rematch_requested
 signal main_menu_requested
 signal next_half_requested
+signal next_cup_round_requested
 signal substitution_requested(starter_slot: int, bench_idx: int)
 
 var _score_label: Label
@@ -156,7 +157,17 @@ func show_half_or_full_time(is_fulltime: bool) -> void:
 	if _overlay_panel == null:
 		return
 	_overlay_panel.visible = true
-	if is_fulltime:
+	var can_advance_cup := false
+	if is_fulltime and GameData.cup_active:
+		var won := MatchState.home_score > MatchState.away_score
+		if won and GameData.cup_round < 2:
+			_overlay_title.text = "%s WIN!" % GameData.get_cup_round_name()
+			can_advance_cup = true
+		elif won:
+			_overlay_title.text = "CUP CHAMPION!!"
+		else:
+			_overlay_title.text = "ELIMINATED (%s)" % GameData.get_cup_round_name()
+	elif is_fulltime:
 		_overlay_title.text = "FULL TIME"
 	elif MatchState.current_half == 2:
 		_overlay_title.text = "END OF 90 MIN — EXTRA TIME"
@@ -165,8 +176,12 @@ func show_half_or_full_time(is_fulltime: bool) -> void:
 	else:
 		_overlay_title.text = "HALF TIME"
 	_overlay_stats.text = _build_stats_text()
-	_btn_primary.text = "Start Extra Time" if (not is_fulltime and MatchState.current_half >= 2) else "Start 2nd Half"
-	_btn_primary.visible = not is_fulltime
+	if can_advance_cup:
+		_btn_primary.text = "Next Round"
+		_btn_primary.visible = true
+	else:
+		_btn_primary.text = "Start Extra Time" if (not is_fulltime and MatchState.current_half >= 2) else "Start 2nd Half"
+		_btn_primary.visible = not is_fulltime
 	_btn_rematch.visible = true
 	_refresh_sub_controls(not is_fulltime)
 
@@ -599,6 +614,8 @@ func _build_ui() -> void:
 	_btn_primary.pressed.connect(func():
 		if MatchState.phase == MatchState.Phase.HALFTIME:
 			next_half_requested.emit()
+		elif MatchState.phase == MatchState.Phase.FULLTIME and GameData.cup_active:
+			next_cup_round_requested.emit()
 		else:
 			resume_requested.emit()
 	)

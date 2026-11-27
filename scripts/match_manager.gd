@@ -189,6 +189,7 @@ func _ready() -> void:
 	hud.rematch_requested.connect(_restart_match)
 	hud.main_menu_requested.connect(_go_main_menu)
 	hud.next_half_requested.connect(_start_second_half)
+	hud.next_cup_round_requested.connect(_on_next_cup_round)
 	hud.substitution_requested.connect(_on_substitution_requested)
 
 	if GameData.game_mode == "pk":
@@ -286,7 +287,8 @@ func _setup_kickoff(kicking_team: int) -> void:
 	_phase_timer = 1.2
 	var h_abbr := GameData.get_team_abbr(GameData.home_team_id)
 	var a_abbr := GameData.get_team_abbr(GameData.away_team_id)
-	hud.show_banner("KICK OFF!  %s vs %s" % [h_abbr, a_abbr], 1.2)
+	var prefix := (GameData.get_cup_round_name() + " — ") if GameData.cup_active else ""
+	hud.show_banner("%sKICK OFF!  %s vs %s" % [prefix, h_abbr, a_abbr], 1.4)
 	SoundFX.play_sfx("whistle")
 	SoundFX.play_commentary("kickoff")
 
@@ -384,7 +386,7 @@ func _process(delta: float) -> void:
 	# WE3 smart end-of-half / injury-time whistle (func_80076E7C.c):
 	# Blow immediately in midfield (|x| < 22m), but allow attacking plays in final third until stalled > 2.2s
 	var half_dur := GameData.half_duration_seconds * (0.3333 if MatchState.current_half >= 3 else 1.0)
-	if MatchState.match_elapsed_real >= half_dur:
+	if GameData.game_mode != "training" and MatchState.match_elapsed_real >= half_dur:
 		var should_whistle := false
 		if bx_abs < 22.0:
 			should_whistle = true
@@ -727,6 +729,12 @@ func _toggle_pause() -> void:
 		_pre_pause_phase = MatchState.phase
 		MatchState.set_phase(MatchState.Phase.PAUSED)
 		hud.show_pause_menu(true)
+
+func _on_next_cup_round() -> void:
+	if GameData.advance_cup_round():
+		get_tree().change_scene_to_file("res://scenes/match.tscn")
+	else:
+		get_tree().change_scene_to_file(GameData.return_scene)
 
 func _start_second_half() -> void:
 	hud.show_pause_menu(false)

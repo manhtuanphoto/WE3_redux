@@ -269,6 +269,14 @@ func _run_tests() -> void:
 	vs_match.hud.update_tactics(2, true)
 	_assert(vs_match.hud._tactic_badge.text == "ATK+TRAP", "In-match Tactics HUD badge updates to ATK+TRAP")
 	vs_match.queue_free()
+
+	# 9g. Verify Cup Knockout Tournament progression (Quarter-Final -> Semi-Final -> Final)
+	GameData.start_cup_tournament(30)
+	_assert(GameData.cup_active and GameData.get_cup_round_name() == "QUARTER-FINAL" and GameData.cup_opponents.size() == 3, "Cup tournament initializes Quarter-Final with 3 opponents")
+	var adv1 := GameData.advance_cup_round()
+	var adv2 := GameData.advance_cup_round()
+	var adv3 := GameData.advance_cup_round()
+	_assert(adv1 and adv2 and not adv3 and not GameData.cup_active, "Cup tournament advances QF -> SF -> Final -> Champion")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

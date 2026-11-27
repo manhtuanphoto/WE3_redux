@@ -79,7 +79,9 @@ func _set_selected(idx: int) -> void:
 func _activate_mode(mode_id: String) -> void:
 	GameData.game_mode = mode_id
 	GameData.extra_time_enabled = mode_id in ["world_cup", "cup"]
+	GameData.cup_active = false
 	GameData.is_ai_vs_ai = false
+	GameData.is_two_player = false
 	GameData.human_side = 0
 	GameData.return_scene = "res://scenes/main_menu.tscn"
 	SoundFX.play_sfx("whistle")
