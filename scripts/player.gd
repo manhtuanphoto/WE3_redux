@@ -370,6 +370,18 @@ func _build_indicators() -> void:
 	_ring_mesh.material_override = r_mat
 	_ring_mesh.position = Vector3(0.0, 0.03, 0.0)
 	_ring_mesh.visible = false
+	# Authentic WE3 overhead 1P inverted triangle marker above player's head
+	var cursor := MeshInstance3D.new()
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.16
+	cone.bottom_radius = 0.0
+	cone.height = 0.24
+	cone.radial_segments = 4
+	cursor.mesh = cone
+	cursor.material_override = r_mat
+	cursor.position = Vector3(0.0, 2.25, 0.0)
+	cursor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ring_mesh.add_child(cursor)
 	add_child(_ring_mesh)
 
 	_name_label = Label3D.new()

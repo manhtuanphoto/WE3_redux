@@ -166,8 +166,19 @@ func _build_ui() -> void:
 	stad_lbl.text = "Stadium:"
 	opt_row.add_child(stad_lbl)
 	var stad_opt := OptionButton.new()
+	const STADIUM_LABELS := {
+		"GRDM_C": "National Stadium",
+		"GRDM_D": "Euro Arena",
+		"GRDM_E": "South Dome",
+		"GRDM_F": "Olympic Park",
+		"GRDM_FN": "Night Cup Arena",
+		"GRDM_G": "Classic Ground",
+		"GRDM_H": "World Bowl",
+		"GRDM_I": "Training Pitch",
+		"GRDM_J": "Grand Finale",
+	}
 	for s_name in GameData.STADIUM_NAMES:
-		stad_opt.add_item(s_name)
+		stad_opt.add_item(STADIUM_LABELS.get(s_name, s_name))
 	stad_opt.select(maxi(0, GameData.STADIUM_NAMES.find(GameData.selected_stadium)))
 	stad_opt.item_selected.connect(func(idx): GameData.selected_stadium = GameData.STADIUM_NAMES[idx])
 	opt_row.add_child(stad_opt)

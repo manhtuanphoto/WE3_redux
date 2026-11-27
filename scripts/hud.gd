@@ -8,6 +8,11 @@ signal main_menu_requested
 signal next_half_requested
 
 var _score_label: Label
+var _home_abbr_lbl: Label
+var _away_abbr_lbl: Label
+var _home_digit_rect: TextureRect
+var _away_digit_rect: TextureRect
+var _digits_tex: Texture2D = null
 var _clock_label: Label
 var _pos_badge: Label
 var _player_label: Label
@@ -128,7 +133,22 @@ func _build_stats_text() -> String:
 func _process(delta: float) -> void:
 	var h_abbr := GameData.get_team_abbr(GameData.home_team_id)
 	var a_abbr := GameData.get_team_abbr(GameData.away_team_id)
-	_score_label.text = "%s  %d  -  %d  %s" % [h_abbr, MatchState.home_score, MatchState.away_score, a_abbr]
+	if _digits_tex != null and MatchState.home_score <= 7 and MatchState.away_score <= 7:
+		_home_abbr_lbl.visible = true
+		_away_abbr_lbl.visible = true
+		_home_abbr_lbl.text = h_abbr
+		_away_abbr_lbl.text = a_abbr
+		_home_digit_rect.visible = true
+		_away_digit_rect.visible = true
+		(_home_digit_rect.texture as AtlasTexture).region = Rect2(MatchState.home_score * 16, 0, 16, 22)
+		(_away_digit_rect.texture as AtlasTexture).region = Rect2(MatchState.away_score * 16, 0, 16, 22)
+		_score_label.text = "-"
+	else:
+		_home_abbr_lbl.visible = false
+		_away_abbr_lbl.visible = false
+		_home_digit_rect.visible = false
+		_away_digit_rect.visible = false
+		_score_label.text = "%s  %d  -  %d  %s" % [h_abbr, MatchState.home_score, MatchState.away_score, a_abbr]
 	var half_str := "1ST" if MatchState.current_half == 1 else "2ND"
 	var spd_str := " [2X]" if Engine.time_scale > 1.5 else ""
 	var added_str := "+" if (MatchState.match_elapsed_real > GameData.half_duration_seconds and MatchState.phase == MatchState.Phase.OPEN_PLAY) else ""
@@ -231,10 +251,45 @@ func _build_ui() -> void:
 	home_swatch.custom_minimum_size = Vector2(8, 22)
 	hbox.add_child(home_swatch)
 
+	if ResourceLoader.exists("res://assets/textures/hud/we3_score_digits.png"):
+		_digits_tex = load("res://assets/textures/hud/we3_score_digits.png") as Texture2D
+
+	_home_abbr_lbl = Label.new()
+	_home_abbr_lbl.add_theme_font_size_override("font_size", 20)
+	_home_abbr_lbl.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
+	hbox.add_child(_home_abbr_lbl)
+
+	_home_digit_rect = TextureRect.new()
+	_home_digit_rect.custom_minimum_size = Vector2(18, 24)
+	_home_digit_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_home_digit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_home_digit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var at_h := AtlasTexture.new()
+	at_h.atlas = _digits_tex
+	at_h.region = Rect2(0, 0, 16, 22)
+	_home_digit_rect.texture = at_h
+	hbox.add_child(_home_digit_rect)
+
 	_score_label = Label.new()
 	_score_label.add_theme_font_size_override("font_size", 22)
 	_score_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
 	hbox.add_child(_score_label)
+
+	_away_digit_rect = TextureRect.new()
+	_away_digit_rect.custom_minimum_size = Vector2(18, 24)
+	_away_digit_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_away_digit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_away_digit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var at_a := AtlasTexture.new()
+	at_a.atlas = _digits_tex
+	at_a.region = Rect2(0, 0, 16, 22)
+	_away_digit_rect.texture = at_a
+	hbox.add_child(_away_digit_rect)
+
+	_away_abbr_lbl = Label.new()
+	_away_abbr_lbl.add_theme_font_size_override("font_size", 20)
+	_away_abbr_lbl.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
+	hbox.add_child(_away_abbr_lbl)
 
 	var away_swatch := ColorRect.new()
 	away_swatch.color = GameData.get_team_primary_color(GameData.away_team_id)
