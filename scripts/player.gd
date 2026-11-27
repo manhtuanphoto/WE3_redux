@@ -331,22 +331,29 @@ func _apply_part_mats_recursive(n: Node, mat_jersey: Material, mat_shorts: Mater
 		_apply_part_mats_recursive(c, mat_jersey, mat_shorts, mat_socks, mat_skin, mat_head, mat_boots)
 
 func _build_indicators() -> void:
-	# Soft WE3 radial ground shadow (stretches on dives/slides, dims in rain)
+	# Authentic WE3 ground shadow: Day = 1 quad at 315 deg (func_8001A544); Night = 4 floodlight quads at 45/135/225/315 deg (func_8001A968)
 	_shadow_mesh = MeshInstance3D.new()
+	var is_night := GameData.stadium_is_night or GameData.selected_stadium == "GRDM_FN"
 	var qm := QuadMesh.new()
-	qm.size = Vector2(0.95, 1.25)
-	_shadow_mesh.mesh = qm
+	qm.size = Vector2(0.88, 1.28)
 	var sh_mat := StandardMaterial3D.new()
 	sh_mat.albedo_texture = PlayerAnimCache.get_shadow_texture()
-	var sh_alpha := 0.72 if GameData.stadium_is_rain else (0.88 if GameData.stadium_is_night else 1.0)
-	sh_mat.albedo_color = Color(1.0, 1.0, 1.0, sh_alpha)
+	var base_alpha := 0.72 if GameData.stadium_is_rain else 1.0
+	sh_mat.albedo_color = Color(1.0, 1.0, 1.0, base_alpha * (0.48 if is_night else 0.95))
 	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	sh_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_shadow_mesh.material_override = sh_mat
-	_shadow_mesh.rotation.x = -PI * 0.5
-	_shadow_mesh.position = Vector3(0.08, 0.02, 0.10)
-	_shadow_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+	var angles: Array = [deg_to_rad(45.0), deg_to_rad(135.0), deg_to_rad(225.0), deg_to_rad(315.0)] if is_night else [deg_to_rad(315.0)]
+	for ang in angles:
+		var q_mi := MeshInstance3D.new()
+		q_mi.mesh = qm
+		q_mi.material_override = sh_mat
+		q_mi.rotation.x = -PI * 0.5
+		q_mi.rotation.z = ang
+		q_mi.position = Vector3(sin(ang) * 0.22, 0.02, cos(ang) * 0.22)
+		q_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_shadow_mesh.add_child(q_mi)
 	add_child(_shadow_mesh)
 
 	# Controlled player ring
@@ -1374,7 +1381,7 @@ func _move_and_clamp(delta: float) -> void:
 	if _shadow_mesh != null:
 		_shadow_mesh.visible = not is_sent_off
 		var stretch := 1.65 if (tackle_timer > 0.0 or _gk_dive_t >= 0.0) else 1.0
-		_shadow_mesh.scale = Vector3(1.0, stretch, 1.0)
+		_shadow_mesh.scale = Vector3(1.0, 1.0, stretch)
 
 func _face_direction(dir: Vector3, delta: float) -> void:
 	_face_direction_rate(dir, delta, TURN_SPEED)

@@ -200,6 +200,7 @@ func _run_tests() -> void:
 	await get_tree().physics_frame
 	_assert(nr_match.pitch.get_node_or_null("StadiumFloodlights") != null, "Night mode spawns StadiumFloodlights")
 	_assert(nr_match.pitch.get_node_or_null("StadiumRain") != null, "Rain mode spawns StadiumRain particles")
+	_assert(nr_match.players[0]._shadow_mesh.get_child_count() == 4, "Night mode uses 4 floodlight shadow quads per player (func_8001A968)")
 	nr_match.ball.reset_to_center()
 	nr_match.ball.kick(Vector3(10.0, 2.5, 0.0), null, 0, 2.0, 1)
 	nr_match.ball.pickup_cooldown = 5.0

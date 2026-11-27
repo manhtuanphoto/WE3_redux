@@ -31,21 +31,29 @@ func _ready() -> void:
 			if not _anim_player.has_animation_library("we3"):
 				_anim_player.add_animation_library("we3", lib)
 			_play_anim("idle")
-	var sh := MeshInstance3D.new()
+	var is_night := GameData.stadium_is_night or GameData.selected_stadium == "GRDM_FN"
+	var sh_root := Node3D.new()
+	sh_root.name = "RefShadow"
 	var qm := QuadMesh.new()
-	qm.size = Vector2(0.95, 1.25)
-	sh.mesh = qm
+	qm.size = Vector2(0.88, 1.28)
 	var sh_mat := StandardMaterial3D.new()
 	sh_mat.albedo_texture = PlayerAnimCache.get_shadow_texture()
-	sh_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.72 if GameData.stadium_is_rain else 1.0)
+	var base_alpha := 0.72 if GameData.stadium_is_rain else 1.0
+	sh_mat.albedo_color = Color(1.0, 1.0, 1.0, base_alpha * (0.48 if is_night else 0.95))
 	sh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	sh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	sh_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	sh.material_override = sh_mat
-	sh.rotation.x = -PI * 0.5
-	sh.position = Vector3(0.08, 0.02, 0.10)
-	sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(sh)
+	var angles: Array = [deg_to_rad(45.0), deg_to_rad(135.0), deg_to_rad(225.0), deg_to_rad(315.0)] if is_night else [deg_to_rad(315.0)]
+	for ang in angles:
+		var q_mi := MeshInstance3D.new()
+		q_mi.mesh = qm
+		q_mi.material_override = sh_mat
+		q_mi.rotation.x = -PI * 0.5
+		q_mi.rotation.z = ang
+		q_mi.position = Vector3(sin(ang) * 0.22, 0.02, cos(ang) * 0.22)
+		q_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		sh_root.add_child(q_mi)
+	add_child(sh_root)
 
 func _apply_referee_kit(root: Node) -> void:
 	# Authentic WE3 128x256 atlas for referee_00..03.gltf (top 128x128 = black ref kit, bottom 128x128 = skin/face)
