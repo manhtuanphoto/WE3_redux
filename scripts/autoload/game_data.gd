@@ -14,6 +14,10 @@ var extra_kit_files_by_id: Dictionary = {}
 var tactics_by_id: Dictionary = {}
 var _clut_primary_cache: Dictionary = {}
 var _clut_secondary_cache: Dictionary = {}
+var _flag_cells: Array = []
+var _flag_shape_by_id: Dictionary = {}
+var _flag_sheet_img: Image = null
+var _flag_tex_cache: Dictionary = {}
 
 const STADIUM_NAMES := ["GRDM_C", "GRDM_D", "GRDM_E", "GRDM_F", "GRDM_FN", "GRDM_G", "GRDM_H", "GRDM_I", "GRDM_J"]
 const FORMATIONS := ["4-4-2", "4-3-3", "3-5-2", "5-3-2", "4-5-1", "3-4-3"]
@@ -82,7 +86,59 @@ func _ready() -> void:
 	_load_kit_map()
 	_load_extra_kit_map()
 	_load_anim_index()
+	_load_flag_shapes()
 	_validate_default_teams()
+
+func _load_flag_shapes() -> void:
+	const PATH := "res://assets/database/flag_shapes.json"
+	if not FileAccess.file_exists(PATH):
+		return
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(PATH))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	_flag_cells = parsed.get("cells", [])
+	for entry in parsed.get("teams", []):
+		if typeof(entry) == TYPE_DICTIONARY:
+			_flag_shape_by_id[int(entry.get("team_id", -1))] = int(entry.get("flag_shape", 0))
+
+func get_team_flag_texture(tid: int) -> Texture2D:
+	if _flag_tex_cache.has(tid):
+		return _flag_tex_cache[tid]
+	if _flag_sheet_img == null:
+		_flag_sheet_img = Image.create(256, 384, false, Image.FORMAT_RGBA8)
+		var tiles := [
+			["res://assets/textures/ui_and_bg/HATA_CSR/tex_00_vram_704_0_128x128.png", Vector2i(0, 0)],
+			["res://assets/textures/ui_and_bg/HATA_CSR/tex_01_vram_736_0_128x128.png", Vector2i(128, 0)],
+			["res://assets/textures/ui_and_bg/HATA_CSR/tex_02_vram_704_128_128x128.png", Vector2i(0, 128)],
+			["res://assets/textures/ui_and_bg/HATA_CSR/tex_03_vram_736_128_128x128.png", Vector2i(128, 128)],
+			["res://assets/textures/ui_and_bg/HATA_CSR/tex_04_vram_704_256_128x128.png", Vector2i(0, 256)],
+		]
+		for t in tiles:
+			if ResourceLoader.exists(t[0]):
+				var tx := load(t[0]) as Texture2D
+				if tx != null and tx.get_image() != null:
+					var im := tx.get_image()
+					im.convert(Image.FORMAT_RGBA8)
+					_flag_sheet_img.blit_rect(im, Rect2i(0, 0, im.get_width(), im.get_height()), t[1])
+	var shape_idx := clampi(int(_flag_shape_by_id.get(tid, 0)), 0, maxi(0, _flag_cells.size() - 1))
+	var cell: Array = _flag_cells[shape_idx] if not _flag_cells.is_empty() else [0, 0]
+	var cx := int(cell[0])
+	var cy := int(cell[1])
+	var sub := _flag_sheet_img.get_region(Rect2i(cx, cy, 64, 40))
+	var c_prim := get_team_primary_color(tid)
+	var c_sec := get_team_secondary_color(tid)
+	for py in range(40):
+		for px in range(64):
+			var p := sub.get_pixel(px, py)
+			if p.a < 0.05:
+				continue
+			var lum := (p.r + p.g + p.b) / 3.0
+			var tinted := c_sec if lum > 0.72 else (c_prim if lum > 0.35 else c_prim.darkened(0.45))
+			tinted.a = p.a
+			sub.set_pixel(px, py, tinted)
+	var out_tex := ImageTexture.create_from_image(sub)
+	_flag_tex_cache[tid] = out_tex
+	return out_tex
 
 func _ensure_p2_input_actions() -> void:
 	var key_map := {

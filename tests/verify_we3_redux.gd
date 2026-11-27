@@ -307,6 +307,10 @@ func _run_tests() -> void:
 		gk0._process_gk_ai(0.035)
 	_assert(gk0.vel.x > 0.1, "GK Rush sprints keeper toward ball")
 	MatchState.gk_rush[0] = false
+
+	# 9j. Verify extracted flag_shapes.json + HATA_CSR produces 64x40 flag textures
+	var f_bra := GameData.get_team_flag_texture(30)
+	_assert(f_bra != null and f_bra.get_width() == 64 and f_bra.get_height() == 40, "Extracted HATA_CSR + flag_shapes.json produces 64x40 flag texture")
 	GameData.is_two_player = false
 
 	nr_match.queue_free()

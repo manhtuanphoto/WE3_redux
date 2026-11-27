@@ -6,6 +6,8 @@ var _away_opt: OptionButton
 var _half_opt: OptionButton
 var _home_kit_rect: TextureRect
 var _away_kit_rect: TextureRect
+var _home_flag_rect: TextureRect
+var _away_flag_rect: TextureRect
 var _home_swatch: ColorRect
 var _away_swatch: ColorRect
 var _home_rating_label: Label
@@ -91,6 +93,12 @@ func _build_ui() -> void:
 	_home_kit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_home_kit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	h_kit_row.add_child(_home_kit_rect)
+	_home_flag_rect = TextureRect.new()
+	_home_flag_rect.custom_minimum_size = Vector2(64, 40)
+	_home_flag_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_home_flag_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_home_flag_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	h_kit_row.add_child(_home_flag_rect)
 	_home_rating_label = Label.new()
 	_home_rating_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_home_rating_label.add_theme_font_size_override("font_size", 12)
@@ -126,6 +134,12 @@ func _build_ui() -> void:
 	_away_kit_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_away_kit_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	a_kit_row.add_child(_away_kit_rect)
+	_away_flag_rect = TextureRect.new()
+	_away_flag_rect.custom_minimum_size = Vector2(64, 40)
+	_away_flag_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_away_flag_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_away_flag_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	a_kit_row.add_child(_away_flag_rect)
 	_away_rating_label = Label.new()
 	_away_rating_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_away_rating_label.add_theme_font_size_override("font_size", 12)
@@ -332,6 +346,8 @@ func _sync_selection() -> void:
 			GameData.home_formation_manual = false
 		GameData.home_team_id = new_home
 		_home_kit_rect.texture = GameData.get_team_kit_texture(GameData.home_team_id)
+		if _home_flag_rect != null:
+			_home_flag_rect.texture = GameData.get_team_flag_texture(GameData.home_team_id)
 		if _home_swatch != null:
 			_home_swatch.color = GameData.get_team_primary_color(GameData.home_team_id)
 		if _home_rating_label != null:
@@ -343,6 +359,8 @@ func _sync_selection() -> void:
 			GameData.away_formation_manual = false
 		GameData.away_team_id = new_away
 		_away_kit_rect.texture = GameData.get_team_kit_texture(GameData.away_team_id)
+		if _away_flag_rect != null:
+			_away_flag_rect.texture = GameData.get_team_flag_texture(GameData.away_team_id)
 		if _away_swatch != null:
 			_away_swatch.color = GameData.get_team_primary_color(GameData.away_team_id)
 		if _away_rating_label != null:

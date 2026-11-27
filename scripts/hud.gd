@@ -401,10 +401,13 @@ func _build_ui() -> void:
 	hbox.add_theme_constant_override("separation", 6)
 	top_box.add_child(hbox)
 
-	var home_swatch := ColorRect.new()
-	home_swatch.color = GameData.get_team_primary_color(GameData.home_team_id)
-	home_swatch.custom_minimum_size = Vector2(22, 15)
-	hbox.add_child(home_swatch)
+	var home_flag := TextureRect.new()
+	home_flag.texture = GameData.get_team_flag_texture(GameData.home_team_id)
+	home_flag.custom_minimum_size = Vector2(26, 17)
+	home_flag.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	home_flag.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	home_flag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	hbox.add_child(home_flag)
 
 	if ResourceLoader.exists("res://assets/textures/hud/we3_score_digits.png"):
 		_digits_tex = load("res://assets/textures/hud/we3_score_digits.png") as Texture2D
@@ -446,10 +449,13 @@ func _build_ui() -> void:
 	_away_abbr_lbl.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
 	hbox.add_child(_away_abbr_lbl)
 
-	var away_swatch := ColorRect.new()
-	away_swatch.color = GameData.get_team_primary_color(GameData.away_team_id)
-	away_swatch.custom_minimum_size = Vector2(22, 15)
-	hbox.add_child(away_swatch)
+	var away_flag := TextureRect.new()
+	away_flag.texture = GameData.get_team_flag_texture(GameData.away_team_id)
+	away_flag.custom_minimum_size = Vector2(26, 17)
+	away_flag.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	away_flag.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	away_flag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	hbox.add_child(away_flag)
 
 	# Top-right WE3 Broadcast Clock + Loss Time + Green-Gold Replay Pill
 	var top_right := PanelContainer.new()
