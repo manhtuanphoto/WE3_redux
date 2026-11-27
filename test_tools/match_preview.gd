@@ -12,6 +12,17 @@ const CFG_PATH := "user://match_preview.cfg"
 const HALF_CHOICES := [60, 120, 180, 300, 600]
 const SPEEDS := [0.5, 1.0, 2.0, 4.0]
 const CONTROLS := ["Home (you) vs CPU", "Away (you) vs CPU", "CPU vs CPU (watch)", "1P vs 2P (Local)"]
+const STADIUM_LABELS := {
+	"GRDM_C": "National Stadium (GRDM_C)",
+	"GRDM_D": "Euro Arena (GRDM_D)",
+	"GRDM_E": "South Dome (GRDM_E)",
+	"GRDM_F": "Olympic Park (GRDM_F)",
+	"GRDM_FN": "Night Cup Arena (GRDM_FN)",
+	"GRDM_G": "Classic Ground (GRDM_G)",
+	"GRDM_H": "World Bowl (GRDM_H)",
+	"GRDM_I": "Training Pitch (GRDM_I)",
+	"GRDM_J": "Grand Finale (GRDM_J)",
+}
 
 var _home_opt: OptionButton
 var _away_opt: OptionButton
@@ -22,10 +33,22 @@ var _half_opt: OptionButton
 var _diff_opt: OptionButton
 var _ctrl_opt: OptionButton
 var _speed_opt: OptionButton
+var _time_opt: OptionButton
+var _weather_opt: OptionButton
+var _mode_opt: OptionButton
+var _et_chk: CheckButton
+var _tactic_opt: OptionButton
+var _trap_chk: CheckButton
+var _home_cond_opt: OptionButton
+var _away_cond_opt: OptionButton
 var _home_info: Label
 var _away_info: Label
 var _home_kit: TextureRect
 var _away_kit: TextureRect
+var _home_flag: TextureRect
+var _away_flag: TextureRect
+var _home_pitch: PreviewMiniPitch
+var _away_pitch: PreviewMiniPitch
 var _status: Label
 
 func _ready() -> void:
@@ -42,9 +65,12 @@ func _ready() -> void:
 func _build_ui() -> void:
 	var bg := ColorRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0.04, 0.07, 0.15)
+	bg.color = Color(0.03, 0.06, 0.16)
 	add_child(bg)
-	_add_we3_background("res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_night.png", 0.5)
+	var bg_path := "res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_flags.png"
+	if not ResourceLoader.exists(bg_path):
+		bg_path = "res://assets/textures/ui_and_bg/BACKGROUNDS/we3_bg_stadium_night.png"
+	_add_we3_background(bg_path, 0.45)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -52,22 +78,22 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.08, 0.13, 0.25, 0.97)
-	sb.border_color = Color(0.95, 0.80, 0.18)
+	sb.bg_color = Color(0.04, 0.08, 0.22, 0.95)
+	sb.border_color = Color(0.96, 0.82, 0.20)
 	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(8)
-	sb.set_content_margin_all(18)
+	sb.set_corner_radius_all(2)
+	sb.set_content_margin_all(14)
 	panel.add_theme_stylebox_override("panel", sb)
 	center.add_child(panel)
 
 	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 10)
+	root.add_theme_constant_override("separation", 8)
 	panel.add_child(root)
 
 	var title := Label.new()
-	title.text = "WE3 MATCH PREVIEW  -  quick match tool"
+	title.text = "WE3 MATCH PREVIEW  —  EXHIBITION & TEST LAUNCHER"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 22)
 	title.add_theme_color_override("font_color", Color(0.98, 0.86, 0.22))
 	root.add_child(title)
 
@@ -95,10 +121,16 @@ func _build_ui() -> void:
 
 	_stad_opt = _option_row(grid, "Stadium")
 	for s_name in GameData.STADIUM_NAMES:
-		_stad_opt.add_item(s_name)
+		_stad_opt.add_item(STADIUM_LABELS.get(s_name, s_name))
 	_half_opt = _option_row(grid, "Half length")
 	for sec in HALF_CHOICES:
 		_half_opt.add_item("%d:%02d min" % [sec / 60, sec % 60], sec)
+	_time_opt = _option_row(grid, "Time of day")
+	_time_opt.add_item("Day", 0)
+	_time_opt.add_item("Night", 1)
+	_weather_opt = _option_row(grid, "Weather")
+	_weather_opt.add_item("Clear", 0)
+	_weather_opt.add_item("Rain", 1)
 	_form_home_opt = _option_row(grid, "Home formation")
 	_form_away_opt = _option_row(grid, "Away formation")
 	for fo in [_form_home_opt, _form_away_opt]:
@@ -115,6 +147,25 @@ func _build_ui() -> void:
 	_speed_opt = _option_row(grid, "Game speed")
 	for sp in SPEEDS:
 		_speed_opt.add_item("%sx" % str(sp))
+	_mode_opt = _option_row(grid, "Match mode")
+	_mode_opt.add_item("Exhibition", 0)
+	_mode_opt.add_item("PK Shootout", 1)
+	_mode_opt.add_item("Training", 2)
+	_tactic_opt = _option_row(grid, "Home tactic")
+	_tactic_opt.add_item("Defensive", 0)
+	_tactic_opt.add_item("Normal", 1)
+	_tactic_opt.add_item("Attacking", 2)
+
+	var chk_row := HBoxContainer.new()
+	chk_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	chk_row.add_theme_constant_override("separation", 24)
+	root.add_child(chk_row)
+	_et_chk = CheckButton.new()
+	_et_chk.text = "Extra Time + PK"
+	chk_row.add_child(_et_chk)
+	_trap_chk = CheckButton.new()
+	_trap_chk.text = "Offside Trap"
+	chk_row.add_child(_trap_chk)
 
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -173,23 +224,47 @@ func _team_column(label_text: String, is_home: bool) -> VBoxContainer:
 		opt.add_item(str(t.get("team_name", "?")), int(t.get("team_id", 0)))
 	opt.item_selected.connect(func(_i): _refresh_info())
 	col.add_child(opt)
+	var kit_row := HBoxContainer.new()
+	kit_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	kit_row.add_theme_constant_override("separation", 12)
+	col.add_child(kit_row)
+	var flag := TextureRect.new()
+	flag.custom_minimum_size = Vector2(64, 40)
+	flag.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	flag.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	flag.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	kit_row.add_child(flag)
 	var kit := TextureRect.new()
-	kit.custom_minimum_size = Vector2(96, 96)
+	kit.custom_minimum_size = Vector2(80, 80)
 	kit.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	kit.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	kit.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	col.add_child(kit)
+	kit_row.add_child(kit)
+	var mini_p := PreviewMiniPitch.new()
+	mini_p.custom_minimum_size = Vector2(110, 56)
+	kit_row.add_child(mini_p)
+	var cond_opt := OptionButton.new()
+	for ci in ["Form: ↓ BAD", "Form: ↘ POOR", "Form: → NORMAL", "Form: ↗ GOOD", "Form: ↑ TOP"]:
+		cond_opt.add_item(ci)
+	cond_opt.select(2)
+	col.add_child(cond_opt)
 	var info := Label.new()
-	info.add_theme_font_size_override("font_size", 11)
+	info.add_theme_font_size_override("font_size", 10)
 	info.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
 	col.add_child(info)
 	if is_home:
 		_home_opt = opt
 		_home_kit = kit
+		_home_flag = flag
+		_home_pitch = mini_p
+		_home_cond_opt = cond_opt
 		_home_info = info
 	else:
 		_away_opt = opt
 		_away_kit = kit
+		_away_flag = flag
+		_away_pitch = mini_p
+		_away_cond_opt = cond_opt
 		_away_info = info
 	return col
 
@@ -226,10 +301,18 @@ func _refresh_info() -> void:
 		var opt := _home_opt if side == 0 else _away_opt
 		var info := _home_info if side == 0 else _away_info
 		var kit := _home_kit if side == 0 else _away_kit
+		var flag := _home_flag if side == 0 else _away_flag
+		var mini_p := _home_pitch if side == 0 else _away_pitch
 		var tid := _team_id(opt)
 		kit.texture = GameData.get_team_kit_texture(tid)
+		if flag != null:
+			flag.texture = GameData.get_team_flag_texture(tid)
 		var choice := _formation_choice(_form_home_opt if side == 0 else _form_away_opt)
 		var auto_form := GameData.get_team_default_formation(tid)
+		if mini_p != null:
+			mini_p.formation_name = choice if choice != "" else auto_form
+			mini_p.team_color = GameData.get_team_primary_color(tid)
+			mini_p.queue_redraw()
 		var players: Array = GameData.get_team(tid).get("players", [])
 		var sums := {"offense": 0, "defense": 0, "speed": 0, "technique": 0, "stamina": 0}
 		var lines: PackedStringArray = []
@@ -271,6 +354,15 @@ func _start_match() -> void:
 	GameData.home_team_id = home_id
 	GameData.away_team_id = away_id
 	GameData.selected_stadium = GameData.STADIUM_NAMES[_stad_opt.selected]
+	GameData.stadium_is_night = (_time_opt.selected == 1)
+	GameData.stadium_is_rain = (_weather_opt.selected == 1)
+	GameData.extra_time_enabled = _et_chk.button_pressed
+	GameData.home_tactic_level = _tactic_opt.selected
+	GameData.home_offside_trap = _trap_chk.button_pressed
+	GameData.team_condition = [_home_cond_opt.selected, _away_cond_opt.selected]
+	var mode_ids := ["exhibition", "pk", "training"]
+	GameData.game_mode = mode_ids[clampi(_mode_opt.selected, 0, 2)]
+	GameData.cup_active = false
 	GameData.half_duration_seconds = float(_half_opt.get_selected_id())
 	GameData.ai_difficulty = _diff_opt.selected
 	var fh := _formation_choice(_form_home_opt)
@@ -316,6 +408,14 @@ func _save_settings() -> void:
 	cfg.set_value("preview", "difficulty", _diff_opt.selected)
 	cfg.set_value("preview", "control", _ctrl_opt.selected)
 	cfg.set_value("preview", "speed", _speed_opt.selected)
+	cfg.set_value("preview", "time", _time_opt.selected)
+	cfg.set_value("preview", "weather", _weather_opt.selected)
+	cfg.set_value("preview", "mode", _mode_opt.selected)
+	cfg.set_value("preview", "et", _et_chk.button_pressed)
+	cfg.set_value("preview", "tactic", _tactic_opt.selected)
+	cfg.set_value("preview", "trap", _trap_chk.button_pressed)
+	cfg.set_value("preview", "cond_h", _home_cond_opt.selected)
+	cfg.set_value("preview", "cond_a", _away_cond_opt.selected)
 	cfg.save(CFG_PATH)
 
 func _load_settings() -> void:
@@ -325,6 +425,7 @@ func _load_settings() -> void:
 	_half_opt.select(1)
 	_diff_opt.select(1)
 	_speed_opt.select(1)
+	_tactic_opt.select(1)
 	var cfg := ConfigFile.new()
 	if cfg.load(CFG_PATH) != OK:
 		return
@@ -337,6 +438,14 @@ func _load_settings() -> void:
 	_select_clamped(_diff_opt, int(cfg.get_value("preview", "difficulty", 1)))
 	_select_clamped(_ctrl_opt, int(cfg.get_value("preview", "control", 0)))
 	_select_clamped(_speed_opt, int(cfg.get_value("preview", "speed", 1)))
+	_select_clamped(_time_opt, int(cfg.get_value("preview", "time", 0)))
+	_select_clamped(_weather_opt, int(cfg.get_value("preview", "weather", 0)))
+	_select_clamped(_mode_opt, int(cfg.get_value("preview", "mode", 0)))
+	_et_chk.button_pressed = bool(cfg.get_value("preview", "et", false))
+	_select_clamped(_tactic_opt, int(cfg.get_value("preview", "tactic", 1)))
+	_trap_chk.button_pressed = bool(cfg.get_value("preview", "trap", false))
+	_select_clamped(_home_cond_opt, int(cfg.get_value("preview", "cond_h", 2)))
+	_select_clamped(_away_cond_opt, int(cfg.get_value("preview", "cond_a", 2)))
 
 func _select_clamped(opt: OptionButton, idx: int) -> void:
 	if opt.item_count > 0:
@@ -411,3 +520,33 @@ func _apply_cmdline() -> void:
 		for i in range(SPEEDS.size()):
 			if is_equal_approx(SPEEDS[i], spd):
 				_speed_opt.select(i)
+	if args.has("time"):
+		_time_opt.select(1 if str(args["time"]).to_lower() == "night" else 0)
+	if args.has("weather"):
+		_weather_opt.select(1 if str(args["weather"]).to_lower() == "rain" else 0)
+	if args.has("pk"):
+		_mode_opt.select(1)
+	if args.has("extra-time"):
+		_et_chk.button_pressed = true
+
+
+class PreviewMiniPitch extends Control:
+	var formation_name: String = "4-4-2"
+	var team_color: Color = Color.CYAN
+
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.06, 0.28, 0.10), true)
+		var lc := Color(0.9, 0.95, 0.9, 0.72)
+		draw_rect(Rect2(Vector2.ZERO, size), lc, false, 1.2)
+		draw_line(Vector2(size.x * 0.5, 0), Vector2(size.x * 0.5, size.y), lc, 1.0)
+		var pts := {
+			"4-4-2": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.5,0.18), Vector2(0.46,0.4), Vector2(0.46,0.6), Vector2(0.5,0.82), Vector2(0.76,0.38), Vector2(0.76,0.62)],
+			"4-3-3": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.48,0.28), Vector2(0.44,0.5), Vector2(0.48,0.72), Vector2(0.78,0.2), Vector2(0.82,0.5), Vector2(0.78,0.8)],
+			"3-5-2": [Vector2(0.08,0.5), Vector2(0.24,0.26), Vector2(0.22,0.5), Vector2(0.24,0.74), Vector2(0.52,0.14), Vector2(0.46,0.34), Vector2(0.54,0.5), Vector2(0.46,0.66), Vector2(0.52,0.86), Vector2(0.76,0.38), Vector2(0.76,0.62)],
+			"5-3-2": [Vector2(0.08,0.5), Vector2(0.28,0.12), Vector2(0.24,0.31), Vector2(0.22,0.5), Vector2(0.24,0.69), Vector2(0.28,0.88), Vector2(0.48,0.28), Vector2(0.44,0.5), Vector2(0.48,0.72), Vector2(0.76,0.38), Vector2(0.76,0.62)],
+			"4-5-1": [Vector2(0.08,0.5), Vector2(0.25,0.2), Vector2(0.22,0.4), Vector2(0.22,0.6), Vector2(0.25,0.8), Vector2(0.50,0.12), Vector2(0.46,0.31), Vector2(0.54,0.5), Vector2(0.46,0.69), Vector2(0.50,0.88), Vector2(0.80,0.5)],
+			"3-4-3": [Vector2(0.08,0.5), Vector2(0.24,0.26), Vector2(0.22,0.5), Vector2(0.24,0.74), Vector2(0.50,0.16), Vector2(0.46,0.39), Vector2(0.46,0.61), Vector2(0.50,0.84), Vector2(0.78,0.2), Vector2(0.82,0.5), Vector2(0.78,0.8)],
+		}
+		for i in range(pts.get(formation_name, pts["4-4-2"]).size()):
+			var pt: Vector2 = Vector2(pts.get(formation_name, pts["4-4-2"])[i].x * size.x, pts.get(formation_name, pts["4-4-2"])[i].y * size.y)
+			draw_circle(pt, 3.0, Color.YELLOW if i == 0 else team_color)
